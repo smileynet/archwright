@@ -150,3 +150,18 @@ S3 (counterexample viz) ← independent, do anytime
 ```
 
 **Recommended start:** S1 (pattern schema as data) — it's self-contained, validates the core vocabulary, and unblocks everything else. Then R1 (lift contract) because it's the agreed next thread from §9.
+
+---
+
+## Research Status
+
+All 5 topics investigated (2026-07-05). See [research synthesis](research-synthesis.md) for combined findings.
+
+**Key conclusions:**
+- Statecharts confirmed as target (R2) — define a "spec layer" above XState
+- Inline authoring + holistic checking (R3) — write invariants on elements, check over full graph
+- Lift = project + summarize + attribute (R1) — interface alphabets make it mechanical
+- Classification = invariant → responsible element → structural class (R4) — delta-debugging for attribution
+- Confidence = evidence accumulator starting at — (R5) — track violation rates for calibration
+
+**Updated spike priority:** S1 → S1b (spec layer schema, new) → S4 → S2 → S3
