@@ -27,15 +27,17 @@ Alloy / Alcoa (Daniel Jackson): the counterexample as the primary artifact, rend
 
 **References:**
 - Jackson, D. *Alloy* / *Software Abstractions.* Alcoa overview: https://groups.csail.mit.edu/sdg/pubs/TR/alcoa-overview.pdf · CACM article: https://cacm.acm.org/research/alloy/
-- FLACK: Counterexample-Guided Fault Localization for Alloy Models (ASE 2021). https://arxiv.org/pdf/2102.10152
-- Counterexample Classification. https://arxiv.org/pdf/2108.00885
+- Alloy 6 (with temporal operators): https://github.com/AlloyTools/org.alloytools.alloy
+- Alloy* (HOLA) — higher-order solver, CEGIS for synthesis: https://github.com/aleksandarmilicevic/hola
+- FLACK: Counterexample-Guided Fault Localization for Alloy Models (Zheng et al., 2021). Contrast-pair via PMAX-SAT, multi-granularity suspicion scoring. https://arxiv.org/pdf/2102.10152
+- Counterexample Classification (Vick, Kang, Tripakis, 2021). Trace constraint partitioning, summary predicates, canonical counterexamples. https://arxiv.org/pdf/2108.00885
 
-## 4. State-Machine Visualization
+## 4. State-Machine Visualization & Invariant-First Design
 
-FSM-visualization pedagogy (Morazán et al.) and SMGA: rendering an invariant predicate per state, live pass/fail after each transition; Gestalt principles for state pictures (keep visual identity stable; reserve color for status).
+FSM-visualization pedagogy (Morazán et al.) and SMGA: rendering an invariant predicate per state, live pass/fail after each transition; Gestalt principles for state pictures (keep visual identity stable; reserve color for status). Key insight: formulate the invariant *before* the transition function — the invariant IS the state's meaning.
 
 **References:**
-- Morazán et al. — Visual Designing and Debugging of DFAs; invariant predicates per state, live pass/fail. https://arxiv.org/pdf/2008.09254
+- Morazán et al. (2020) — Visual Designing and Debugging of DFAs; invariant predicates per state, live pass/fail, 9-step design recipe. https://arxiv.org/pdf/2008.09254
 - "Better state pictures…" (SMGA; Gestalt principles for state pictures). https://link.springer.com/article/10.1007/s11042-021-10992-z
 - Using State Machines for the Visualisation of Specifications via Refinement.
 
