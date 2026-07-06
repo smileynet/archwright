@@ -7,11 +7,13 @@ AI-assisted design system that compiles human design intent (expressed as a forc
 ```
 .
 ├── design-system-working-doc.md   # Living design document (core theory & vocabulary)
-├── compilation.svg                # Fig 1: vertical compile from forces to architecture
-├── invariant_boundary.svg         # Fig 2: invariant-as-no-go-region + pass-up hop
-├── pass_up_tower.svg              # Fig 3: pass-up as level-terminating climb
+├── figures/                       # SVG diagrams
+│   ├── compilation.svg            # Fig 1: vertical compile from forces to architecture
+│   ├── invariant_boundary.svg     # Fig 2: invariant-as-no-go-region + pass-up hop
+│   └── pass_up_tower.svg          # Fig 3: pass-up as level-terminating climb
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary
+│   ├── research-plan.md           # Research topics & spike proposals
 │   └── adr/                       # Architecture decision records
 ├── .scratch/                      # Ephemeral working notes (gitignored)
 ├── .references/                   # Reference repos (gitignored)

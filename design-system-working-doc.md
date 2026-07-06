@@ -2,10 +2,10 @@
 
 *Working doc · v0.1 · living document — extend freely*
 
-Companion figures (see accompanying files):
-- **Fig. 1 — `compilation.svg`**: the vertical compile from forces to architecture.
-- **Fig. 2 — `invariant_boundary.svg`**: invariant-as-no-go-region + the pass-up hop.
-- **Fig. 3 — `pass_up_tower.svg`**: pass-up as a level-terminating climb.
+Companion figures (see `figures/`):
+- **Fig. 1 — [`compilation.svg`](figures/compilation.svg)**: the vertical compile from forces to architecture.
+- **Fig. 2 — [`invariant_boundary.svg`](figures/invariant_boundary.svg)**: invariant-as-no-go-region + the pass-up hop.
+- **Fig. 3 — [`pass_up_tower.svg`](figures/pass_up_tower.svg)**: pass-up as a level-terminating climb.
 
 ---
 
