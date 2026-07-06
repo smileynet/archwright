@@ -6,13 +6,21 @@ AI-assisted design system that compiles human design intent (expressed as a forc
 
 ```
 .
-├── design-system-working-doc.md   # Living design document (core theory & vocabulary)
+├── README.md                      # Project overview & doc index
+├── docs/
+│   ├── lineage.md                 # Origin: Alexander, what we keep vs. what software dropped
+│   ├── findings.md                # 9 load-bearing theoretical insights (stable core)
+│   ├── glossary.md                # All concepts and terminology
+│   ├── pattern-schema.md          # Proposed machine-readable pattern schema
+│   ├── worked-examples.md         # Alexander patterns mapped to games/apps
+│   ├── prior-art.md              # 5 traditions with full references
+│   └── open-questions.md          # Prioritized research backlog
 ├── figures/                       # SVG diagrams
 │   ├── compilation.svg            # Fig 1: vertical compile from forces to architecture
 │   ├── invariant_boundary.svg     # Fig 2: invariant-as-no-go-region + pass-up hop
 │   └── pass_up_tower.svg          # Fig 3: pass-up as level-terminating climb
 ├── .memory/
-│   ├── CONTEXT.md                 # Project glossary
+│   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
 │   ├── research-plan.md           # Research topics & spike proposals
 │   └── adr/                       # Architecture decision records
 ├── .scratch/                      # Ephemeral working notes (gitignored)
