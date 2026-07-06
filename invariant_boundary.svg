@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 820" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a857c"/>
+    </marker>
+    <marker id="aSlate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2E4A5E"/>
+    </marker>
+    <marker id="aRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C0453E"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="660" height="820" fill="#FBFAF7"/>
+
+  <!-- Pattern chip at top -->
+  <rect x="150" y="30" width="360" height="70" rx="12" fill="#2E2A33"/>
+  <text x="330" y="60" text-anchor="middle" font-family="Georgia, serif" font-size="19" fill="#F3EFE8">PATTERN LAYER</text>
+  <text x="330" y="84" text-anchor="middle" font-size="14" fill="#A9A3AD">desires + constraints · resolution · ★confidence</text>
+
+  <!-- hands-down arrow (left, slate) -->
+  <path d="M235,100 C205,150 195,175 205,205" fill="none" stroke="#2E4A5E" stroke-width="2.4" marker-end="url(#aSlate)"/>
+  <text x="150" y="160" font-size="13" fill="#2E4A5E">hands down</text>
+  <text x="150" y="177" font-size="12" fill="#5A7488">commitments ↓</text>
+
+  <!-- pass-up arrow (right, red dashed) -->
+  <path d="M455,205 C465,175 460,150 430,100" fill="none" stroke="#C0453E" stroke-width="2.4" stroke-dasharray="6,5" marker-end="url(#aRed)"/>
+  <text x="472" y="160" font-size="13" fill="#C0453E">pass up</text>
+  <text x="472" y="177" font-size="12" fill="#C0453E">counterexample ↑</text>
+
+  <!-- fork note -->
+  <text x="330" y="128" text-anchor="middle" font-size="12.5" fill="#8a5a5a">real → revise resolution   ·   spurious → refine model</text>
+
+  <!-- Graph container -->
+  <rect x="45" y="205" width="570" height="470" rx="14" fill="#F5F4F0" stroke="#C9C4BA" stroke-width="1.5"/>
+  <text x="66" y="235" font-family="Georgia, serif" font-size="16" fill="#4a463f">STATE GRAPH</text>
+
+  <!-- no-go zone (shaded forbidden region) -->
+  <path d="M355,470 Q560,455 570,560 Q575,650 430,648 Q345,640 355,470 Z" fill="#F7DED9" fill-opacity="0.72" stroke="#C0453E" stroke-width="2.2"/>
+  <text x="470" y="512" text-anchor="middle" font-size="13.5" fill="#A6382F" font-style="italic">no-go region</text>
+  <text x="470" y="532" text-anchor="middle" font-size="12" fill="#B5564E">INV: X unreachable ★★</text>
+
+  <!-- edges -->
+  <!-- A -> B -->
+  <path d="M158,315 L262,300" fill="none" stroke="#8a857c" stroke-width="1.8" marker-end="url(#a)"/>
+  <!-- A -> G (safe branch) -->
+  <path d="M150,345 L232,470" fill="none" stroke="#8a857c" stroke-width="1.8" marker-end="url(#a)"/>
+  <!-- G -> D -->
+  <path d="M300,468 L432,405" fill="none" stroke="#8a857c" stroke-width="1.8" marker-end="url(#a)"/>
+  <!-- B -> D -->
+  <path d="M320,318 L452,378" fill="none" stroke="#8a857c" stroke-width="1.8" marker-end="url(#a)"/>
+
+  <!-- counterexample path A -> B -> X (bright red) -->
+  <path d="M158,315 L262,300" fill="none" stroke="#C0453E" stroke-width="3.4" marker-end="url(#aRed)"/>
+  <path d="M292,322 Q360,470 452,588" fill="none" stroke="#C0453E" stroke-width="3.4" stroke-dasharray="1,0" marker-end="url(#aRed)"/>
+  <!-- missing guard marker on B->X -->
+  <rect x="330" y="430" width="118" height="26" rx="13" fill="#FBFAF7" stroke="#C0453E" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <text x="389" y="448" text-anchor="middle" font-size="12" fill="#A6382F">guard ⟨needs G⟩ ✗</text>
+
+  <!-- nodes -->
+  <!-- A start -->
+  <circle cx="135" cy="330" r="34" fill="#E9EEF2" stroke="#6B8BA4" stroke-width="2"/>
+  <text x="135" y="330" text-anchor="middle" font-size="15" fill="#2E4A5E">A</text>
+  <text x="135" y="347" text-anchor="middle" font-size="10.5" fill="#5A7488">start</text>
+  <circle cx="158" cy="308" r="8" fill="#5b9a6b"/>
+  <text x="158" y="312" text-anchor="middle" font-size="10" fill="#fff">✓</text>
+
+  <!-- B -->
+  <circle cx="288" cy="300" r="32" fill="#E9EEF2" stroke="#6B8BA4" stroke-width="2"/>
+  <text x="288" y="305" text-anchor="middle" font-size="15" fill="#2E4A5E">B</text>
+  <circle cx="309" cy="279" r="8" fill="#5b9a6b"/>
+  <text x="309" y="283" text-anchor="middle" font-size="10" fill="#fff">✓</text>
+
+  <!-- G (auth / guard state) -->
+  <circle cx="270" cy="482" r="32" fill="#E9EEF2" stroke="#6B8BA4" stroke-width="2"/>
+  <text x="270" y="480" text-anchor="middle" font-size="15" fill="#2E4A5E">G</text>
+  <text x="270" y="497" text-anchor="middle" font-size="10" fill="#5A7488">auth</text>
+  <circle cx="291" cy="461" r="8" fill="#5b9a6b"/>
+  <text x="291" y="465" text-anchor="middle" font-size="10" fill="#fff">✓</text>
+
+  <!-- D -->
+  <circle cx="470" cy="392" r="32" fill="#E9EEF2" stroke="#6B8BA4" stroke-width="2"/>
+  <text x="470" y="397" text-anchor="middle" font-size="15" fill="#2E4A5E">D</text>
+  <circle cx="491" cy="371" r="8" fill="#5b9a6b"/>
+  <text x="491" y="375" text-anchor="middle" font-size="10" fill="#fff">✓</text>
+
+  <!-- X violating -->
+  <circle cx="470" cy="600" r="36" fill="#F7E0DE" stroke="#C0453E" stroke-width="2.6"/>
+  <text x="470" y="600" text-anchor="middle" font-size="15" fill="#A6382F">X</text>
+  <text x="470" y="617" text-anchor="middle" font-size="10" fill="#B5564E">forbidden</text>
+  <circle cx="496" cy="576" r="9" fill="#C0453E"/>
+  <text x="496" y="580" text-anchor="middle" font-size="11" fill="#fff">✗</text>
+
+  <!-- counterexample label -->
+  <rect x="66" y="628" width="250" height="30" rx="8" fill="#FBEBE9" stroke="#C0453E" stroke-width="1.2"/>
+  <text x="80" y="648" font-size="12.5" fill="#A6382F">shortest counterexample:  A → B → X</text>
+
+  <!-- caption -->
+  <text x="330" y="712" text-anchor="middle" font-size="13.5" fill="#6b665f">The invariant is drawn as the boundary of its violation.</text>
+  <text x="330" y="732" text-anchor="middle" font-size="13.5" fill="#6b665f">The same counterexample that makes it visible is what flows</text>
+  <text x="330" y="752" text-anchor="middle" font-size="13.5" fill="#6b665f">back up to the pattern layer to be re-resolved.</text>
+</svg>
