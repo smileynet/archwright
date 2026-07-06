@@ -1,0 +1,168 @@
+# Pattern Schema v0.1
+# Machine-readable format for force-resolution patterns.
+# Every field serves the design conversation, the compilation pipeline, or both.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "archwright/pattern/v0.1"
+title: "Archwright Pattern"
+type: object
+required: [id, name, scale, tension, resolution, confidence]
+
+properties:
+  id:
+    type: string
+    description: "Unique identifier (slug). The token to reason and talk in."
+    pattern: "^[a-z][a-z0-9-]+$"
+
+  name:
+    type: string
+    description: "Human-readable name."
+
+  scale:
+    type: string
+    enum: [premise, loops-systems, verbs-interactions, feel-finish]
+    description: "Which level of the design tower this pattern lives at."
+
+  context:
+    type: string
+    description: "Where this pattern applies — the situation it addresses."
+
+  above:
+    type: array
+    items:
+      type: string
+      description: "ID of a larger pattern this one helps complete (assume-guarantee up-link)."
+
+  desires:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      required: [id, description]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9-]+$"
+        description:
+          type: string
+        weight:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: "Relative importance (optional). 1.0 = non-negotiable feel."
+        source:
+          type: string
+          description: "Where this desire comes from (playtest, stakeholder, prior art)."
+
+  constraints:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      required: [id, description, hardness]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9-]+$"
+        description:
+          type: string
+        hardness:
+          type: string
+          enum: [hard, soft]
+          description: "Hard = inviolable. Soft = negotiable under pressure."
+        source:
+          type: string
+          description: "Platform, budget, regulation, physics, etc."
+
+  tension:
+    type: object
+    required: [description, forces]
+    properties:
+      description:
+        type: string
+        description: "The explicit conflict statement — this IS the problem."
+      forces:
+        type: array
+        minItems: 2
+        items:
+          type: string
+          description: "IDs of the forces in conflict."
+
+  resolution:
+    type: object
+    required: [description]
+    properties:
+      description:
+        type: string
+        description: "The generative rule that balances forces. Never a fixed artifact."
+      mechanism:
+        type: string
+        description: "Brief tag for the resolution strategy (e.g., 'staging', 'redundancy', 'gating')."
+
+  consequences:
+    type: array
+    items:
+      type: object
+      required: [id, description, polarity]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9-]+$"
+        description:
+          type: string
+        polarity:
+          type: string
+          enum: [desire, constraint]
+          description: "The new force's type — it becomes input to downstream patterns."
+        discovered:
+          type: boolean
+          default: false
+          description: "True if this consequence was found empirically (not predicted from the resolution)."
+
+  hands_down:
+    type: object
+    properties:
+      sub_patterns:
+        type: array
+        items:
+          type: string
+          description: "IDs of child patterns this resolution invokes."
+      commitments:
+        type: array
+        items:
+          type: object
+          required: [type, description]
+          properties:
+            type:
+              type: string
+              enum: [state, transition, guard, invariant, data, interface]
+              description: "What kind of architectural element this commits to."
+            description:
+              type: string
+            target:
+              type: string
+              description: "ID/path of the element in the statechart spec (provenance link)."
+
+  confidence:
+    type: string
+    enum: ["★★", "★", "—"]
+    description: "★★ = true invariant (proof/strong evidence). ★ = believed correct (some evidence). — = one approach (untested)."
+
+  evidence:
+    type: array
+    items:
+      type: object
+      required: [type, description]
+      properties:
+        type:
+          type: string
+          enum: [playtest, prior-art, formal-proof, empirical, theoretical]
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        promotes_to:
+          type: string
+          enum: ["★★", "★"]
+          description: "If this evidence was sufficient to promote confidence."

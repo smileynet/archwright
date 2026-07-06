@@ -1,0 +1,187 @@
+# Archwright Statechart Spec Layer v0.1
+# A superset of XState's machine definition that adds:
+# - Provenance (which pattern/force produced each element)
+# - Invariants (state, transition, and temporal)
+# - Confidence markers
+# - Interface alphabet (forces visible across scale boundaries)
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "archwright/spec/v0.1"
+title: "Archwright Statechart Spec"
+type: object
+required: [id, from_pattern, context, states, initial]
+
+properties:
+  id:
+    type: string
+    description: "Machine identifier."
+    pattern: "^[a-z][a-z0-9-]+(-machine)?$"
+
+  from_pattern:
+    type: string
+    description: "ID of the pattern this machine was compiled from (provenance root)."
+
+  context:
+    type: object
+    description: "Extended state — typed variables that guards read."
+    properties:
+      variables:
+        type: object
+        additionalProperties:
+          type: object
+          required: [type, initial]
+          properties:
+            type:
+              type: string
+              enum: [int, float, bool, string, enum]
+            initial:
+              description: "Initial value."
+            min:
+              type: number
+            max:
+              type: number
+            values:
+              type: array
+              items:
+                type: string
+              description: "For enum type: allowed values."
+            from_force:
+              type: string
+              description: "Provenance: which force introduced this variable."
+
+  initial:
+    type: string
+    description: "ID of the initial state."
+
+  states:
+    type: object
+    additionalProperties:
+      $ref: "#/$defs/state"
+
+  interface_alphabet:
+    type: object
+    description: "Forces and events visible across the scale boundary (what the parent can see)."
+    properties:
+      events_in:
+        type: array
+        items:
+          type: string
+        description: "Events this machine accepts from parent/siblings."
+      events_out:
+        type: array
+        items:
+          type: string
+        description: "Events this machine emits to parent/siblings."
+      forces_exposed:
+        type: array
+        items:
+          type: string
+        description: "Force IDs that cross this boundary (visible to parent for lift routing)."
+
+  invariants:
+    type: array
+    items:
+      $ref: "#/$defs/invariant"
+
+$defs:
+  state:
+    type: object
+    required: [type]
+    properties:
+      type:
+        type: string
+        enum: [atomic, compound, parallel, final]
+      on:
+        type: object
+        description: "Event → transition mapping."
+        additionalProperties:
+          $ref: "#/$defs/transition"
+      states:
+        type: object
+        description: "Child states (for compound/parallel)."
+        additionalProperties:
+          $ref: "#/$defs/state"
+      initial:
+        type: string
+        description: "Initial child state (for compound)."
+      entry:
+        type: array
+        items:
+          type: string
+        description: "Actions on entry."
+      exit:
+        type: array
+        items:
+          type: string
+        description: "Actions on exit."
+      invariant:
+        type: object
+        description: "State invariant — must hold while in this state."
+        properties:
+          predicate:
+            type: string
+          confidence:
+            type: string
+            enum: ["★★", "★", "—"]
+          from_force:
+            type: string
+      from_force:
+        type: string
+        description: "Provenance: which desire produced this state."
+      from_pattern:
+        type: string
+        description: "Provenance: which pattern introduced this state."
+
+  transition:
+    type: object
+    required: [target]
+    properties:
+      target:
+        type: string
+      guard:
+        type: object
+        properties:
+          predicate:
+            type: string
+            description: "Boolean expression over context variables."
+          from_force:
+            type: string
+            description: "Provenance: which constraint compiled into this guard."
+          confidence:
+            type: string
+            enum: ["★★", "★", "—"]
+      actions:
+        type: array
+        items:
+          type: string
+        description: "Side effects on transition."
+      from_force:
+        type: string
+        description: "Provenance: which desire produced this transition."
+      from_pattern:
+        type: string
+        description: "Provenance: which pattern introduced this transition."
+
+  invariant:
+    type: object
+    required: [id, type, predicate, confidence, from_force]
+    properties:
+      id:
+        type: string
+      type:
+        type: string
+        enum: [state, transition, temporal]
+      predicate:
+        type: string
+        description: "For temporal: restricted LTL (□¬bad or □◇good). For state/transition: boolean over context."
+      confidence:
+        type: string
+        enum: ["★★", "★", "—"]
+      from_force:
+        type: string
+        description: "Which force this invariant protects."
+      from_pattern:
+        type: string
+        description: "Which pattern's resolution established this invariant."
+      description:
+        type: string
