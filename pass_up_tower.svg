@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 790" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="dn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2E4A5E"/>
+    </marker>
+    <marker id="up" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C0453E"/>
+    </marker>
+    <marker id="upA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C08A3E"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="720" height="790" fill="#FBFAF7"/>
+
+  <!-- Forces -->
+  <rect x="150" y="38" width="340" height="70" rx="11" fill="#FBEFE0" stroke="#E0A55E" stroke-width="2"/>
+  <text x="168" y="66" font-family="Georgia, serif" font-size="16" fill="#8A5A1E">DESIRES + CONSTRAINTS</text>
+  <text x="168" y="88" font-size="12" fill="#A97C42">the forces · the top of the climb</text>
+
+  <!-- Premise -->
+  <rect x="150" y="132" width="340" height="66" rx="11" fill="#F1EEF2" stroke="#9B8BA4" stroke-width="1.6"/>
+  <text x="168" y="160" font-family="Georgia, serif" font-size="15" fill="#5E4E6E">PREMISE</text>
+  <text x="482" y="180" text-anchor="end" font-size="12" fill="#8A6B80" font-style="italic">"the fantasy self-contradicts"</text>
+
+  <!-- Loops -->
+  <rect x="150" y="222" width="340" height="66" rx="11" fill="#EDEFF1" stroke="#8b96a0" stroke-width="1.6"/>
+  <text x="168" y="250" font-family="Georgia, serif" font-size="15" fill="#43505c">LOOPS &amp; SYSTEMS</text>
+  <text x="482" y="270" text-anchor="end" font-size="12" fill="#6a7680" font-style="italic">"the loop rings hollow"</text>
+
+  <!-- Verbs -->
+  <rect x="150" y="312" width="340" height="66" rx="11" fill="#EDEFF1" stroke="#8b96a0" stroke-width="1.6"/>
+  <text x="168" y="340" font-family="Georgia, serif" font-size="15" fill="#43505c">VERBS &amp; INTERACTIONS</text>
+  <text x="482" y="360" text-anchor="end" font-size="12" fill="#6a7680" font-style="italic">"this verb leaks its guard"</text>
+
+  <!-- Feel -->
+  <rect x="150" y="402" width="340" height="66" rx="11" fill="#EDEFF1" stroke="#8b96a0" stroke-width="1.6"/>
+  <text x="168" y="430" font-family="Georgia, serif" font-size="15" fill="#43505c">FEEL &amp; FINISH</text>
+
+  <!-- Architecture -->
+  <rect x="150" y="492" width="340" height="80" rx="11" fill="#E4EAEE" stroke="#2E4A5E" stroke-width="2"/>
+  <text x="168" y="520" font-family="Georgia, serif" font-size="15" fill="#2E4A5E">ARCHITECTURE</text>
+  <text x="168" y="540" font-size="12" fill="#5A7488">state graph · data · interface · invariant</text>
+  <text x="482" y="560" text-anchor="end" font-size="12" fill="#5A7488" font-style="italic">counterexample trace  A→B→X</text>
+
+  <!-- Running artifact -->
+  <rect x="150" y="596" width="340" height="64" rx="11" fill="#F5F4F0" stroke="#C9C4BA" stroke-width="1.6"/>
+  <text x="168" y="623" font-family="Georgia, serif" font-size="15" fill="#4a463f">RUNNING ARTIFACT</text>
+  <text x="168" y="644" font-size="12" fill="#8A857C">playtest · the game as felt</text>
+
+  <!-- HANDS DOWN (left) -->
+  <path d="M108,55 L108,650" fill="none" stroke="#2E4A5E" stroke-width="2.4" marker-end="url(#dn)"/>
+  <text x="70" y="360" font-size="13" fill="#2E4A5E" transform="rotate(-90 70 360)" text-anchor="middle">hands down · concretize</text>
+
+  <!-- PASS-UP 1: spurious, terminates at architecture -->
+  <path d="M490,510 C532,505 532,545 496,548" fill="none" stroke="#C0453E" stroke-width="2.2" stroke-dasharray="5,4" marker-end="url(#up)"/>
+  <text x="512" y="588" font-size="11.5" fill="#A6382F">spurious →</text>
+  <text x="512" y="603" font-size="11.5" fill="#A6382F">refine model,</text>
+  <text x="512" y="618" font-size="11.5" fill="#A6382F">no ascent</text>
+
+  <!-- PASS-UP 2: real, arch -> verbs -->
+  <path d="M490,528 C575,528 575,345 496,345" fill="none" stroke="#C0453E" stroke-width="2.6" stroke-dasharray="6,5" marker-end="url(#up)"/>
+  <text x="586" y="440" font-size="12" fill="#C0453E" transform="rotate(-90 586 440)" text-anchor="middle">real → re-resolve the verb</text>
+
+  <!-- PASS-UP 3: evidence, running -> premise -->
+  <path d="M490,628 C662,628 662,168 496,168" fill="none" stroke="#C08A3E" stroke-width="2.6" stroke-dasharray="6,5" marker-end="url(#upA)"/>
+  <text x="672" y="400" font-size="12" fill="#B07E36" transform="rotate(-90 672 400)" text-anchor="middle">evidence → revise a Desire</text>
+
+  <!-- legend -->
+  <line x1="150" y1="700" x2="182" y2="700" stroke="#C0453E" stroke-width="2.4" stroke-dasharray="6,5"/>
+  <text x="190" y="704" font-size="12" fill="#6b665f">counterexample (falsification)</text>
+  <line x1="410" y1="700" x2="442" y2="700" stroke="#C08A3E" stroke-width="2.4" stroke-dasharray="6,5"/>
+  <text x="450" y="704" font-size="12" fill="#6b665f">evidence (from play)</text>
+
+  <text x="360" y="742" text-anchor="middle" font-size="13" fill="#6b665f">A signal rises only to the level that owns the violated force —</text>
+  <text x="360" y="761" text-anchor="middle" font-size="13" fill="#6b665f">and is re-expressed in that level's language at every hop.</text>
+</svg>
