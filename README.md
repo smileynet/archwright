@@ -1,25 +1,34 @@
 # Archwright
 
-A force-resolution design language that compiles to architecture.
+A force-resolution design language that resolves into verified architecture.
 
 ## The Thesis
 
-Human design intent — expressed as forces in tension — **compiles down** into architecture (a state graph and its supporting structure). The compilation is **traceable and reversible**: what is learned downstream routes back up to revise the design.
+Human design intent — expressed as forces in tension — **resolves into** verified architecture. The resolution is traceable: every architectural commitment carries provenance back to the forces that demanded it. When the architecture violates its own stated forces, corrections route back to the design for re-resolution.
 
-Two halves, one pipeline:
+Two vocabularies, one pipeline:
 
 1. **Design domain** — a vocabulary for thinking at the level of intent: what the thing wants to be, what bounds it, and how those are reconciled.
-2. **Architecture domain** — the executable target: a state machine / graph as the central anchor, with data, interfaces, and invariants as supporting pillars.
+2. **Architecture domain** — the formal target: behavior models, data contracts, service boundaries, dependency rules, and invariants — verified against the stated forces.
 
-These are not two systems but one compilation, running in both directions.
+These are not two systems but one resolution, running in both directions.
 
 ## The Model in One Line
 
-> Desires + Constraints → resolved Pattern → hands-down (with provenance) → State · Data · Interface · Invariant → check → counterexample → pass-up (lift, confidence-gated, level-terminating) → revised Pattern/Force → recompile → … → quiescence.
+> Forces in tension → resolved Pattern → takes form as architecture (State · Data · Interface · Invariant) → verified against forces → violations surface as contrast pairs → route back to responsible force → re-resolve → … → quiescence.
 
 ## Core Commitment
 
 Keep *forces* first-class. The reusable IP is not a catalogue of patterns; it is the method of naming and resolving tensions. The moment patterns become fixed templates, the system dies.
+
+## What Archwright Is
+
+Archwright is a **methodology embodied as agent skills**, with supporting tools for mechanical tasks. The AI agent IS the system — it holds the design methodology. Humans express intent through conversation; the agent resolves it into checkable specifications.
+
+- **Skills** (global, `~/.kiro/skills/`) — the design methodology: force identification, resolution, verification, correction
+- **Tools** (on PATH, `tools/`) — mechanical operations: schema validation, spec → Alloy compilation, checking, parsing
+- **Patterns** (in target project, `design/patterns/`) — captured design intent
+- **Specs** (in target project, `design/specs/`) — verified architectural commitments
 
 ## Documentation
 
@@ -37,15 +46,22 @@ Keep *forces* first-class. The reusable IP is not a catalogue of patterns; it is
 
 | Figure | Shows |
 |--------|-------|
-| [compilation.svg](figures/compilation.svg) | Vertical compile from forces → architecture |
+| [compilation.svg](figures/compilation.svg) | Vertical resolution from forces → architecture |
 | [invariant_boundary.svg](figures/invariant_boundary.svg) | Invariant-as-no-go-region + pass-up hop |
 | [pass_up_tower.svg](figures/pass_up_tower.svg) | Pass-up as level-terminating climb |
 
 ## Project Status
 
-Research / design-theory phase. No implementation yet.
+Research + design phase. Spikes validated: pattern schema, spec layer, Alloy as checking backend (94ms counterexample finding), contrast pair generation, game failure predicates, live validation feasibility.
 
-**Next thread:** The lift contract — the explicit rule by which a child level translates its failure into the parent's vocabulary. See [Open Questions #1](docs/open-questions.md) and [Research Plan](/.memory/research-plan.md).
+**Next:** Tracer bullet against lacrosse-bosse — encode existing design decisions as patterns + specs, verify invariants, demonstrate violation detection.
+
+## Lineage
+
+Archwright evolves from:
+1. **spec-driven-development** — structured planning (PLAN.md, spec files, validation criteria)
+2. **project-overseer** — drift detection between spec and implementation (terraform model)
+3. **archwright** — formal verification of design intent (forces → checkable invariants → verified architecture)
 
 ## How to Contribute
 

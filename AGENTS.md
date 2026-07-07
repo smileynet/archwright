@@ -1,6 +1,6 @@
 # AGENTS.md — Archwright
 
-AI-assisted design system that compiles human design intent (expressed as a force-resolution language) into architecture (state graphs), with traceable bidirectional flow.
+AI-assisted design system that resolves human design intent (expressed as a force-resolution language) into verified architecture, with traceable bidirectional flow.
 
 ## Project Layout
 
@@ -11,7 +11,7 @@ AI-assisted design system that compiles human design intent (expressed as a forc
 │   ├── lineage.md                 # Origin: Alexander, what we keep vs. what software dropped
 │   ├── findings.md                # 9 load-bearing theoretical insights (stable core)
 │   ├── glossary.md                # All concepts and terminology
-│   ├── pattern-schema.md          # Proposed machine-readable pattern schema
+│   ├── pattern-schema.md          # Proposed machine-readable schema for patterns
 │   ├── worked-examples.md         # Alexander patterns mapped to games/apps
 │   ├── prior-art.md              # 5 traditions with full references
 │   └── open-questions.md          # Prioritized research backlog
@@ -19,49 +19,81 @@ AI-assisted design system that compiles human design intent (expressed as a forc
 │   ├── compilation.svg            # Fig 1: vertical compile from forces to architecture
 │   ├── invariant_boundary.svg     # Fig 2: invariant-as-no-go-region + pass-up hop
 │   └── pass_up_tower.svg          # Fig 3: pass-up as level-terminating climb
+├── tools/                         # Mechanical operations (on PATH)
+│   ├── pattern-schema.yaml        # JSON Schema for pattern validation
+│   ├── spec-schema.yaml           # JSON Schema for spec validation
+│   └── domains/                   # Domain-specific overlays
+│       ├── game/                  # Game design predicates + scales
+│       └── general/               # General structural predicates
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
 │   ├── research-plan.md           # Research topics & spike proposals
+│   ├── research-synthesis.md      # R1-R5 findings
+│   ├── research-synthesis-2.md    # R6-R11 findings
+│   ├── spike-results-s5-s8.md    # Alloy validation results
 │   └── adr/                       # Architecture decision records
 ├── .scratch/                      # Ephemeral working notes (gitignored)
 ├── .references/                   # Reference repos (gitignored)
-├── tools/                         # Project scripts and automation
 └── AGENTS.md                      # This file
 ```
 
+## What Archwright Is
+
+A **methodology embodied as agent skills** with supporting tools. The AI agent IS the system — it holds the design methodology. Tools handle deterministic mechanical tasks.
+
+**Skills** (global, `~/.kiro/skills/`):
+- `archwright` — full design methodology: identify forces, resolve tensions, formalize as patterns + specs
+- `archwright-check` — verification loop: check specs, report violations, route corrections
+
+**Tools** (on PATH, `tools/`):
+- Schema validation, spec → Alloy compilation, Alloy execution, counterexample parsing, spec → XState
+
 ## Project Type
 
-Research / design-theory project. No build system yet — primarily Markdown documents, SVG figures, and conceptual modeling.
+Research + design-theory project transitioning to implementation. Primary outputs: skills, tools, schemas, documentation.
 
 ## Commands
 
-None configured yet. When tooling is added:
-
 | Task | Command |
 |------|---------|
-| Validate YAML schemas | `yq '.' <file>` |
-| Link check | `markdown-link-check design-system-working-doc.md` |
+| Validate pattern | `archwright-validate <pattern.yaml>` |
+| Validate spec | `archwright-validate <spec.yaml>` |
+| Check spec (Alloy) | `archwright-check <spec.yaml>` |
+| Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` |
 
 ## Workflows
 
-1. **Extend the design language** — add findings to §3, terms to §4, update `.memory/CONTEXT.md`
-2. **Explore an open question** — pick from §9, research, write findings, produce ADR if decision-worthy
-3. **Build tooling** — scripts in `tools/` for schema validation, compilation pipeline, visualization
+1. **Extend the design language** — add findings to docs/, terms to `.memory/CONTEXT.md`
+2. **Explore an open question** — pick from docs/open-questions.md, research, produce ADR
+3. **Build tooling** — scripts in `tools/` for validation, compilation, checking
+4. **Tracer bullet** — encode lacrosse-bosse decisions as patterns + specs, verify
 
 ## Key Constraints
 
 - Forces stay first-class — never reduce patterns to fixed templates
-- The design language and architecture domain are one compilation, not two systems
+- "Resolves into" not "compiles to" — the process is creative + verified, not mechanical
 - Pass-up is level-terminating (signals stop at the level that owns the violated force)
-- Confidence (★★/★/—) gates AI autonomy and escalation
+- Confidence (★★/★/—) gates AI autonomy, checking rigor, and escalation
+- Specs are flat, typed (kind field), linked via `kind:id` references
+- The agent IS the system; tools are mechanical servants
+
+## Target Project Artifacts
+
+When archwright operates on a project, it produces:
+```
+target-project/
+  design/
+    patterns/          # Pattern YAML (forces, tensions, resolutions)
+    specs/             # Spec YAML (behavior, contract, constraint, dependency)
+```
 
 ## References
 
-Reference materials live in `.references/`. Relevant prior art:
 - Alexander's *A Pattern Language* (1977) and *The Timeless Way of Building* (1979)
 - Harel statecharts / XState
 - Alloy / lightweight formal methods (counterexample-driven)
 - CEGAR (Clarke et al., 2000/2003)
+- Kleppmann (2025) — AI + formal verification mainstream prediction
 
 ## Customization
 
