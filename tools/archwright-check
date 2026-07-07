@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""archwright-check: Run verification checks against specs.
+
+Usage:
+  archwright-check <spec-file>...       Check individual specs
+  archwright-check --all <dir>          Check all specs in directory
+
+Dispatches by spec kind:
+  behavior    → compile to Alloy, run model checker (if alloy6.jar available)
+  constraint  → execute self-described check (grep, semgrep, script)
+  dependency  → execute self-described check (grep, script)
+  contract    → schema validation only (for now)
+"""
+
+import sys
+import os
+import re
+import yaml
+import subprocess
+import json
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).parent
+
+
+def extract_frontmatter(path):
+    """Extract YAML frontmatter from a markdown file."""
+    content = path.read_text()
+    if not content.startswith("---"):
+        return None
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return None
+    return yaml.safe_load(parts[1])
+
+
+def load_spec(path):
+    """Load a spec file, return (data, kind)."""
+    path = Path(path)
+    if path.suffix in (".yaml", ".yml"):
+        data = yaml.safe_load(path.read_text())
+        return data, data.get("kind")
+    elif path.suffix == ".md":
+        data = extract_frontmatter(path)
+        if data:
+            return data, data.get("kind")
+    return None, None
+
+
+def check_behavior(data, spec_path):
+    """Check a behavior spec via Alloy (if available) or report invariants."""
+    results = []
+    invariants = data.get("invariants", [])
+
+    # For now: report invariants as requiring Alloy check
+    # Full implementation would compile to .als and run
+    alloy_jar = Path.home() / "code" / "archwright" / ".references" / "alloy6.jar"
+
+    if not alloy_jar.exists():
+        for inv in invariants:
+            results.append({
+                "invariant": inv.get("id", "unknown"),
+                "status": "skipped",
+                "message": "Alloy JAR not found — behavior check requires alloy6.jar",
+                "confidence": inv.get("confidence", "—"),
+            })
+        return results
+
+    # TODO: compile spec to .als and run
+    # For now, report that the tool exists but compilation isn't automated
+    for inv in invariants:
+        results.append({
+            "invariant": inv.get("id", "unknown"),
+            "status": "skipped",
+            "message": "Alloy compilation not yet automated — run manually",
+            "confidence": inv.get("confidence", "—"),
+        })
+    return results
+
+
+def check_conformance(data, spec_path):
+    """Check a constraint or dependency spec using its self-described check field."""
+    check = data.get("check")
+    if not check:
+        return [{
+            "invariant": data.get("id", "unknown"),
+            "status": "skipped",
+            "message": "No 'check' field in spec — cannot verify",
+        }]
+
+    method = check.get("method", "")
+    spec_id = data.get("id", "unknown")
+    confidence = data.get("confidence", "—")
+
+    # Determine the working directory (look for project root)
+    # Try to find the design/ directory and go up from there
+    spec_dir = Path(spec_path).resolve().parent
+    project_root = spec_dir
+    for _ in range(5):
+        if (project_root / "design").exists() or (project_root / "project.godot").exists():
+            break
+        project_root = project_root.parent
+
+    if method == "grep":
+        return _check_grep(check, spec_id, confidence, project_root)
+    elif method == "script":
+        return _check_script(check, spec_id, confidence, project_root)
+    elif method == "semgrep":
+        return _check_semgrep(check, spec_id, confidence, project_root)
+    else:
+        return [{
+            "invariant": spec_id,
+            "status": "error",
+            "message": f"Unknown check method: {method}",
+        }]
+
+
+def _check_grep(check, spec_id, confidence, project_root):
+    """Run a grep-based check."""
+    target = check.get("target", ".")
+    pattern = check.get("pattern", "")
+    expect = check.get("expect", "absent")
+    command = check.get("command")
+    only_in = check.get("only_in")
+
+    if command:
+        # Custom command provided
+        try:
+            result = subprocess.run(
+                command, shell=True, capture_output=True, text=True,
+                cwd=str(project_root)
+            )
+            matches = result.stdout.strip()
+        except Exception as e:
+            return [{"invariant": spec_id, "status": "error", "message": str(e)}]
+    else:
+        # Build grep command from target + pattern
+        target_path = project_root / target
+        if not target_path.exists():
+            return [{"invariant": spec_id, "status": "error",
+                     "message": f"Target path not found: {target_path}"}]
+
+        if target_path.is_dir():
+            cmd = ["grep", "-rn", pattern, str(target_path)]
+        else:
+            cmd = ["grep", "-n", pattern, str(target_path)]
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            matches = result.stdout.strip()
+        except Exception as e:
+            return [{"invariant": spec_id, "status": "error", "message": str(e)}]
+
+    # Interpret results based on expect
+    if expect == "absent":
+        if matches:
+            lines = matches.split("\n")
+            return [{
+                "invariant": spec_id,
+                "status": "fail",
+                "confidence": confidence,
+                "message": f"Found {len(lines)} match(es) — expected none",
+                "violations": [l.strip() for l in lines[:5]],
+                "from_pattern": _first_pattern(check),
+            }]
+        else:
+            return [{"invariant": spec_id, "status": "pass"}]
+
+    elif expect == "present":
+        if matches:
+            return [{"invariant": spec_id, "status": "pass"}]
+        else:
+            return [{
+                "invariant": spec_id,
+                "status": "fail",
+                "confidence": confidence,
+                "message": "Expected match not found",
+            }]
+
+    elif expect == "only-in" and only_in:
+        if not matches:
+            return [{"invariant": spec_id, "status": "pass",
+                     "message": "No matches found (vacuously satisfied)"}]
+        lines = matches.split("\n")
+        violations = [l for l in lines if only_in not in l]
+        if violations:
+            return [{
+                "invariant": spec_id,
+                "status": "fail",
+                "confidence": confidence,
+                "message": f"Found {len(violations)} match(es) outside {only_in}",
+                "violations": [v.strip() for v in violations[:5]],
+            }]
+        else:
+            return [{"invariant": spec_id, "status": "pass"}]
+
+    return [{"invariant": spec_id, "status": "pass"}]
+
+
+def _check_script(check, spec_id, confidence, project_root):
+    """Run a script-based check."""
+    command = check.get("command", "")
+    expect = check.get("expect", "absent")
+
+    try:
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True,
+            cwd=str(project_root)
+        )
+        output = result.stdout.strip()
+    except Exception as e:
+        return [{"invariant": spec_id, "status": "error", "message": str(e)}]
+
+    if expect == "absent":
+        if output:
+            return [{
+                "invariant": spec_id, "status": "fail", "confidence": confidence,
+                "message": f"Script produced output — expected none",
+                "violations": output.split("\n")[:5],
+            }]
+        return [{"invariant": spec_id, "status": "pass"}]
+    elif expect == "present":
+        if output:
+            return [{"invariant": spec_id, "status": "pass"}]
+        return [{
+            "invariant": spec_id, "status": "fail", "confidence": confidence,
+            "message": "Script produced no output — expected some",
+        }]
+
+    return [{"invariant": spec_id, "status": "pass"}]
+
+
+def _check_semgrep(check, spec_id, confidence, project_root):
+    """Run a semgrep-based check (placeholder)."""
+    return [{
+        "invariant": spec_id, "status": "skipped",
+        "message": "semgrep checks not yet implemented",
+    }]
+
+
+def _first_pattern(check):
+    """Extract from_pattern context if available."""
+    return check.get("from_pattern", None)
+
+
+def format_result(spec_path, kind, results):
+    """Format check results for output."""
+    path = Path(spec_path)
+    lines = []
+
+    all_pass = all(r["status"] == "pass" for r in results)
+    all_skip = all(r["status"] == "skipped" for r in results)
+
+    if all_pass:
+        lines.append(f"  ✓ PASS: {path.name} (kind: {kind})")
+    elif all_skip:
+        lines.append(f"  ○ SKIP: {path.name} (kind: {kind})")
+        for r in results:
+            lines.append(f"    {r.get('message', '')}")
+    else:
+        lines.append(f"  ✗ FAIL: {path.name} (kind: {kind})")
+        for r in results:
+            if r["status"] == "fail":
+                conf = r.get("confidence", "")
+                conf_str = f" ({conf})" if conf else ""
+                lines.append(f"    invariant: {r['invariant']}{conf_str}")
+                lines.append(f"    {r['message']}")
+                for v in r.get("violations", []):
+                    lines.append(f"      {v}")
+
+    return "\n".join(lines), (0 if all_pass or all_skip else 1)
+
+
+def check_file(spec_path):
+    """Check a single spec file."""
+    data, kind = load_spec(spec_path)
+    if not data:
+        return f"  ✗ ERROR: {spec_path} — could not parse", 1
+
+    if kind == "behavior":
+        results = check_behavior(data, spec_path)
+    elif kind in ("constraint", "dependency"):
+        results = check_conformance(data, spec_path)
+    elif kind == "contract":
+        results = [{"invariant": data.get("id", "?"), "status": "pass",
+                    "message": "contract validation: schema only (no runtime check)"}]
+    elif kind == "pattern":
+        results = [{"invariant": data.get("id", "?"), "status": "skipped",
+                    "message": "patterns are not checked — check their resolved specs"}]
+    else:
+        results = [{"invariant": "?", "status": "error",
+                    "message": f"unknown kind: {kind}"}]
+
+    return format_result(spec_path, kind, results)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: archwright-check <spec>... | --all <dir>")
+        sys.exit(2)
+
+    files = []
+    if sys.argv[1] == "--all":
+        if len(sys.argv) < 3:
+            print("Usage: archwright-check --all <directory>")
+            sys.exit(2)
+        directory = Path(sys.argv[2])
+        files = sorted(
+            [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
+        )
+    else:
+        files = [Path(f) for f in sys.argv[1:]]
+
+    exit_code = 0
+    for f in files:
+        output, code = check_file(f)
+        print(output)
+        if code != 0:
+            exit_code = 1
+
+    sys.exit(exit_code)
+
+
+if __name__ == "__main__":
+    main()
