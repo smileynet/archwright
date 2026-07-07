@@ -1,0 +1,35 @@
+# Contract Spec Template
+# Describes a typed data shape with lifecycle constraints.
+# Machine-primary: validated structurally (types, presence, relationships).
+
+kind: contract
+id: data-shape-name
+from_patterns:
+  - "pattern:source-pattern-id"
+confidence: "★"
+
+fields:
+  field_name:
+    type: string  # string | int | float | bool | enum | reference | list
+    required: true
+    description: "What this field represents"
+    from_force: force-id
+  another_field:
+    type: int
+    required: true
+    min: 0
+    max: 100
+
+lifecycle:
+  - state: "produced"
+    by: "component:producer-id"
+    invariant: "all required fields are non-null"
+  - state: "consumed"
+    by: "component:consumer-id"
+    invariant: "field_name matches expected format"
+
+links:
+  - target: "behavior:producing-component"
+    type: produced-by
+  - target: "behavior:consuming-component"
+    type: consumed-by

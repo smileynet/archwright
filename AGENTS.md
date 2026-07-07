@@ -22,6 +22,12 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 ├── tools/                         # Mechanical operations (on PATH)
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
+│   ├── templates/                 # Document templates
+│   │   ├── pattern.md             # New pattern template
+│   │   ├── spec-behavior.yaml    # Behavior spec template
+│   │   ├── spec-contract.yaml    # Contract spec template
+│   │   ├── spec-constraint.md    # Constraint spec template
+│   │   └── spec-dependency.md    # Dependency spec template
 │   └── domains/                   # Domain-specific overlays
 │       ├── game/                  # Game design predicates + scales
 │       └── general/               # General structural predicates
@@ -47,6 +53,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 
 **Tools** (on PATH, `tools/`):
 - Schema validation, spec → Alloy compilation, Alloy execution, counterexample parsing, spec → XState
+- Templates for patterns and each spec kind (`tools/templates/`)
 
 ## Project Type
 
@@ -83,8 +90,8 @@ When archwright operates on a project, it produces:
 ```
 target-project/
   design/
-    patterns/          # Pattern YAML (forces, tensions, resolutions)
-    specs/             # Spec YAML (behavior, contract, constraint, dependency)
+    patterns/          # Markdown+frontmatter (forces, tensions, resolutions)
+    specs/             # Behavior/contract: YAML. Constraint/dependency: Markdown+frontmatter.
 ```
 
 ## References
