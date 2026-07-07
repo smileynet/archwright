@@ -15,12 +15,12 @@ Traditional:
 
   Design Decisions          Implementation
   ┌──────────────┐         ┌──────────────┐
-  │ "Players     │         │ onboarding   │
-  │  should feel │  ????   │ _tutorial()  │
-  │  oriented"   │ ─ ─ ─ >│ _show_all()  │
-  │              │         │ _skip()      │
-  └──────────────┘         └──────────────┘
-        ↕ no connection ↕
+  │ "Only one    │         │ ball_holder  │
+  │  entity can  │  ????   │ = player_a   │
+  │  hold the    │ ─ ─ ─ >│              │
+  │  ball"       │         │ ball_holder  │
+  └──────────────┘         │ = player_b   │ ← bug!
+                           └──────────────┘
   decisions drift from reality
   violations go undetected
   corrections have no target
@@ -49,134 +49,179 @@ Archwright:
 Every architectural commitment traces back to the force that demanded it.
 Every violation routes back to the decision that needs revision.
 
-## How It Works
+## How It Works: Ball Ownership in a Sports Game
+
+A lacrosse practice app needs to track who has the ball. Sounds simple — until it isn't.
 
 ### 1. Express Intent (Forces)
 
-Through conversation, the human expresses what they want (desires) and what bounds them (constraints). The agent helps name the tensions:
+Through conversation, the human expresses what they want and what constrains them:
 
 ```
 ┌─ DESIRE ─────────────────────────────────────────┐
-│ "Players feel oriented before exposed to depth"  │
+│ "Any fielder can receive a pass at any time"     │
+│ (gameplay fluidity — the ball moves freely)      │
 └──────────────────────────────────────────────────┘
           ╲                              ╱
            ╲    T E N S I O N           ╱
             ╲                          ╱
-             ╲  Depth wants to be     ╱
-              ╲ shown; comprehension ╱
-               ╲ wants it hidden    ╱
-                ╲                  ╱
+             ╲ Free passing vs.       ╱
+              ╲ single possession    ╱
+               ╲                    ╱
 ┌─ CONSTRAINT ─────────────────────────────────────┐
-│ "Humans hold ~4 novel concepts simultaneously"   │
+│ "Exactly one entity holds the ball at any time"  │
+│ (physics — a ball can't be in two places)        │
 └──────────────────────────────────────────────────┘
 ```
 
-### 2. Resolve (Patterns)
-
-The tension is resolved — a configuration found that balances the forces:
+A second constraint emerges from the architecture interview:
 
 ```
-PATTERN: Intimacy Gradient
+┌─ CONSTRAINT ─────────────────────────────────────┐
+│ "Only BallStateService writes ball ownership"    │
+│ (single source of truth — no conflicting writes) │
+└──────────────────────────────────────────────────┘
+```
+
+### 2. Resolve (Pattern)
+
+The tension is resolved — a configuration that satisfies all forces:
+
+```
+PATTERN: Ball Possession
 ├── Forces:
-│   ├── Desire: orientation before depth
-│   └── Constraint: attention budget (hard)
-├── Tension: depth vs comprehension
-├── Resolution: stage exposure shallow → deep
-├── Confidence: ★ (some evidence)
+│   ├── Desire: any fielder can receive (fluidity)
+│   ├── Constraint: exactly one holder (physics, ★★)
+│   └── Constraint: single writer (architecture, ★★)
+├── Tension: free passing vs. exclusive possession
+├── Resolution: request/validate model — controllers REQUEST
+│   transfers, BallStateService VALIDATES and commits.
+│   Ball is "in flight" during transfer (no holder).
+├── Confidence: ★★ (invariant of the domain)
 └── Resolves into:
-    ├── behavior:onboarding-progression
-    ├── constraint:max-4-novel-elements-per-tier
-    └── contract:tier-unlock-criteria
+    ├── behavior:ball-state-lifecycle
+    ├── constraint:single-ball-holder
+    └── dependency:ball-write-ownership
 ```
 
 ### 3. Formalize (Specs)
 
-The resolution takes form as checkable architecture:
+The resolution takes form as three checkable specs:
 
 ```
-┌─────────────────────────────────────────────────┐
-│ kind: behavior                                  │
-│ id: onboarding-progression                      │
-│                                                 │
-│   ┌────────┐  ADVANCE   ┌──────────────┐       │
-│   │Shallow │───────────>│ Intermediate │       │
-│   │tier=1  │  [score≥70]│ tier=2       │       │
-│   └────────┘            └──────────────┘       │
-│       │                        │                │
-│       │ EXPLORE                │ ADVANCE        │
-│       └──> (self)              │ [score≥70]     │
-│                                ↓                │
-│                         ┌──────────────┐        │
-│                         │    Deep      │        │
-│                         │    tier=3    │        │
-│                         └──────────────┘        │
-│                                                 │
-│ INVARIANT (★★): no tier skip                    │
-│   "Deep requires previously(Intermediate)"     │
-│                                                 │
-│ INVARIANT (★): visibility monotonic             │
-│   "features_visible never decreases"            │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│ kind: behavior                                          │
+│ id: ball-state-lifecycle                                │
+│                                                         │
+│  ┌────────┐ REQUEST  ┌───────────┐ VALIDATE ┌────────┐ │
+│  │ Held   │─────────>│ In-Flight │─────────>│  Held  │ │
+│  │(one    │          │ (no       │  [valid] │ (new   │ │
+│  │holder) │          │  holder)  │          │holder) │ │
+│  └────────┘          └───────────┘          └────────┘ │
+│      ↑                     │                            │
+│      │                     │ VALIDATE [invalid]         │
+│      │                     ↓                            │
+│      │               ┌───────────┐                      │
+│      └───────────────│ Returned  │                      │
+│        (back to      │ (original │                      │
+│         sender)      │  holder)  │                      │
+│                      └───────────┘                      │
+│                                                         │
+│ INVARIANT (★★): exactly-one-holder                      │
+│   "always (state != InFlight implies #holders == 1)"    │
+│                                                         │
+│ INVARIANT (★★): no-double-possession                    │
+│   "always (#holders <= 1)"                              │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ kind: constraint                                        │
+│ id: single-ball-holder                                  │
+│                                                         │
+│ rule: "At most one entity's ball_holder field is true"  │
+│ check:                                                  │
+│   method: grep                                          │
+│   pattern: "ball_holder\s*="                            │
+│   target: "src/"                                        │
+│   expect: only in BallStateService                      │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ kind: dependency                                        │
+│ id: ball-write-ownership                                │
+│                                                         │
+│ rule: "Only BallStateService writes ball_holder"        │
+│ allowed:                                                │
+│   - BallStateService → ball_holder (write)              │
+│ forbidden:                                              │
+│   - FielderController → ball_holder (write)             │
+│   - PlayManager → ball_holder (write)                   │
+│   - ANY other component → ball_holder (write)           │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ### 4. Verify (Check)
 
-The spec is checked against its own invariants. If a violation exists, it surfaces as a **contrast pair** — the violation alongside the nearest valid alternative:
+The behavior spec is checked via Alloy. The constraint and dependency specs are checked against the codebase:
 
 ```
-VIOLATION FOUND:
-  ┌─ Counterexample ────────────────────────┐
-  │ Shallow ──[EXTERNAL_UNLOCK]──> Deep     │
-  │ (1 step, skips Intermediate)            │
-  └─────────────────────────────────────────┘
+$ archwright-check design/specs/ball-state-lifecycle.yaml
+  ✓ exactly-one-holder: PASS (94ms, Alloy bounded scope 5)
+  ✓ no-double-possession: PASS
 
-  ┌─ Nearest Valid (contrast) ──────────────┐
-  │ Shallow → Shallow → Intermediate → Deep │
-  │ (proper path via advancement)           │
-  └─────────────────────────────────────────┘
+$ archwright-check design/specs/single-ball-holder.yaml
+  ✗ FAIL: ball_holder assigned in 2 files
+    src/services/ball_state_service.gd:47    ← expected
+    src/controllers/fielder_ai.gd:183        ← VIOLATION
 
-  DIFF: externalUnlock bypasses comprehension gate
-  RESPONSIBLE: constraint:attention-budget (★★)
-  FROM PATTERN: intimacy-gradient
-  SUGGESTED: add guard requiring intermediate completion
+  VIOLATION:
+    invariant: single-ball-holder (★★)
+    from_pattern: ball-possession
+    from_force: constraint:single-writer
+    location: src/controllers/fielder_ai.gd:183
+    content: "ball_holder = self"
 ```
 
 ### 5. Correct (Pass-Up)
 
-The violation routes back to the responsible force via provenance links:
+The violation routes back via provenance:
 
 ```
-  Violation: "tier skip via EXTERNAL_UNLOCK"
+  Violation: "fielder_ai.gd writes ball_holder directly"
        │
-       │  provenance: from_force = attention-budget
-       │              from_pattern = intimacy-gradient
+       │ provenance: from_force = constraint:single-writer
+       │             from_pattern = ball-possession
        ↓
-  Pattern: intimacy-gradient
+  Pattern: ball-possession
        │
-       │  Resolution doesn't account for external bypass
+       │ Resolution says: "controllers REQUEST, service VALIDATES"
+       │ But fielder_ai is writing directly — bypassing the service
        ↓
-  RE-RESOLVE: add guard OR remove event OR reroute through intermediate
+  FIX: fielder_ai must call BallStateService.request_transfer()
+       instead of assigning ball_holder directly.
+
+  Confidence: ★★ → MUST escalate to human before resolving
 ```
+
+The human reviews, confirms the fix direction, and the agent corrects the code.
 
 ## The Confidence System
 
-Confidence gates how the system behaves:
-
 ```
   ★★  TRUE INVARIANT (proof or strong evidence)
-  │   • Agent must escalate violations to human
-  │   • Deeper checking (unbounded proof)
-  │   • Solid boundary in visualizations
+  │   • A ball can't be in two places — this is physics
+  │   • Agent MUST escalate violations to human
+  │   • Checked rigorously (formal model + code analysis)
   │
   ★   BELIEVED CORRECT (some evidence)
+  │   • "In-flight state should last < 500ms" — probably right
   │   • Agent proposes fixes, human confirms
   │   • Standard bounded checking
-  │   • Normal boundary
   │
   —   ONE APPROACH (untested)
-      • Agent may auto-fix or log
+      • "Return to sender on invalid pass" — one option among several
+      • Agent may auto-adjust or log
       • Quick checks only
-      • Dashed boundary
 ```
 
 ## What Archwright Produces
@@ -187,18 +232,20 @@ In your project:
 your-project/
   design/
     patterns/
-      intimacy-gradient.yaml       # WHY (forces + resolution)
-      resource-tension.yaml
+      ball-possession.yaml         # WHY: forces + resolution
+      practice-execution.yaml
+      step-sequencing.yaml
     specs/
-      onboarding-progression.yaml  # WHAT (kind: behavior)
-      tier-unlock-criteria.yaml    # WHAT (kind: contract)
-      max-novel-elements.yaml      # WHAT (kind: constraint)
-      no-skip-tier.yaml            # WHAT (kind: constraint)
+      ball-state-lifecycle.yaml    # WHAT (kind: behavior)
+      single-ball-holder.yaml      # WHAT (kind: constraint)
+      ball-write-ownership.yaml    # WHAT (kind: dependency)
+      resolved-play-view.yaml      # WHAT (kind: contract)
+      execution-boundary.yaml      # WHAT (kind: boundary)
 ```
 
-Patterns = **why** (design intent, forces, resolutions)
-Specs = **what** (checkable architecture: behaviors, contracts, constraints, dependencies)
-Tests = **how** (implemented in your language, verifying specs hold in code)
+**Patterns** = why (design intent, forces, resolutions)
+**Specs** = what (checkable architecture commitments)
+**Tests** = how (implemented in your language, verifying specs hold)
 
 ## The Full Loop
 
@@ -243,7 +290,7 @@ Tests = **how** (implemented in your language, verifying specs hold in code)
                     │ Re-resolve    │
                     │ (adjust       │
                     │  pattern or   │
-                    │  force)       │
+                    │  fix code)    │
                     └───────────────┘
 ```
 
