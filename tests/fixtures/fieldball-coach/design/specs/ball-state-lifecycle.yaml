@@ -1,0 +1,82 @@
+kind: behavior
+id: ball-state-lifecycle
+from_patterns:
+  - "pattern:ball-possession"
+confidence: "★★"
+
+context:
+  variables:
+    holder:
+      type: enum
+      values: [none, fielder_a, fielder_b, fielder_c]
+      initial: fielder_a
+      from_force: single-holder
+    requester:
+      type: enum
+      values: [none, fielder_a, fielder_b, fielder_c]
+      initial: none
+      from_force: fluidity
+
+initial: held
+
+states:
+  held:
+    type: atomic
+    on:
+      REQUEST_TRANSFER:
+        target: in-flight
+        guard:
+          predicate: "requester != holder"
+          from_force: single-holder
+          confidence: "★★"
+        from_force: fluidity
+        from_pattern: ball-possession
+    invariant:
+      predicate: "holder != none"
+      confidence: "★★"
+      from_force: single-holder
+    from_pattern: ball-possession
+
+  in-flight:
+    type: atomic
+    on:
+      VALIDATE_ACCEPT:
+        target: held
+        guard:
+          predicate: "requester != none"
+          from_force: fluidity
+          confidence: "★"
+        from_force: fluidity
+        from_pattern: ball-possession
+      VALIDATE_REJECT:
+        target: held
+        from_force: single-holder
+        from_pattern: ball-possession
+    invariant:
+      predicate: "holder == none"
+      confidence: "★★"
+      from_force: single-holder
+    from_pattern: ball-possession
+
+invariants:
+  - id: at-most-one-holder
+    type: temporal
+    predicate: "always (holder == none or holder in {fielder_a, fielder_b, fielder_c})"
+    confidence: "★★"
+    from_force: single-holder
+    from_pattern: ball-possession
+    description: "At most one entity holds the ball at any time."
+
+  - id: no-holder-during-flight
+    type: state
+    predicate: "in-flight implies holder == none"
+    confidence: "★★"
+    from_force: single-holder
+    from_pattern: ball-possession
+    description: "While in flight, no one holds the ball."
+
+links:
+  - target: "constraint:single-ball-writer"
+    type: constrained-by
+  - target: "dependency:ball-write-ownership"
+    type: constrained-by
