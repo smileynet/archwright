@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Run all archwright checks against the lacrosse-bosse fixture.
+# Exit 0 if all pass, 1 if any fail.
+set -euo pipefail
+
+FIXTURE="$(dirname "$0")/../tests/fixtures/lacrosse-bosse"
+VALIDATE="$(dirname "$0")/archwright-validate"
+PASS=0
+FAIL=0
+
+report() {
+  if [ "$1" = "PASS" ]; then
+    echo "  ✓ $2"
+    PASS=$((PASS + 1))
+  else
+    echo "  ✗ $2"
+    [ -n "${3:-}" ] && echo "    $3"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+echo "=== Schema Validation ==="
+for f in "$FIXTURE"/design/patterns/*.md "$FIXTURE"/design/specs/*.yaml "$FIXTURE"/design/specs/*.md; do
+  if python3 "$VALIDATE" "$f" > /dev/null 2>&1; then
+    report PASS "$(basename "$f")"
+  else
+    report FAIL "$(basename "$f")" "$(python3 "$VALIDATE" "$f" 2>&1)"
+  fi
+done
+
+echo ""
+echo "=== Link Validation ==="
+if python3 "$VALIDATE" --links "$FIXTURE/design/" > /dev/null 2>&1; then
+  report PASS "all links resolve"
+else
+  report FAIL "broken links" "$(python3 "$VALIDATE" --links "$FIXTURE/design/" 2>&1)"
+fi
+
+echo ""
+echo "=== Conformance Checks ==="
+
+# no-autoloads
+if grep -q "^autoload/" "$FIXTURE/project.godot" 2>/dev/null; then
+  report FAIL "no-autoloads" "autoloads found in project.godot"
+else
+  report PASS "no-autoloads"
+fi
+
+# executor-no-resolve
+if grep -rq "PlayResolver\|play_resolver\|resolve_play" "$FIXTURE/client/src/execution/" 2>/dev/null; then
+  report FAIL "executor-no-resolve" "$(grep -rn "PlayResolver" "$FIXTURE/client/src/execution/")"
+else
+  report PASS "executor-no-resolve"
+fi
+
+# single-ball-writer
+violations=$(grep -rn "ball_holder\s*=" "$FIXTURE/client/src/" 2>/dev/null | grep -v "ball_state_service" || true)
+if [ -z "$violations" ]; then
+  report PASS "single-ball-writer"
+else
+  report FAIL "single-ball-writer" "$violations"
+fi
+
+# executor-boundaries
+violations=$(grep -n "PlayResolver\|RuntimeUI\|ObjectivePlanBuilder" "$FIXTURE/client/src/execution/play_manager_3d.gd" 2>/dev/null || true)
+if [ -z "$violations" ]; then
+  report PASS "executor-boundaries"
+else
+  report FAIL "executor-boundaries" "$violations"
+fi
+
+echo ""
+echo "=== Results: $PASS passed, $FAIL failed ==="
+[ "$FAIL" -eq 0 ] && exit 0 || exit 1
