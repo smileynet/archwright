@@ -1,0 +1,56 @@
+# Behavior Spec Template
+# Describes how a component behaves: modes, transitions, guards.
+# Formal model is a statechart. Compiled to Alloy for checking, XState for execution.
+
+kind: behavior
+id: component-name
+from_patterns:
+  - "pattern:source-pattern-id"
+
+context:
+  variables:
+    example_var:
+      type: enum  # int | float | bool | string | enum
+      values: [state_a, state_b]
+      initial: state_a
+      from_force: force-id
+
+initial: first-state
+
+states:
+  first-state:
+    type: atomic  # atomic | compound | parallel | final
+    on:
+      EVENT_NAME:
+        target: second-state
+        guard:
+          predicate: "example_var == 'state_a'"
+          from_force: constraint-id
+          confidence: "★"
+        from_force: desire-id
+        from_pattern: pattern-id
+    invariant:
+      predicate: "some property holds in this state"
+      confidence: "★"
+      from_force: force-id
+    from_pattern: pattern-id
+
+  second-state:
+    type: atomic
+    on: {}
+    from_pattern: pattern-id
+
+invariants:
+  - id: invariant-name
+    type: temporal  # state | transition | temporal
+    predicate: "always (property)"
+    confidence: "★★"
+    from_force: force-id
+    from_pattern: pattern-id
+    description: "Human-readable explanation"
+
+links:
+  - target: "contract:data-shape-id"
+    type: consumes
+  - target: "constraint:rule-id"
+    type: constrained-by

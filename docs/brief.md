@@ -110,18 +110,18 @@ Every spec element traces back to the force that created it. The violation tells
 ```
   your-project/
     design/
-      patterns/                # WHY — forces + resolutions
-        ball-possession.yaml
-        practice-execution.yaml
-      specs/                   # WHAT — checkable architecture
-        ball-state-lifecycle.yaml     (kind: behavior)
-        single-ball-holder.yaml       (kind: constraint)
-        ball-write-ownership.yaml     (kind: dependency)
-        resolved-play-view.yaml       (kind: contract)
+      patterns/                        # WHY — forces + resolutions
+        ball-possession.md               (markdown — humans read these)
+        practice-execution.md
+      specs/                           # WHAT — checkable architecture
+        ball-state-lifecycle.yaml        (kind: behavior — YAML)
+        resolved-play-view.yaml          (kind: contract — YAML)
+        single-ball-holder.md            (kind: constraint — markdown)
+        ball-write-ownership.md          (kind: dependency — markdown)
 ```
 
-**Patterns** record the reasoning (forces, tensions, how you resolved them).
-**Specs** record the commitments (what must be true, how to check it).
+**Patterns** = markdown with YAML frontmatter. Humans read the prose; tools validate the frontmatter.
+**Specs** = YAML for machine-processed specs (behavior, contract). Markdown+frontmatter for human-read specs (constraint, dependency).
 Your test suite verifies the implementation matches the specs.
 
 ## The Confidence System

@@ -63,7 +63,7 @@ A spec describing how a component behaves — its modes, transitions, and guards
 _Avoid_: "machine" (overloaded, mechanical)
 
 **Spec**:
-A formal expression of architectural commitments with typed `kind` field. Flat, self-contained, linked via `kind:id` references. Kinds: behavior, contract, constraint, dependency, boundary, protocol.
+A formal expression of architectural commitments with typed `kind` field. Flat, self-contained, linked via `kind:id` references. Kinds: behavior, contract, constraint, dependency, boundary, protocol. Format varies by kind: YAML for machine-primary (behavior, contract), markdown+frontmatter for human-primary (constraint, dependency).
 _Avoid_: "design doc" (specs are checkable, not prose)
 
 **Contract (spec kind)**:
