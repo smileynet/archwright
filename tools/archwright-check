@@ -51,6 +51,8 @@ def check_behavior(data, spec_path):
     """Check a behavior spec via Alloy (if available) or report invariants."""
     results = []
     invariants = data.get("invariants", [])
+    scope = 4
+    steps = max(10, len(data.get("states", {})) * 3)
 
     # For now: report invariants as requiring Alloy check
     # Full implementation would compile to .als and run
@@ -63,6 +65,7 @@ def check_behavior(data, spec_path):
                 "status": "skipped",
                 "message": "Alloy JAR not found — behavior check requires alloy6.jar",
                 "confidence": inv.get("confidence", "—"),
+                "assurance": "none",
             })
         return results
 
@@ -72,8 +75,10 @@ def check_behavior(data, spec_path):
         results.append({
             "invariant": inv.get("id", "unknown"),
             "status": "skipped",
-            "message": "Alloy compilation not yet automated — run manually",
+            "message": f"Alloy compilation not yet automated — run manually (scope {scope}, {steps} steps)",
             "confidence": inv.get("confidence", "—"),
+            "assurance": "bounded",
+            "scope_note": f"Would check at scope {scope}, {steps} steps",
         })
     return results
 
@@ -159,12 +164,13 @@ def _check_grep(check, spec_id, confidence, project_root):
                 "invariant": spec_id,
                 "status": "fail",
                 "confidence": confidence,
+                "assurance": "conformance",
                 "message": f"Found {len(lines)} match(es) — expected none",
                 "violations": [l.strip() for l in lines[:5]],
                 "from_pattern": _first_pattern(check),
             }]
         else:
-            return [{"invariant": spec_id, "status": "pass"}]
+            return [{"invariant": spec_id, "status": "pass", "assurance": "conformance"}]
 
     elif expect == "present":
         if matches:

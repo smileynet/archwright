@@ -54,3 +54,9 @@ links:
     type: consumes
   - target: "constraint:rule-id"
     type: constrained-by
+
+abstraction_notes:
+  included: []       # What aspects of the real system ARE modeled
+  excluded: []       # What was deliberately left out
+  justification: ""  # Why the exclusions don't affect the properties being checked
+  scope_limit: ""    # What scope/steps were used; what this means for confidence
