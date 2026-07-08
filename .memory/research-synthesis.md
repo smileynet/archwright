@@ -72,3 +72,15 @@ This is Spike S1 (pattern schema as data) extended to the architecture side.
 3. **S4 — XState as compilation target** — now informed by the spec layer; compile the annotated schema down to bare XState and run it in Stately Studio
 4. **S2 — Provenance roundtrip** — now concrete: use the spec layer's `_provenance` fields to walk back from a counterexample to the responsible pattern/force
 5. **S3 — Counterexample rendering** — deferred until S4 produces a machine worth visualizing
+
+---
+
+## Verification Note (2026-07-07)
+
+Findings R1–R5 were originally synthesized from training knowledge (2026-07-05) without fetching cited sources. On 2026-07-07, subagent research verified key claims against actual documentation:
+
+- **R1 (Lift/CEGAR):** Verified via Clarke et al. paper. α is a surjective quotient map; spuriousness check requires *consistency* (re-abstraction landing within the original counterexample). The consistency requirement maps directly to archwright's level-terminating pass-up. See `.scratch/research/verified-cegar-lift.md`.
+- **R3 (Invariant authoring):** Verified via TLA+ docs. Two distinct modes: state invariants (fast, per-state) vs temporal properties (require full state graph + fairness for liveness). Liveness is much slower. Apalache (symbolic/SMT) may be more practical than TLC for bounded temporal checking. See `.scratch/research/verified-tlaplus-invariants.md`.
+- **R5 (Confidence):** Game failure terms (softlock, death spiral, degenerate strategy) verified as established terms with published definitions. No unified ontology exists — archwright fills this gap. See `.scratch/research/verified-game-failures.md`.
+
+Original claims were directionally correct but lacked source verification. Verified files now provide the evidence.

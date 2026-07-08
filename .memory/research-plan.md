@@ -165,3 +165,19 @@ All 5 topics investigated (2026-07-05). See [research synthesis](research-synthe
 - Confidence = evidence accumulator starting at — (R5) — track violation rates for calibration
 
 **Updated spike priority:** S1 → S1b (spec layer schema, new) → S4 → S2 → S3
+
+---
+
+## Future Tooling Considerations (added 2026-07-07, from verified research)
+
+### SARIF Output Format
+`archwright-check` should consider emitting SARIF-compatible JSON alongside its current output. SARIF is adopted by GitHub Code Scanning, VS Code, Semgrep, and CodeQL. Benefits: violation fingerprinting (stable cross-run identity), baselineState (new/unchanged/updated/absent), fix suggestion encoding (replacement arrays), and free tooling integration. Not urgent but worth adopting when the output format stabilizes.
+
+### Baseline Mechanism (from dependency-cruiser)
+dependency-cruiser's `--output-type baseline` generates a JSON snapshot of known violations; `--ignore-known` suppresses them in subsequent runs. This enables gradual adoption: snapshot existing state, then only flag NEW violations. Archwright should offer similar: `archwright-check --baseline` to snapshot, then normal runs only report regressions.
+
+### Apalache for Bounded Temporal Checking
+Apalache is a symbolic TLA+ model checker (SMT-based) that handles some infinite-state models within bounded steps (6-12 practical). May be a better fit than TLC or Alloy's nuXmv backend for behavior specs with liveness properties. Worth spiking when liveness checking becomes a priority.
+
+### PBT as Complementary Checking
+Property-based testing (fast-check for TS, Hypothesis for Python) can complement Alloy: specs compile to BOTH Alloy models (exhaustive bounded proof) AND PBT properties (fast implementation-level violation detection). PBT shrinking is structurally analogous to contrast-pair generation — shrunk counterexamples are machine-generated minimal violations.

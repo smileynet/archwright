@@ -61,3 +61,15 @@ Classify (domain predicates)  Empirical evidence
 2. **S6 — Contrast pair generation** — given an Alloy counterexample, use PMAX-SAT (or Alloy's own machinery) to find the nearest satisfying instance. Verify the diff localizes the responsible element.
 3. **S7 — Formal summary predicates** — express 3 of the 12 game failure predicates (softlock, death spiral, degenerate strategy) in Alloy's logic. Check them against a small game model.
 4. **S8 — Incremental checking latency** — measure how fast Alloy can re-check a model after a single state/transition addition. Determines if live validation is feasible.
+
+---
+
+## Verification Note (2026-07-07)
+
+Findings R6–R11 were originally synthesized from training knowledge (2026-07-05) without fetching cited sources. On 2026-07-07, subagent research verified key claims:
+
+- **R7 (Bounded vs unbounded):** Small scope hypothesis verified — scope 3 catches ~90%, scope 5-7 is practical confidence. Critical addition: properties requiring induction CANNOT be proven by bounded checking. Escalation to unbounded (nuXmv, Lean) required for ★★ promotion of inductive properties. See `.scratch/research/verified-small-scope.md`.
+- **R8 (Contrast pairs):** PBT shrinking verified as structurally analogous to contrast-pair generation. Hypothesis byte-stream architecture is most robust. PBT complements Alloy: specs can compile to BOTH Alloy (proof) and PBT properties (fast implementation-level checking). See `.scratch/research/verified-pbt.md`.
+- **Conformance checking tools:** ArchUnit, dependency-cruiser verified with actual docs. ArchUnit: JVM-only, fluent DSL, no design intent layer. dependency-cruiser: forbidden/allowed/required trichotomy + baseline mechanism for gradual adoption. See `.scratch/research/verified-archunit.md`, `.scratch/research/verified-dependency-cruiser.md`.
+- **Spec format:** Kubernetes references verified — 4 distinct mechanisms, no enforced referential integrity. Terraform verified — implicit DAG, three-way comparison. Archwright's link validation is STRICTER than both (enforces all references resolve). See `.scratch/research/verified-k8s-resource-model.md`, `.scratch/research/verified-terraform-config.md`.
+- **Output format:** SARIF verified as mature standard with fix suggestions, fingerprinting, baseline state. Widely adopted (GitHub, Semgrep, CodeQL). Candidate output format for archwright-check. See `.scratch/research/verified-sarif-format.md`.

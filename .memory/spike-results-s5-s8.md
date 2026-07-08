@@ -60,3 +60,10 @@ The dual-target architecture is validated:
 3. **Latency is acceptable** for live validation with a warm JVM (S8).
 
 The critical open question answered: **Alloy is a viable checking backend for archwright.** The compilation from spec layer to Alloy is mechanical, the checking is fast, and the results map cleanly back to archwright's force/pattern vocabulary via provenance annotations.
+
+### Limitations (verified 2026-07-07)
+
+- **Bounded checking cannot prove inductive properties.** If a property requires induction (e.g., "for ALL traces of ANY length, X holds"), no finite scope suffices. Escalation to unbounded verification (Alloy's nuXmv backend, Apalache for TLA+, or Lean proofs) is needed for ★★ promotion of such properties.
+- **Liveness properties are expensive.** Temporal liveness (◇good, "eventually reaches X") requires full state graph construction + fairness constraints. Much slower than safety (□¬bad). Apalache (symbolic/SMT-based) may be more practical than explicit-state checkers for bounded liveness.
+- **Integer overflow at small bitwidth.** Default 4-bit integers (-8..7) cause spurious counterexamples. Must set appropriate bitwidth for numeric specs.
+- **Scope 3 catches ~90% of bugs** (Jackson's empirical data). Scope 5-7 is practical confidence. Report the scope used alongside any "no violation found" result.
