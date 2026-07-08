@@ -65,7 +65,17 @@ Formal methods applied specifically to games — prior art for archwright's game
 - Adams, E. (2010). "Preventing the Downward Spiral." Canonical definition of death spiral. Gamedeveloper.com.
 - Salen & Zimmerman (2003). *Rules of Play.* Defines "degenerate strategy" formally.
 
-## 7. Lean & AI-Assisted Verification
+## 7. Spec-Driven AI Development
+
+Approaches to keeping AI-generated code aligned with architectural intent.
+
+**References:**
+- Grabowski, H. (2026). "The Spec Growth Engine: Spec-Anchored, Code-Coupled, Drift-Enforced Architecture for AI-Assisted Software Development." arXiv:2606.27045v1. Spec graph + context assembler + drift gate + growth rules. *(verified 2026-07-07)*
+- Böckeler, B. (2025). "Exploring Gen AI: The Tools of Spec-Driven Development." martinfowler.com. Survey of Kiro, Spec Kit, Tessl — the maturity axis (spec-first → spec-anchored → spec-as-source).
+- Murphy & Notkin (1995). "Software Reflexion Models." The ancestor of drift validation — comparing intended architecture to actual code structure.
+- Parnas (1972). "On the Criteria to be Used in Decomposing Systems into Modules." Information hiding as the basis for both module design and agent context scoping.
+
+## 8. Lean & AI-Assisted Verification
 
 The emerging ecosystem that represents archwright's long-term verification backend.
 
