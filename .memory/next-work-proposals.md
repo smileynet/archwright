@@ -139,3 +139,64 @@ check:
 | S11: Lean theorem | Spike | 2 hr | Medium (tests future path) | 8 |
 | R17: Lean feasibility | Research | 1 hr | Low (future, not blocking) | 9 |
 | Schema: `prior_art` field | Spec update | 15 min | Low (nice to have) | 10 |
+
+---
+
+## From Spec Growth Engine Paper (added 2026-07-07)
+
+### R18. Growth Rules for Archwright
+
+**Question:** What are archwright's equivalent of SGE's 6 growth rules? When a pattern changes, which specs MUST update? When a spec's contract changes, which consumers MUST be re-checked?
+
+**Why it matters:** Without codified rules, the agent uses judgment about what to update. This is the same "discipline problem" that SGE solves with its rule table. Archwright needs the same rigor.
+
+**Deliverable:** A rule table mapping change types to required artifact updates. Goes into the archwright skill's references.
+
+### R19. Deterministic Context Assembly
+
+**Question:** Can the archwright skill's "what to read" become a computable function (like SGE's Context(N) formula) rather than prose guidance?
+
+**Why it matters:** SGE shows that `context = root_invariants + spine_contracts + own_spec + dependency_contracts(one_hop) + own_code` is both sufficient and dramatically smaller than "read everything relevant." This prevents context explosion.
+
+**Deliverable:** A formula for archwright context per task type. May require schema additions (declaring dependency contracts explicitly).
+
+### S13. Drift Gate as CI Check
+
+**Goal:** Integrate `archwright-check --all design/` as a merge-blocking CI step (pre-commit hook or GitHub Action). Prove that spec-code drift is catchable at commit time.
+
+**Pass:** A PR that introduces a constraint violation is automatically blocked.
+**Fail:** The check is too slow, too noisy, or produces false positives that make it unusable as a gate.
+
+### Spec Update: Contract/Design Split
+
+Consider adding explicit `contract` and `design` sections to behavior specs:
+
+```yaml
+kind: behavior
+id: ball-state-lifecycle
+contract:
+  states: [held, in-flight]
+  events: [REQUEST_TRANSFER, VALIDATE_ACCEPT, VALIDATE_REJECT]
+  invariants: [at-most-one-holder, no-holder-during-flight]
+design:
+  # Internal transitions, guard predicates, context variables
+  # Only visible to this spec's owner and its parent pattern
+```
+
+This maps to SGE's Parnas principle: dependency specs reference only the CONTRACT, never the design. Enables: checking that consumers only depend on stable interfaces, not internal details.
+
+### Updated Priority (full list including SGE items)
+
+| # | Item | Type | Effort | Impact |
+|---|------|------|--------|--------|
+| 1 | Schema: `abstraction_notes` | Spec update | 15 min | High |
+| 2 | Schema: `assurance` in results | Spec update | 15 min | High |
+| 3 | R18: Growth rules | Research | 1 hr | High (agent rigor) |
+| 4 | R19: Context assembly formula | Research | 1 hr | High (context efficiency) |
+| 5 | S9: Abstraction quality test | Spike | 2 hr | High (scalability) |
+| 6 | S13: Drift gate CI | Spike | 1 hr | High (enforcement) |
+| 7 | S12: Mawhorter replication | Spike | 1 hr | Medium (validation) |
+| 8 | Contract/design split | Spec update | 30 min | Medium |
+| 9 | S10: Runtime monitoring | Spike | 1 hr | Medium |
+| 10 | R15: Abstraction strategies | Research | 2 hr | Medium |
+| 11 | S11: Lean theorem | Spike | 2 hr | Low (future) |
