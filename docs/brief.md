@@ -164,3 +164,29 @@ You decide. The agent prepares, proposes, and verifies.
 4. **Trust via verification.** Once specs are proven consistent, you review the *intent* (pattern), not the *output* (spec). The checking handles correctness.
 
 5. **Contrast pairs over raw errors.** When something breaks, show the violation next to the nearest valid alternative. The *diff* is the diagnosis.
+
+## Limitations & Honest Claims
+
+**What archwright CAN do:**
+- Catch structural violations in abstracted models (dead-ends, unreachable states, constraint breaches)
+- Verify codebase conformance to stated rules (grep/AST checks against real code)
+- Route violations back to responsible design decisions via provenance
+- Provide a disciplined vocabulary for design intent that both humans and agents can use
+
+**What archwright CANNOT do:**
+- Verify full game simulations (state explosion makes real games intractable without abstraction)
+- Prove properties hold in the actual implementation (model checking proves properties of the MODEL, not the code — runtime monitoring or Lean-based code proofs bridge this gap)
+- Replace playtesting for experience qualities (proxies approximate but don't prove "feels good")
+
+**What already exists (archwright builds on, not invents):**
+- Formal methods applied to games (Mawhorter 2021, Rezin 2017)
+- Softlock detection via CTL: `AG(EF(goal))` is published
+- State machine model checking (Alloy, SPIN, TLC — decades of prior art)
+- AI-assisted proof generation (DeepSeek-Prover, AlphaProof)
+
+**What archwright uniquely adds:**
+- A unified library of game/app failure predicates (not just softlock)
+- Provenance routing from violations back to design forces
+- The force-resolution methodology connecting Alexander's theory to formal verification
+- Multi-kind specs (behavior + constraint + dependency) with self-describing checks
+- Confidence-gated AI autonomy for correction routing

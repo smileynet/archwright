@@ -55,3 +55,21 @@ High-confidence assertions refuse to bend, so they *force* signals upward; low-c
 **9. Traceability is the routing table.**
 
 Pass-up can only be targeted if every downstream artifact remembers what produced it. The recorded hands-down links *are* the up-routing table. Without provenance, "pass up" degenerates into "regenerate everything."
+
+---
+
+**10. Trace length matters more than scope for game models.**
+
+The "small scope hypothesis" (most bugs found at scope 3) applies to structural/relational models. Game systems have temporal complexity — bugs require sequences of events to manifest. In testing: 6 steps catches 50% of bugs; 10 steps catches 100%. Scope (atom count) barely matters. Default to `steps = max(10, states × 3)`.
+
+---
+
+**11. The contrast pair is the natural pass-up payload.**
+
+Not the raw counterexample (too noisy) and not just the classification (too abstract). The diff between the violation and the nearest valid alternative localizes the fault AND suggests the fix direction. FLACK's PMAX-SAT approach generates these mechanically.
+
+---
+
+**12. Bounded checking is necessary but not sufficient for ★★.**
+
+Alloy finds counterexamples fast (94ms) but can only prove "no violation up to scope N." For genuine ★★ confidence (true invariant), unbounded proof is needed. Lean + AI provers (88.9% on benchmarks, 2025) provide the promotion path: compile spec to Lean theorem, attempt proof, kernel guarantees correctness if proof found.

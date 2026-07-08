@@ -1,49 +1,56 @@
 # Open Questions
 
-Roughly prioritized. Each is a research topic or decision point that will produce findings, ADRs, or both.
+Prioritized. Resolved questions marked; new questions added from validation spikes and research.
 
-## 1. The Lift Contract ← next up
+## Resolved
 
-The explicit rule by which a child level translates its failure into the parent's vocabulary — e.g., how an architecture counterexample becomes a verb-level design statement. This is what determines whether the AI can *route* a signal or merely dump it.
+- ~~#3 Canonical form of the graph~~ → Statecharts. ADR 0002.
+- ~~#4 Invariant authoring model~~ → Inline authoring, holistic checking. R3 synthesis.
+- ~~#9 Tooling surface~~ → Agent + scripts on PATH. ADR 0001, 0004.
 
-**Research topic:** [R1 in research plan](../.memory/research-plan.md)
+## Active
 
-## 2. Spurious-vs-Real Adjudication Handshake
+### 1. The Lift Contract ← partially addressed
 
-A model checker can prove a trace infeasible, but "real design flaw vs. modeling artifact" often needs the *Desire* to adjudicate. Design the AI-proposes / human-confirms handshake, especially for ★★ invariants.
+The explicit rule by which a child level translates its failure into the parent's vocabulary. R1 research established the three components (project, summarize, attribute) and S2 proved the provenance roundtrip works. Remaining: formalize the "summarize" step (currently requires AI judgment — can it be made more mechanical?).
 
-## 3. Canonical Form of the Graph
+### 2. State Explosion Mitigation ← NEW (from V2, Penguin Clash)
 
-Flat FSMs won't survive real games (state explosion). Commit to **statecharts** (Harel: hierarchy + orthogonal regions), so an entity's animation / AI / health machines run as concurrent regions. Highest-leverage architectural decision.
+Real games hit state explosion (~10^72 states for a simple multiplayer game). Archwright's Alloy checking works only on ABSTRACTED models. How do we:
+- Guide the designer/agent in choosing the right abstraction level?
+- Assure that the abstraction faithfully represents the real system?
+- Detect when an abstraction is too coarse (spurious counterexamples)?
 
-**Research topic:** [R2 in research plan](../.memory/research-plan.md)
+Prior art: Mawhorter 2021 (hand-authored tile abstraction for Super Metroid), CEGAR (automatic refinement), Rezin 2017 (manual model reduction).
 
-## 4. Invariant Authoring Model
+### 3. Lean Migration Timing ← NEW (from Lean research)
 
-Inline assertions co-located with transitions (ergonomic, always in sync) vs. a separate temporal spec the graph is checked against (verifiable, two artifacts to align). Determines whether "AI-assisted" means *generate-then-check* or *check-while-generating*.
+When does CSLib mature enough to serve as archwright's verification backend? Triggers:
+- CSLib has robust LTS formalization with temporal properties
+- AI provers reliably handle archwright-sized properties (not just math olympiad)
+- Veil or similar provides model-checking mode within Lean
 
-**Research topic:** [R3 in research plan](../.memory/research-plan.md)
+Current status (mid-2026): CSLib has basic LTS + bisimulation. Temporal logics on roadmap. AI provers at 88.9% on math benchmarks but untested on software specs.
 
-## 5. Counterexample Classification
+### 4. Spurious-vs-Real Adjudication
 
-Partition violations into a few named failure kinds and pass *those* up ("your resolution leaks in three ways"), rather than surfacing every trace. The AI's summarization contract.
+A model checker can prove a trace infeasible, but "real design flaw vs. modeling artifact" often needs the Desire to adjudicate. Design the AI-proposes / human-confirms handshake, especially for ★★ invariants.
 
-**Research topic:** [R4 in research plan](../.memory/research-plan.md)
+### 5. Confidence Calibration
 
-## 6. Confidence Calibration
+How do ★-ratings get assigned and revised as evidence accumulates? What promotes a — to a ★★, and what should demote one? R5 established the framework; needs empirical validation on real projects.
 
-How do ★-ratings get assigned and revised as evidence accumulates? What promotes a — to a ★★, and what should demote one?
+### 6. Counterexample Classification Predicates ← updated
 
-**Research topic:** [R5 in research plan](../.memory/research-plan.md)
+The 12 candidate game failure predicates need formal expression. Three are validated (softlock via Mawhorter's `AG(EF(goal))`, death spiral, degenerate strategy as established terms). Remaining: formalize the others and test on real game models.
 
-## 7. Promotion Policy
+### 7. The Abstraction Gap ← NEW
 
-When is the right response to a spurious counterexample to promote extended→discrete state, vs. to accept a wider abstraction? When should play-evidence promote a Desire into an explicit invariant?
+Checking an abstracted model proves properties of the ABSTRACTION, not necessarily the real system. How does archwright communicate this limitation? Options:
+- Clearly label confidence as "proven in model" vs "proven in implementation"
+- Runtime monitoring bridges the gap (check invariants during actual execution)
+- Property-based testing against real implementation complements model checking
 
-## 8. Quiescence / Shipping Criteria
+### 8. Quiescence / Shipping Criteria
 
 Formalize "stable under its own pass-up": which residual tensions are acceptable to ship as logged zero-star known issues.
-
-## 9. Tooling Surface
-
-Does the whole thing live in / export to a statechart tool (XState-style), a model checker (Alloy/TLA-style), or a bespoke editor? What's the minimal viable pipeline?

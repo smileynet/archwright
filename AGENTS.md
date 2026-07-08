@@ -100,6 +100,9 @@ target-project/
 - Harel statecharts / XState
 - Alloy / lightweight formal methods (counterexample-driven)
 - CEGAR (Clarke et al., 2000/2003)
+- Mawhorter & Smith (FDG 2021) — softlock detection via CTL
+- Rezin et al. (2017) — model checking multiplayer games
+- Lean 4 / CSLib / Veil — future unbounded verification backend
 - Kleppmann (2025) — AI + formal verification mainstream prediction
 
 ## Customization
