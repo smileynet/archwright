@@ -52,4 +52,27 @@ Clarke et al. (CAV 2000 / JACM 2003) and compositional/learning variants: the sp
 
 ---
 
-*(URLs captured from research on 2026-07-05; verify before citing formally.)*
+*(URLs captured from research on 2026-07-05; verified sources marked with dates.)*
+
+## 6. Game Verification
+
+Formal methods applied specifically to games — prior art for archwright's game domain overlay.
+
+**References:**
+- Mawhorter & Smith (FDG 2021). "Softlock Detection for Super Metroid with Computation Tree Logic." Formalizes softlock as `AG(EF(goal))`, builds tile-based Kripke structure, finds non-obvious softlocks via counterexample traces. https://dl.acm.org/doi/10.1145/3472538.3472542 *(verified 2026-07-07)*
+- Rezin et al. (2017). "Model Checking in multiplayer games development." NuSMV on Penguin Clash (~10^72 states full, ~10^9 reduced, 2.5 hours). State explosion is real. https://ar5iv.labs.arxiv.org/html/1712.01207 *(verified 2026-07-07)*
+- K-Machinations (Springer 2024). Testing and repairing Machinations game economy diagrams.
+- Adams, E. (2010). "Preventing the Downward Spiral." Canonical definition of death spiral. Gamedeveloper.com.
+- Salen & Zimmerman (2003). *Rules of Play.* Defines "degenerate strategy" formally.
+
+## 7. Lean & AI-Assisted Verification
+
+The emerging ecosystem that represents archwright's long-term verification backend.
+
+**References:**
+- Lean 4: https://lean-lang.org/ — programming language + proof assistant with minimal trusted kernel
+- CSLib (2025-2026). The Lean Computer Science Library. Formalizes LTS, bisimulation, algorithms. https://arxiv.org/abs/2602.04846 *(verified 2026-07-07)*
+- Veil (CAV 2025). Multi-modal protocol verification in Lean (model check + SMT + interactive proof). https://veil.dev *(verified 2026-07-07)*
+- DeepSeek-Prover-V2 (2025). 88.9% on MiniF2F benchmark. AI-generated Lean proofs. https://arxiv.org/abs/2504.21801
+- Kleppmann, M. (2025). "Prediction: AI will make formal verification go mainstream." https://martin.kleppmann.com/2025/12/08/ai-formal-verification.html *(verified 2026-07-05)*
+- De Moura, L. (2026). "The Platform Is Ready." Lean FRO blog. https://leodemoura.github.io/blog/2026-4-20-signal-shot-the-platform-is-ready
