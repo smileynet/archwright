@@ -100,6 +100,61 @@ properties:
         description:
           type: string
 
+  abstraction_notes:
+    type: object
+    description: "Documents what is excluded from checking. Required for honest assurance reporting."
+    properties:
+      included:
+        type: array
+        items:
+          type: string
+      excluded:
+        type: array
+        items:
+          type: string
+      justification:
+        type: string
+      scope_limit:
+        type: string
+
+  check:
+    type: object
+    description: "Declares how this spec can be checked at different assurance levels."
+    properties:
+      trace:
+        type: object
+        properties:
+          scope:
+            type: array
+            items:
+              type: string
+            description: "Source paths this spec covers (for selective re-checking)."
+          events:
+            type: array
+            items:
+              type: string
+            description: "Events the trace validator accepts."
+          state_vars:
+            type: array
+            items:
+              type: string
+            description: "Context variables the trace must report."
+          invariants:
+            type: array
+            items:
+              type: string
+            description: "Invariant IDs to check against traces."
+      model:
+        type: object
+        properties:
+          backend:
+            type: string
+            enum: [alloy, lean]
+          scope:
+            type: integer
+          steps:
+            type: integer
+
   links:
     type: array
     items:

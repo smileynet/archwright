@@ -80,3 +80,25 @@ links:
     type: constrained-by
   - target: "dependency:ball-write-ownership"
     type: constrained-by
+
+abstraction_notes:
+  included:
+    - "Possession states (held, in-flight)"
+    - "Transfer protocol (request, validate, accept/reject)"
+  excluded:
+    - "Physics proximity checks"
+    - "Animation timing"
+    - "Network latency"
+  justification: "Properties checked (single holder, no double possession) are independent of physics/proximity. Those affect WHEN transfers happen, not WHETHER the invariant holds."
+  scope_limit: "Trace checks cover observed executions only. Bounded model checking at scope 4, 10 steps."
+
+check:
+  trace:
+    scope: ["src/ball/"]
+    events: [REQUEST_TRANSFER, VALIDATE_ACCEPT, VALIDATE_REJECT]
+    state_vars: [holder, requester]
+    invariants: [at-most-one-holder, no-holder-during-flight]
+  model:
+    backend: alloy
+    scope: 4
+    steps: 10

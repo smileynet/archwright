@@ -2,8 +2,10 @@
 """archwright-check: Run verification checks against specs.
 
 Usage:
-  archwright-check <spec-file>...       Check individual specs
-  archwright-check --all <dir>          Check all specs in directory
+  archwright-check <spec-file>...                Check individual specs
+  archwright-check --all <dir>                   Check all specs in directory
+  archwright-check --static <dir> [--target <root>]   Check constraint/dependency specs only
+  archwright-check --trace <spec.yaml> <trace.json>   Validate a trace against a behavior spec
 
 Dispatches by spec kind:
   behavior    → compile to Alloy, run model checker (if alloy6.jar available)
@@ -98,13 +100,17 @@ def check_conformance(data, spec_path):
     confidence = data.get("confidence", "—")
 
     # Determine the working directory (look for project root)
-    # Try to find the design/ directory and go up from there
-    spec_dir = Path(spec_path).resolve().parent
-    project_root = spec_dir
-    for _ in range(5):
-        if (project_root / "design").exists() or (project_root / "project.godot").exists():
-            break
-        project_root = project_root.parent
+    # Honor ARCHWRIGHT_PROJECT_ROOT env var if set, otherwise auto-detect
+    env_root = os.environ.get("ARCHWRIGHT_PROJECT_ROOT")
+    if env_root:
+        project_root = Path(env_root)
+    else:
+        spec_dir = Path(spec_path).resolve().parent
+        project_root = spec_dir
+        for _ in range(5):
+            if (project_root / "design").exists() or (project_root / "project.godot").exists():
+                break
+            project_root = project_root.parent
 
     if method == "grep":
         return _check_grep(check, spec_id, confidence, project_root)
@@ -300,29 +306,374 @@ def check_file(spec_path):
     return format_result(spec_path, kind, results)
 
 
+def _find_op(pred, op):
+    """Find operator position outside braces/parens."""
+    depth_p, depth_b = 0, 0
+    for i in range(len(pred) - len(op) + 1):
+        c = pred[i]
+        if c == "(": depth_p += 1
+        elif c == ")": depth_p -= 1
+        elif c == "{": depth_b += 1
+        elif c == "}": depth_b -= 1
+        if depth_p == 0 and depth_b == 0 and pred[i:i+len(op)] == op:
+            return i
+    return -1
+
+
+def _split_op(pred, op):
+    """Split on operator respecting braces/parens."""
+    parts, depth_p, depth_b, start = [], 0, 0, 0
+    for i in range(len(pred) - len(op) + 1):
+        c = pred[i]
+        if c == "(": depth_p += 1
+        elif c == ")": depth_p -= 1
+        elif c == "{": depth_b += 1
+        elif c == "}": depth_b -= 1
+        if depth_p == 0 and depth_b == 0 and pred[i:i+len(op)] == op:
+            parts.append(pred[start:i].strip())
+            start = i + len(op)
+    parts.append(pred[start:].strip())
+    return parts
+
+
+def translate_predicate(pred, state, current_spec_state=None):
+    """Evaluate a spec predicate against a state dict."""
+    pred = pred.strip()
+
+    # Strip balanced outer parens
+    if pred.startswith("(") and pred.endswith(")"):
+        depth = 0
+        for i, c in enumerate(pred):
+            if c == "(": depth += 1
+            elif c == ")": depth -= 1
+            if depth == 0 and i < len(pred) - 1:
+                break
+        else:
+            pred = pred[1:-1].strip()
+
+    # Prefix operators first (before binary splits)
+    if pred.startswith("always "):
+        inner = pred[7:].strip()
+        if inner.startswith("(") and inner.endswith(")"):
+            inner = inner[1:-1]
+        return translate_predicate(inner, state, current_spec_state)
+
+    if pred.startswith("not "):
+        return not translate_predicate(pred[4:], state, current_spec_state)
+
+    # Binary operators (lowest precedence first, respecting braces/parens)
+    idx = _find_op(pred, " implies ")
+    if idx >= 0:
+        lhs, rhs = pred[:idx].strip(), pred[idx+9:].strip()
+        return not translate_predicate(lhs, state, current_spec_state) or translate_predicate(rhs, state, current_spec_state)
+
+    idx = _find_op(pred, " or ")
+    if idx >= 0:
+        return any(translate_predicate(p, state, current_spec_state) for p in _split_op(pred, " or "))
+
+    idx = _find_op(pred, " and ")
+    if idx >= 0:
+        return all(translate_predicate(p, state, current_spec_state) for p in _split_op(pred, " and "))
+
+    # Atoms
+    if " in {" in pred:
+        match = re.match(r"(\w+)\s+in\s+\{([^}]+)\}", pred)
+        if match:
+            var = match.group(1)
+            values = [v.strip() for v in match.group(2).split(",")]
+            actual = str(state.get(var, ""))
+            return actual in values
+
+    if " == " in pred:
+        lhs, rhs = pred.split(" == ", 1)
+        lval = str(state.get(lhs.strip(), lhs.strip()))
+        rval = str(state.get(rhs.strip(), rhs.strip()))
+        return lval == rval
+
+    if " != " in pred:
+        lhs, rhs = pred.split(" != ", 1)
+        lval = str(state.get(lhs.strip(), lhs.strip()))
+        rval = str(state.get(rhs.strip(), rhs.strip()))
+        return lval != rval
+
+    # Bare identifier: state name reference
+    if current_spec_state is not None and re.match(r"^[a-z][a-z0-9-]*$", pred):
+        return pred == current_spec_state
+
+    if pred in state:
+        return bool(state[pred])
+
+    return True
+
+
+def check_trace(spec_path, trace_path):
+    """Validate a JSON trace against a behavior spec."""
+    spec_path = Path(spec_path)
+    trace_path = Path(trace_path)
+    
+    # Load spec
+    if spec_path.suffix in (".yaml", ".yml"):
+        data = yaml.safe_load(spec_path.read_text())
+    else:
+        print(json.dumps({"status": "error", "message": "Trace checking requires a YAML behavior spec"}))
+        return 2
+    
+    if data.get("kind") != "behavior":
+        print(json.dumps({"status": "error", "message": f"Expected kind: behavior, got: {data.get('kind')}"}))
+        return 2
+    
+    # Load trace
+    try:
+        trace = json.loads(trace_path.read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        print(json.dumps({"status": "error", "message": f"Failed to parse trace: {e}"}))
+        return 2
+    
+    if not isinstance(trace, list) or len(trace) == 0:
+        print(json.dumps({"status": "error", "message": "Trace must be a non-empty JSON array"}))
+        return 2
+    
+    # Extract spec components
+    states = data.get("states", {})
+    invariants = data.get("invariants", [])
+    initial_state = data.get("initial", "")
+    check_block = data.get("check", {}).get("trace", {})
+    check_invariant_ids = check_block.get("invariants", [inv["id"] for inv in invariants])
+    
+    # Filter invariants to those declared checkable
+    active_invariants = [inv for inv in invariants if inv["id"] in check_invariant_ids]
+    
+    # Replay trace
+    current_state = initial_state
+    
+    for i, entry in enumerate(trace):
+        event = entry.get("event", "")
+        state_snapshot = entry.get("state", {})
+        clock = entry.get("clock", i)
+        
+        # First entry: validate initial state
+        if i == 0:
+            if event != "INITIAL":
+                print(json.dumps({
+                    "status": "fail",
+                    "assurance": "trace",
+                    "spec_id": data["id"],
+                    "violation": {
+                        "type": "protocol",
+                        "position": 0,
+                        "clock": clock,
+                        "message": f"First trace event must be INITIAL, got '{event}'"
+                    }
+                }))
+                return 1
+            # Check invariants at initial state
+            for inv in active_invariants:
+                if not translate_predicate(inv["predicate"], state_snapshot, current_state):
+                    print(json.dumps({
+                        "status": "fail",
+                        "assurance": "trace",
+                        "spec_id": data["id"],
+                        "violation": {
+                            "invariant": inv["id"],
+                            "position": 0,
+                            "clock": clock,
+                            "event": "INITIAL",
+                            "state": state_snapshot,
+                            "expected": inv["predicate"],
+                            "message": f"Invariant '{inv['id']}' violated at INITIAL state"
+                        },
+                        "provenance": {
+                            "from_force": inv.get("from_force"),
+                            "from_pattern": inv.get("from_pattern")
+                        }
+                    }))
+                    return 1
+            continue
+        
+        # Find valid transition from current state
+        current_state_def = states.get(current_state, {})
+        # YAML parses 'on:' as True (boolean) — handle both
+        transitions = current_state_def.get("on") or current_state_def.get(True, {})
+        
+        if event not in transitions:
+            valid_events = list(transitions.keys())
+            print(json.dumps({
+                "status": "fail",
+                "assurance": "trace",
+                "spec_id": data["id"],
+                "violation": {
+                    "type": "transition",
+                    "invariant": f"valid-transition-from-{current_state}",
+                    "position": i,
+                    "clock": clock,
+                    "event": event,
+                    "state": state_snapshot,
+                    "current_spec_state": current_state,
+                    "valid_events": valid_events,
+                    "message": f"No transition for event '{event}' in state '{current_state}'. Valid: {valid_events}"
+                },
+                "provenance": {
+                    "from_force": current_state_def.get("from_force"),
+                    "from_pattern": current_state_def.get("from_pattern")
+                }
+            }))
+            return 1
+        
+        transition = transitions[event]
+        
+        # Handle single transition (dict) vs multiple (list)
+        if isinstance(transition, dict):
+            transition = [transition]
+        elif not isinstance(transition, list):
+            transition = [{"target": str(transition)}]
+        
+        # Try each transition (evaluate guards)
+        transition_taken = False
+        prev_state = trace[i-1].get("state", {}) if i > 0 else state_snapshot
+        
+        for trans in transition:
+            if isinstance(trans, str):
+                trans = {"target": trans}
+            guard = trans.get("guard", {})
+            guard_pred = guard.get("predicate") if isinstance(guard, dict) else None
+            
+            if guard_pred:
+                if not translate_predicate(guard_pred, prev_state, current_state):
+                    continue  # Guard failed, try next
+            
+            # Transition accepted
+            current_state = trans.get("target", current_state)
+            transition_taken = True
+            break
+        
+        if not transition_taken:
+            print(json.dumps({
+                "status": "fail",
+                "assurance": "trace",
+                "spec_id": data["id"],
+                "violation": {
+                    "type": "guard",
+                    "position": i,
+                    "clock": clock,
+                    "event": event,
+                    "state": state_snapshot,
+                    "prev_state": prev_state,
+                    "current_spec_state": current_state,
+                    "message": f"All guards failed for event '{event}' in state '{current_state}'"
+                }
+            }))
+            return 1
+        
+        # Check invariants after transition
+        for inv in active_invariants:
+            if not translate_predicate(inv["predicate"], state_snapshot, current_state):
+                print(json.dumps({
+                    "status": "fail",
+                    "assurance": "trace",
+                    "spec_id": data["id"],
+                    "violation": {
+                        "invariant": inv["id"],
+                        "position": i,
+                        "clock": clock,
+                        "event": event,
+                        "state": state_snapshot,
+                        "current_spec_state": current_state,
+                        "expected": inv["predicate"],
+                        "message": f"Invariant '{inv['id']}' violated after event '{event}' at position {i}"
+                    },
+                    "provenance": {
+                        "from_force": inv.get("from_force"),
+                        "from_pattern": inv.get("from_pattern")
+                    }
+                }))
+                return 1
+    
+    # All steps passed
+    print(json.dumps({
+        "status": "pass",
+        "assurance": "trace",
+        "spec_id": data["id"],
+        "steps_checked": len(trace),
+        "final_state": current_state,
+        "invariants_checked": [inv["id"] for inv in active_invariants]
+    }))
+    return 0
+
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: archwright-check <spec>... | --all <dir>")
+        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace>")
         sys.exit(2)
 
-    files = []
-    if sys.argv[1] == "--all":
-        if len(sys.argv) < 3:
-            print("Usage: archwright-check --all <directory>")
+    # Handle --trace mode early (different flow)
+    if sys.argv[1] == "--trace":
+        if len(sys.argv) < 4:
+            print(json.dumps({"status": "error", "message": "Usage: archwright-check --trace <spec.yaml> <trace.json>"}))
             sys.exit(2)
-        directory = Path(sys.argv[2])
-        files = sorted(
-            [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
-        )
-    else:
-        files = [Path(f) for f in sys.argv[1:]]
+        sys.exit(check_trace(sys.argv[2], sys.argv[3]))
+
+    files = []
+    target_root = None
+    static_only = False
+    json_output = False
+
+    # Parse args
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] == "--all":
+            i += 1
+            if i < len(args):
+                directory = Path(args[i])
+                files = sorted(
+                    [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
+                )
+        elif args[i] == "--static":
+            static_only = True
+            i += 1
+            if i < len(args):
+                directory = Path(args[i])
+                files = sorted(
+                    [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
+                )
+        elif args[i] == "--target":
+            i += 1
+            if i < len(args):
+                target_root = Path(args[i]).resolve()
+        elif args[i] == "--json":
+            json_output = True
+        else:
+            files.append(Path(args[i]))
+        i += 1
+
+    if not files:
+        print("No spec files found.")
+        sys.exit(2)
+
+    # If --static, filter to constraint/dependency only
+    if static_only:
+        filtered = []
+        for f in files:
+            data, kind = load_spec(f)
+            if kind in ("constraint", "dependency"):
+                filtered.append(f)
+        files = filtered
 
     exit_code = 0
+    results_list = []
+
     for f in files:
+        if target_root:
+            # Override project root detection
+            os.environ["ARCHWRIGHT_PROJECT_ROOT"] = str(target_root)
         output, code = check_file(f)
         print(output)
         if code != 0:
             exit_code = 1
+
+    if json_output:
+        print(json.dumps({"status": "pass" if exit_code == 0 else "fail",
+                          "checked": len(files)}, indent=2))
 
     sys.exit(exit_code)
 
