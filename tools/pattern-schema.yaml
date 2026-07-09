@@ -1,13 +1,13 @@
-# Pattern Schema v0.2
+# Pattern Schema v0.3
 # Validates the YAML frontmatter of a pattern markdown document.
-# The markdown body (forces, tension, resolution, evidence) is free-form prose.
+# The markdown body (Problem, Forces, Evidence, Therefore, etc.) is free-form prose.
 # Tools extract frontmatter and validate against this schema.
 
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "archwright/pattern/v0.2"
+$id: "archwright/pattern/v0.3"
 title: "Archwright Pattern (frontmatter)"
 type: object
-required: [kind, id, name, scale, confidence]
+required: [kind, id, name, scale, confidence, status]
 
 properties:
   kind:
@@ -31,13 +31,25 @@ properties:
   confidence:
     type: string
     enum: ["★★", "★", "—"]
-    description: "★★ = true invariant. ★ = believed correct. — = one approach."
+    description: "★★ = true invariant (mechanical check exists). ★ = believed correct (heuristic check). — = one approach (advisory)."
 
-  above:
+  status:
+    type: string
+    enum: [active, fog, deprecated]
+    default: active
+    description: "active = formalized and checkable. fog = known gap, not yet resolved. deprecated = superseded."
+
+  context:
     type: array
     items:
       type: string
-    description: "IDs of larger patterns this one helps complete."
+    description: "IDs of larger patterns this one helps complete (upward network links)."
+
+  completed_by:
+    type: array
+    items:
+      type: string
+    description: "IDs of smaller patterns needed to fill this out (downward network links)."
 
   resolves_into:
     type: array
@@ -45,3 +57,15 @@ properties:
       type: string
       pattern: "^(behavior|contract|constraint|dependency|boundary|protocol):.+$"
     description: "kind:id references to specs this pattern produces."
+
+  links:
+    type: array
+    items:
+      type: object
+      properties:
+        target:
+          type: string
+        type:
+          type: string
+          enum: [complements, conflicts-with, alternative-to]
+    description: "Same-level sibling relationships."
