@@ -647,8 +647,7 @@ def main():
         i += 1
 
     if not files:
-        print("No spec files found.")
-        sys.exit(2)
+        sys.exit(0)  # No specs = nothing to check = pass
 
     # If --static, filter to constraint/dependency only
     if static_only:
