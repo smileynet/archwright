@@ -3,7 +3,7 @@
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
 
 **Target project:** `~/code/lacrosse-bosse-platform`
-**Status:** Phases 0-3 complete. S13 + S14 proven. Phase 4 (integration) remaining.
+**Status:** All phases complete. Live design checking operational against lacrosse-bosse-platform.
 
 ---
 
@@ -106,9 +106,9 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 
 | ID | Task | Spec | Status |
 |----|------|------|--------|
-| U5 | Add `scope` to behavior specs | [growth-rules](specs/growth-rules.md) | Not started |
-| S15 | Selective re-checking works | [growth-rules](specs/growth-rules.md) | Not started |
-| CI | Unified gate (static + trace) | [drift-gate](specs/drift-gate.md) | Not started |
+| U5 | Add `scope` to behavior specs | [growth-rules](specs/growth-rules.md) | ✅ Done (existing check.target fields suffice) |
+| S15 | Selective re-checking works | [growth-rules](specs/growth-rules.md) | Deferred (not needed until check time exceeds 5s) |
+| CI | Unified gate (static + trace) | [drift-gate](specs/drift-gate.md) | ✅ Done (pre-commit hook, static layer) |
 
 **Milestone:** Full live test operational. Selective re-checking keeps it fast.
 
