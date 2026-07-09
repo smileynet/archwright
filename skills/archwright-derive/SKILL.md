@@ -138,6 +138,16 @@ Specs are written to the target project's `design/specs/` directory:
 - Run checks (hand off to `archwright-check` after writing)
 - Set confidence higher than the parent pattern's confidence
 
+## Pre-Commit Verification
+
+Before committing constraint specs, verify check targets against the actual codebase:
+1. Run `find` or `ls` to confirm the `check.target` path exists
+2. If using `expect: absent`, verify the grep pattern would match violations (test against a known-bad example if possible)
+3. If using `expect: present`, verify the pattern matches something that currently exists
+4. Run `archwright-check --static` against the batch before committing — fix target paths before the pre-commit hook rejects
+
+**Common pitfall:** File/directory names in the target project may differ from spec names (e.g., `practice_setup/` vs `setup/`). Always verify.
+
 ## Spec Sizing
 
 - **One spec per concern.** Don't put multiple independent invariants in one behavior spec.

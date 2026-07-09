@@ -107,6 +107,16 @@ Forces cluster into tensions along these lines:
 - Invent tensions not supported by the force inventory
 - Declare a tension "open" without checking all grill/ADR sources
 
+## When All Tensions Are Pre-Resolved
+
+If the force inventory comes from a mature grill corpus (every question decided), all tensions may arrive pre-resolved. This is normal — the output is still valuable because it:
+- Names the tensions explicitly (they were implicit across scattered decisions)
+- Confirms which decisions resolve which force-conflicts
+- Identifies whether any tension was resolved by multiple independent decisions (possible inconsistency)
+- Reveals missed tensions (force pairs that conflict but were never addressed)
+
+In this case, the output serves as a confirmation map, not a discovery tool. The subsequent `archwright-resolve` phase becomes a human confirmation pass rather than a decision session.
+
 ## Judgments
 
 - **One tension per conflict pair.** Don't split "fluidity vs single-holder" into sub-tensions unless the sub-resolutions are genuinely independent.
