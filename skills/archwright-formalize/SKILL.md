@@ -116,6 +116,14 @@ List each as `"<kind>:<proposed-id>"` in the frontmatter.
 - Resolve open tensions (only formalizes already-resolved ones)
 - Set confidence to ★★ without formal verification evidence
 
+## Batch Discipline
+
+When formalizing multiple patterns in one session:
+- Present patterns in groups of **3-4 max** for review
+- After each group, pause for human feedback before writing the next group
+- Cross-check network links (`context`, `completed_by`) across the batch — don't create orphan references
+- If a pattern's `resolves_into` targets overlap with another pattern's, flag the overlap
+
 ## Writing Quality
 
 - **Forces section:** Polarity is clear. Each force is one sentence. No solutions disguised as forces.
