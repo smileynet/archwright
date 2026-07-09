@@ -84,6 +84,20 @@ Research + design-theory project transitioning to implementation. Primary output
 - Specs are flat, typed (kind field), linked via `kind:id` references
 - The agent IS the system; tools are mechanical servants
 
+## Pipeline Phase Discipline
+
+The archwright pipeline (`survey → forces → tensions → resolve → formalize → derive → check`) is a sequence of **discrete phases with human checkpoints between them**.
+
+**Rules:**
+1. Each skill invocation = one phase. Produce its artifact, present it, STOP.
+2. After presenting the phase output, ask whether to proceed to the next phase — never auto-advance.
+3. "Proceed" after orientation means "run the current phase" (the one named in Next Steps[1]), not "run all phases."
+4. The survey skill explicitly does NOT write patterns, specs, or resolve tensions. It produces an intake outline and dispatch queue.
+5. Phases that require human input (resolve, grill) are HITL gates — they cannot be skipped even if prior decisions exist.
+6. A skill's "Does NOT" section is a hard boundary, not a suggestion.
+
+**Why:** Each phase produces an artifact the human should review before it feeds the next. Pattern quality depends on force quality. Spec quality depends on pattern quality. Skipping review compounds errors silently.
+
 ## Target Project Artifacts
 
 When archwright operates on a project, it produces:
