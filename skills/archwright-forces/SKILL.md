@@ -87,9 +87,9 @@ Before presenting output:
 
 ## Subagent Dispatch (at scale)
 
-When multiple areas each have 5+ source files, dispatch one subagent per area. See `subagent-reliability` steering.
+When multiple areas each have 5+ source files, dispatch one subagent per area for **extraction only**. See `subagent-reliability` steering.
 
-**Per-stage prompt shape:**
+**Per-stage prompt shape (extraction — good for subagents):**
 ```
 Read ALL files in [directory]. For each file, extract:
 - Desires (what the system wants to be)
@@ -97,12 +97,17 @@ Read ALL files in [directory]. For each file, extract:
 Include exact quotes as provenance. Output as structured YAML.
 ```
 
-**Validation after return:**
+**Deduplication — do directly, not via subagent:**
+Synthesis tasks (merging, deduplicating, clustering) should be done in the main context. Subagents read well but synthesize provided text poorly.
+
+**If survey already extracted raw forces:** Skip re-extraction. Read the survey subagent results from `.scratch/archwright-raw/` or the survey output directly. The forces phase becomes pure dedup + validation — done directly.
+
+**Validation after subagent return:**
 - Count forces vs files read. Expect ≥1 force per source file on average.
 - Check every source file is mentioned in the output.
 - Thin output (< 50% expected volume) = flag for re-read or retry.
 
-**On failure:** Report which areas failed, retry once with smaller scope, then read directly with explicit "fallback read" documentation in the output.
+**On failure:** Report which areas failed, retry once with smaller scope, then do directly with explicit "fallback" documentation in the output.
 
 ## Common Force Sources
 
