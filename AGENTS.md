@@ -47,13 +47,25 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 
 A **methodology embodied as agent skills** with supporting tools. The AI agent IS the system — it holds the design methodology. Tools handle deterministic mechanical tasks.
 
-**Skills** (global, `~/.kiro/skills/`):
-- `archwright` — full design methodology: identify forces, resolve tensions, formalize as patterns + specs
-- `archwright-check` — verification loop: check specs, report violations, route corrections
+**Skills** (source in `skills/`, deployed to `~/.kiro/skills/`):
+- `archwright-survey` — entry point: map project design state, dispatch specialists
+- `archwright-forces` — extract desires and constraints from project sources
+- `archwright-tensions` — cluster forces into named tensions
+- `archwright-resolve` — resolve a tension (HITL: human decides between options)
+- `archwright-formalize` — write a pattern from a resolved tension
+- `archwright-derive` — generate specs from a formalized pattern
+- `archwright-check` — verify specs against implementation
+
+**Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
+- `archwright-conventions.md` — pipeline phase discipline, quality gates
+- `subagent-reliability.md` — failure handling for parallel dispatch
 
 **Tools** (on PATH, `tools/`):
-- Schema validation, spec → Alloy compilation, Alloy execution, counterexample parsing, spec → XState
+- Schema validation, spec → Alloy compilation, Alloy execution, counterexample parsing
 - Templates for patterns and each spec kind (`tools/templates/`)
+- `deploy-skills` — sync skills + steering from repo to global `~/.kiro/`
+
+**Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills` to push to global.
 
 ## Project Type
 
