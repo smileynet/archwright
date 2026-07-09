@@ -71,3 +71,29 @@ The final artifact must declare its own completeness:
 | 50+ files | Multiple stages + structured output format + validation |
 
 For the LBP survey (106 grill files across 11 sessions): 11 stages, one per grill session. Not 2-3 mega-stages that batch 5-6 sessions together.
+
+## Task Shape (what to subagent vs do directly)
+
+| Task type | Subagent? | Why |
+|-----------|-----------|-----|
+| Read files → extract structured data | ✅ Yes | Agents excel at file reading + structured output |
+| Transform provided text → new structure | ❌ No | Data already in context; synthesis is unreliable via subagent |
+| Cross-area dedup/merge | ❌ No | Requires seeing all areas together; do directly |
+| Validate/check existing output | ⚠️ Maybe | Small focused checks can work |
+| Multi-step reasoning | ❌ No | Better to work sequentially in main context |
+
+**Key insight:** Subagents read well but synthesize poorly. If the data is already in your context (from a prior subagent phase), don't re-dispatch — work with it directly.
+
+## Throttling
+
+- Limit parallel stages to **6 max** per dispatch
+- If a batch throttles, **wait 30+ seconds** before retrying (don't immediately re-dispatch)
+- Throttling in one dispatch may affect subsequent dispatches in the same session
+- The survey's 11 parallel stages worked, but consumed quota that caused the forces dispatch to throttle minutes later
+
+## Preserving Subagent Output
+
+When a subagent phase produces raw extraction that a later phase will consume:
+- Save raw results to `.scratch/archwright-raw/` (ephemeral but session-durable)
+- Later phases read the saved output rather than re-dispatching
+- This avoids: double extraction cost, throttle risk, and re-read failures
