@@ -46,9 +46,9 @@ graph TD
     PM -->|"step_completing"| BRANCH
     BRANCH -->|"next_step"| PM
 
-    classDef actor fill:#2d5a88,stroke:#1a3a5c,color:#fff
-    classDef observer fill:#6b7b8a,stroke:#4a5a6a,color:#fff
-    classDef policy fill:#8a6b2d,stroke:#5c4a1a,color:#fff
+    classDef actor fill:#3b82f6,stroke:#60a5fa,color:#fff
+    classDef observer fill:#6b7280,stroke:#9ca3af,color:#fff
+    classDef policy fill:#d97706,stroke:#fbbf24,color:#fff
 
     class PM,FM,BALL,FC1,FC2 actor
     class PREVIEW observer
@@ -144,11 +144,11 @@ graph LR
     M1 --> S2[constraint:play-manager-agnosticism]
     M2 --> S3[contract:controller-interface]
 
-    classDef desire fill:#2d882d,color:#fff
-    classDef tension fill:#882d2d,color:#fff
-    classDef pattern fill:#2d5a88,color:#fff
-    classDef model fill:#8a6b2d,color:#fff
-    classDef spec fill:#5a2d88,color:#fff
+    classDef desire fill:#22c55e,stroke:#4ade80,color:#fff
+    classDef tension fill:#ef4444,stroke:#f87171,color:#fff
+    classDef pattern fill:#3b82f6,stroke:#60a5fa,color:#fff
+    classDef model fill:#d97706,stroke:#fbbf24,color:#fff
+    classDef spec fill:#a855f7,stroke:#c084fc,color:#fff
 
     class D desire
     class T tension
@@ -175,23 +175,31 @@ graph LR
 
 ### Styling
 
+Dark-mode-first palette (high contrast on dark backgrounds, still readable on light):
+
 ```
-classDef actor fill:#2d5a88,stroke:#1a3a5c,color:#fff
-classDef observer fill:#6b7b8a,stroke:#4a5a6a,color:#fff
-classDef policy fill:#8a6b2d,stroke:#5c4a1a,color:#fff
-classDef desire fill:#2d882d,color:#fff
-classDef tension fill:#882d2d,color:#fff
-classDef pattern fill:#2d5a88,color:#fff
-classDef spec fill:#5a2d88,color:#fff
+%%{init: {'theme': 'dark'}}%%
+
+classDef actor fill:#3b82f6,stroke:#60a5fa,color:#fff
+classDef observer fill:#6b7280,stroke:#9ca3af,color:#fff
+classDef policy fill:#d97706,stroke:#fbbf24,color:#fff
+classDef desire fill:#22c55e,stroke:#4ade80,color:#fff
+classDef tension fill:#ef4444,stroke:#f87171,color:#fff
+classDef pattern fill:#3b82f6,stroke:#60a5fa,color:#fff
+classDef spec fill:#a855f7,stroke:#c084fc,color:#fff
+classDef data fill:#06b6d4,stroke:#22d3ee,color:#fff
 ```
 
 Use these consistently across all archwright diagrams. The color carries meaning:
-- **Blue** = domain actor (owns state, processes events)
-- **Gray** = observer (reads state, never writes)
-- **Gold** = policy/strategy (injected decision logic)
-- **Green** = desire (product-level force)
-- **Red** = tension (conflict between forces)
-- **Purple** = spec (checkable commitment)
+- **Blue** (`#3b82f6`) = domain actor (owns state, processes events)
+- **Gray** (`#6b7280`) = observer (reads state, never writes)
+- **Gold** (`#d97706`) = policy/strategy (injected decision logic)
+- **Green** (`#22c55e`) = desire (product-level force)
+- **Red** (`#ef4444`) = tension (conflict between forces)
+- **Purple** (`#a855f7`) = spec (checkable commitment)
+- **Cyan** (`#06b6d4`) = data contract (typed shape)
+
+All fills use white text (`color:#fff`). Strokes are lighter tints of the fill for edge visibility on dark backgrounds. Add `%%{init: {'theme': 'dark'}}%%` as the first line of every diagram block.
 
 ### Anti-Patterns
 
