@@ -4,6 +4,12 @@ The load-bearing insights so far. These are the stable theoretical core — trea
 
 ---
 
+**0. Human desires are the primary forces — architecture serves people.**
+
+Product-level desires (what coaches and players want to accomplish) initiate the design process. Architectural constraints exist to serve those desires. Desires span functional jobs (what it must do), emotional jobs (how it should feel), and social jobs (how it positions the user). Every architectural force should trace upward to a human desire via a `serves` link — orphaned constraints that serve no named desire are suspect. (Alexander: "most of the forces which occur in an environment are the ones which people experience inside themselves.")
+
+---
+
 **1. "Constraints" and "Desires" are Alexander's forces, split by polarity.**
 
 Desires are attractive forces (what it wants to become); Constraints are bounding forces (what is given). Neither is a design. **Design exists only at the resolution** of a tension between them.
@@ -12,11 +18,11 @@ Desires are attractive forces (what it wants to become); Constraints are boundin
 
 **2. The design lives in the transitions, not the states.**
 
-A state is a mode; a transition is a *verb under conditions*. That's where forces land: a transition exists because of a Desire; its guard is a Constraint. Compiling a pattern mostly adds *guarded transitions*, not states.
+A state is a mode; a transition is a *verb under conditions*. That's where forces land: a transition exists because of a Desire; its guard is a Constraint. Resolving a pattern mostly adds *guarded transitions*, not states.
 
 ---
 
-**3. An invariant is the compiled form of a resolved force.**
+**3. An invariant is the architectural form of a resolved force.**
 
 When a pattern resolves "this Desire must survive that Constraint," the durable guarantee that it *stays* resolved across all states and inputs is an invariant on the graph. Alexander's two-star "true invariant of the problem" becomes, literally, an invariant assertion.
 

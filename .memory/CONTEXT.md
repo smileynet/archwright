@@ -5,11 +5,11 @@ AI-assisted design system that helps humans express design intent (forces) throu
 _Avoid_: "compiler" (implies mechanical transformation), "tool" (archwright is a methodology embodied as skills)
 
 **Force**:
-Any pressure acting on a design decision. Split by polarity into Desires (attractive) and Constraints (bounding).
+Any pressure acting on a design decision. Split by polarity into Desires (attractive) and Constraints (bounding). Product-level desires (what humans want to accomplish) are primary — architectural constraints exist to serve them.
 _Avoid_: "requirement" (too flat), "feature" (no tension)
 
 **Desire**:
-An attractive force — the intended feel, quality, aliveness. Directionless about limits.
+An attractive force — the intended feel, quality, aliveness. Spans functional jobs (what it must accomplish), emotional jobs (how it should feel), and social jobs (how it positions the user). Directionless about limits.
 _Avoid_: "goal" (implies measurable target)
 
 **Constraint**:
@@ -50,7 +50,11 @@ A counterexample paired with the nearest satisfying instance. The diff between t
 _Avoid_: "error report" (contrast pair carries the fix direction, not just the problem)
 
 **Confidence (★★ / ★ / —)**:
-Stated belief that a resolution names a true invariant vs. one workable arrangement. Gates AI autonomy, pass-up escalation, and checking rigor.
+Stated belief that a resolution names a true invariant vs. one workable arrangement. ★★ = mechanically verifiable (model checker, type system, proof). ★ = heuristically checkable (code review, test coverage, playtests). — = advisory (expert judgment, no mechanical check). Gates AI autonomy, pass-up escalation, and checking rigor.
+
+**Scenario walk**:
+The derivation process for discovering forces from desires: walk a human desire through the current architecture as concrete scenarios, identify where gaps or friction arise, generate architectural questions that expose the underlying tension. The primary method for translating product desires into architectural form.
+_Avoid_: "brainstorm" (scenario walks are structured, not free-form)
 
 **Quiescence**:
 The practical "done" state — the system is stable under its own pass-up; only low-confidence, low-severity signals still circulate.
