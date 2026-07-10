@@ -74,14 +74,80 @@ If an architectural force has no `serves` link, it's either:
 - An orphaned constraint (may be over-engineering)
 - Serving an unnamed product desire (name it)
 
-### 4. Classify and deduplicate
+### 4. Infer unstated product desires
 
-Forces recur across multiple sources. Cluster them:
+Many product-level desires are never explicitly stated — they're implied by features built, decisions made, and domain conventions. Use these techniques:
+
+**Five Whys Inversion** — For each major feature/decision, trace backward:
+```
+We built [feature X]
+→ Why? Because users need [capability Y]
+→ Why? Because in their workflow [situation Z]
+→ Why? Because without it [consequence W]
+→ Why? Because the root job is [J]
+```
+
+**Domain Workflow Mapping** — What does a [coach/player] do in a typical [practice/game/season]? Each workflow step implies a job regardless of software.
+
+**Workaround Detection** — Custom scripts, repeated manual steps, TODOs, or hacks in the codebase reveal unmet desires.
+
+**Competitive Analysis** — What do ALL similar tools do? (table stakes desires). What do SOME do? (differentiators). What does NONE do? (potential unmet or invalid desires).
+
+**Three Job Types** (from JTBD):
+| Type | What it captures | Example |
+|------|-----------------|---------|
+| Functional | The practical task | "Practice running a play from my position" |
+| Emotional | How the user wants to FEEL | "Feel confident I'm running the route correctly" |
+| Social | How the user wants to be PERCEIVED | "Show my coach I know the play at tomorrow's practice" |
+
+### 5. Classify confidence of each force
+
+| Level | Label | Meaning |
+|-------|-------|---------|
+| L1 | Stated | User explicitly said it (issue, interview, feedback) |
+| L2 | Observed | User behavior demonstrates it (analytics, workarounds) |
+| L3 | Corroborated | Multiple independent sources imply it (competitors, domain, team discussion) |
+| L4 | Inferred | Logical derivation from one source (Five Whys, domain analysis) |
+| L5 | Speculated | Plausible but no direct evidence |
+
+**Rules:**
+- L1-L3 product forces can drive pattern formalization directly
+- L4-L5 product forces MUST be presented to the user for validation before they enter the tension map
+- Tag every inferred force explicitly: "⚠️ Inferred — needs validation"
+
+### 6. Validate inferred forces with user (HITL gate)
+
+Present inferred product desires to the user grouped by confidence:
+
+```markdown
+## Inferred Product Desires — Needs Your Confirmation
+
+### High confidence (L3 — multiple signals):
+- "A player wants to practice executing plays from any position to learn their responsibilities"
+  Evidence: issue #34, #77; grills player-control Q02, Q06; README states it
+  → Confirm / Reject / Reword?
+
+### Medium confidence (L4 — inferred from one source):
+- "A coach wants players to develop ambidextrous capability through randomized mirroring"
+  Evidence: issue #164 (random mirror); inferred from domain (lacrosse is both-handed)
+  → Confirm / Reject / Reword?
+
+### Low confidence (L5 — speculated):
+- "Parents want to see their child's progress documented"
+  Evidence: none in project; common in youth sports tools
+  → Confirm / Reject / Not in scope?
+```
+
+Do NOT proceed past this gate until the user confirms or rejects each inferred force.
+
+### 7. Deduplicate and link levels
+
+After validation, merge the full inventory:
 - Same force stated differently in multiple grills → one force, multiple provenance entries
-- A force that appears in code (an assertion, a guard) but was never stated → name it, tag as `inferred`
-- A force implied by a rejected alternative → name it, tag as `implicit`
+- Every architectural force links upward via `serves` to a product desire
+- Orphaned architectural forces (no `serves` link) are flagged for review
 
-### 5. Output the force inventory
+### 8. Output the force inventory
 
 ```yaml
 area: <area-name>
