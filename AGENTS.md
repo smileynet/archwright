@@ -21,7 +21,8 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-tensions/       # Cluster forces into named tensions
 │   ├── archwright-resolve/        # Resolve tensions (HITL: human decides)
 │   ├── archwright-formalize/      # Write patterns from resolved tensions
-│   ├── archwright-derive/         # Generate specs from patterns
+│   ├── archwright-model/          # Identify domains as actors, map state machines
+│   ├── archwright-derive/         # Generate specs from domain models
 │   └── archwright-check/          # Verify specs against implementation
 ├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills)
 │   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
@@ -63,7 +64,8 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-tensions` — cluster forces into named tensions
 - `archwright-resolve` — resolve a tension (HITL: human decides between options)
 - `archwright-formalize` — write a pattern from a resolved tension
-- `archwright-derive` — generate specs from a formalized pattern
+- `archwright-model` — identify domains as actors, map state machines and event flows
+- `archwright-derive` — generate specs from domain models
 - `archwright-check` — verify specs against implementation
 
 **Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
