@@ -21,7 +21,48 @@ Read the forces. State the conflict clearly: "X wants Y, but Z demands W."
 
 If the tension comes from the pipeline (`archwright-tensions`), it arrives pre-articulated. If it comes directly from a human, articulate it first — name the forces, then the conflict.
 
-### 2. Research prior art
+**Determine resolution state:**
+- **Fully resolved** (grill/ADR decided) → confirm with human, proceed to formalize
+- **Partially resolved** (desire clear, architectural form unclear) → use the Scenario → Gap → Questions process below
+- **Open** (desire unclear or forces not yet named) → route back to grilling
+
+### 2. For partially-resolved tensions: Derive architectural form from desire
+
+When the product desire is clear but the architecture hasn't taken shape yet:
+
+**a) Write 3-5 concrete scenarios** demonstrating the desire working:
+```
+Scenario: [Name]
+Given [existing system state]
+When [user action or event]
+Then [observable outcome that satisfies the desire]
+```
+
+**b) Event-storm each scenario** — extract:
+- Domain Events (what happened — past tense)
+- Commands (what intent triggered it)
+- Policies (what rule connects event → next command)
+- Read Models (what information is needed to act)
+
+**c) Gap matrix** — map extracted elements against existing architecture:
+| Element from scenario | Existing architecture | Gap type |
+|-|-|-|
+| DecisionPointReached event | ExecutionStateMachine | Extend (new event from existing state) |
+| PlayerChoice data | (nothing) | NEW entity needed |
+| OutcomeEvaluation logic | (nothing) | NEW service needed |
+
+**d) Express gaps as architectural questions:**
+- State: "What entity tracks X? Created when? Destroyed when?"
+- Transitions: "What event triggers Y? Who is authorized? What guards?"
+- Invariants: "What must always/never be true about Z?"
+- Interfaces: "How does the system communicate X to the user?"
+- Data: "What fields extend the existing contract?"
+
+**e) Present the questions (not pre-formed options) to the human.** The answers become the resolution.
+
+### 3. For fully-resolved tensions: Research and present options
+
+(Standard path when architecture isn't yet decided but the tension is clear)
 
 - Domain conventions (how does the sport/industry handle this?)
 - Software patterns (what do similar systems do?)
@@ -29,8 +70,6 @@ If the tension comes from the pipeline (`archwright-tensions`), it arrives pre-a
 - Prior decisions in this project (have we solved something similar?)
 
 Cite sources with confidence levels. See source-authority hierarchy.
-
-### 3. Present options
 
 Propose 2-3 resolution approaches. For each:
 - **Name** the approach (bold, descriptive)
@@ -43,9 +82,17 @@ Do NOT present more than 3. If you can't narrow to 3, you don't understand the t
 
 ### 4. Human decides
 
-Present options clearly. Wait for the human's choice. Do not proceed without a decision. If the human asks for more research or a different framing, iterate — don't force a choice.
+Present options or questions clearly. Wait for the human's choice/answers. Do not proceed without a decision. If the human asks for more research or a different framing, iterate — don't force a choice.
 
-### 5. Hand off
+### 5. Verify against existing invariants
+
+Before committing a new resolution:
+- List existing invariants that could be affected
+- For each new state/transition/interface, confirm it doesn't violate them
+- Prefer composition (orthogonal regions, new entities) over modification (changing existing transitions)
+- If a new invariant conflicts with an existing one, surface it as a NEW tension — don't silently override
+
+### 6. Hand off
 
 Once decided:
 - If the resolution should be a pattern → dispatch `archwright-formalize`
