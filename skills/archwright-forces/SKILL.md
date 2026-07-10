@@ -147,6 +147,8 @@ After validation, merge the full inventory:
 - Every architectural force links upward via `serves` to a product desire
 - Orphaned architectural forces (no `serves` link) are flagged for review
 
+**Granularity:** `serves` links can be per-force (precise) or per-theme (practical). Per-theme is acceptable when all forces in a theme serve the same product desires. Per-force is required when forces within one theme serve different product desires.
+
 ### 8. Output the force inventory
 
 ```yaml
