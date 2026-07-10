@@ -65,10 +65,11 @@ The final artifact must declare its own completeness:
 
 | Corpus size | Strategy |
 |-------------|----------|
-| 1-5 files | Read directly, no subagent needed |
+| 1-5 files, < 500 lines total | Read directly. NEVER subagent. |
 | 6-15 files | One subagent per logical group (1 grill session = 1 stage) |
 | 16-50 files | Multiple stages, 5-8 files each |
 | 50+ files | Multiple stages + structured output format + validation |
+| Data already in context | Do directly. NEVER re-dispatch. |
 
 For the LBP survey (106 grill files across 11 sessions): 11 stages, one per grill session. Not 2-3 mega-stages that batch 5-6 sessions together.
 
@@ -76,24 +77,44 @@ For the LBP survey (106 grill files across 11 sessions): 11 stages, one per gril
 
 | Task type | Subagent? | Why |
 |-----------|-----------|-----|
-| Read files → extract structured data | ✅ Yes | Agents excel at file reading + structured output |
-| Transform provided text → new structure | ❌ No | Data already in context; synthesis is unreliable via subagent |
+| Read files → extract structured data | ✅ Yes | Small prompt ("read X, extract Y") + tool-mediated work |
+| Transform provided text → new structure | ❌ No | Large inline prompt overflows subagent context |
 | Cross-area dedup/merge | ❌ No | Requires seeing all areas together; do directly |
-| Validate/check existing output | ⚠️ Maybe | Small focused checks can work |
+| Validate/check existing output | ⚠️ Maybe | Only if the data is in FILES, not inline |
 | Multi-step reasoning | ❌ No | Better to work sequentially in main context |
+| Research (web search + synthesis) | ⚠️ Unreliable | ~40% success rate; have a fallback plan |
 
-**Key insight:** Subagents read well but synthesize poorly. If the data is already in your context (from a prior subagent phase), don't re-dispatch — work with it directly.
+**Root cause (validated):** Subagent failures correlate with **prompt size**, not task complexity. File-reading tasks succeed because the dispatch prompt is small (< 1K tokens) and work happens via tool calls. Synthesis tasks fail because the data is inlined in the prompt (5-10K+ tokens), which can overflow the subagent model's effective working space.
 
-## Throttling
+**The rule:** Never put large data inline in a subagent prompt. If the subagent needs data, write it to a file and have the subagent read it.
 
-- Limit parallel stages to **6 max** per dispatch
-- If a batch throttles, **wait 30+ seconds** before retrying (don't immediately re-dispatch)
-- Throttling in one dispatch may affect subsequent dispatches in the same session
-- The survey's 11 parallel stages worked, but consumed quota that caused the forces dispatch to throttle minutes later
+## Parallelism
+
+- **Hard limit: 4 concurrent subagents** (kiro-cli official docs). The DAG system queues beyond this.
+- Dispatching more than 4 stages works (the system queues them), but plan for the wall clock time of `ceil(stages / 4)` sequential batches.
+- Large parallel dispatches (11 stages) succeed when each stage has a small prompt and reads from disk.
+
+## Write-Then-Read Pattern
+
+When a subagent needs to process data that's already in your main context:
+
+1. Write the data to a temp file: `.scratch/subagent-input/{stage-name}.md`
+2. Dispatch the subagent with: "Read `.scratch/subagent-input/{stage-name}.md` and [task]"
+3. The subagent's prompt stays small; the data loads via tool call
+
+This converts a "synthesis with inline data" (fails ~90%) into a "file reading" task (succeeds ~93%).
 
 ## Preserving Subagent Output
 
 When a subagent phase produces raw extraction that a later phase will consume:
 - Save raw results to `.scratch/archwright-raw/` (ephemeral but session-durable)
 - Later phases read the saved output rather than re-dispatching
-- This avoids: double extraction cost, throttle risk, and re-read failures
+- This avoids: double extraction cost and re-read failures
+
+## Detecting Degraded Reliability
+
+If 2+ stages in a batch return empty:
+1. STOP dispatching subagents
+2. Report: "N/M stages returned empty. Switching to direct reading."
+3. For remaining files < 500 lines total: read directly
+4. For larger corpora: use the write-then-read pattern with smaller batches (2 stages at a time)
