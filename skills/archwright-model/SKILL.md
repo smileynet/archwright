@@ -149,6 +149,49 @@ Each actor's invariants become constraint or behavior specs:
 - Composition hierarchy matches the actual scene tree / object ownership in the codebase
 - Event flow diagram has no orphan events (every emitted event has a receiver)
 
+## Domain Boundary Heuristics
+
+How to decide what constitutes a separate domain (actor) vs a region within one actor:
+
+### Split into SEPARATE ACTORS when:
+
+| Heuristic | Test | Source |
+|-----------|------|--------|
+| **Independent state** | Can this thing's state change without the other noticing? | XState actor model |
+| **Independent lifecycle** | Can this thing be created/destroyed without the other? | Harel/XState invoke |
+| **Event communication** | Do they communicate via messages, not direct state reads? | Actor model (Hewitt) |
+| **Single writer** | Does exactly one entity write this state? | DDD aggregate |
+| **Independent language** | Does this thing have its own vocabulary for its states/events? | DDD bounded context |
+| **Independent change** | Can you change this thing's logic without changing the other? | Team Topologies ISH |
+
+### Keep as ONE ACTOR (possibly with orthogonal regions) when:
+
+| Heuristic | Test | Source |
+|-----------|------|--------|
+| **Shared lifecycle** | Created and destroyed together, always | Harel statechart |
+| **Shared transaction** | Must change atomically together (consistency boundary) | DDD aggregate |
+| **Direct state coupling** | One reads the other's internal state directly | Anti-pattern if separate |
+| **Synchronized transitions** | A transition in one ALWAYS requires a transition in the other | Coupled = one machine |
+
+### Use ORTHOGONAL REGIONS within one actor when:
+
+| Heuristic | Test | Source |
+|-----------|------|--------|
+| **Same lifecycle, independent behavior** | Both created/destroyed together, but their state transitions are independent | Harel 1987 |
+| **Occasional sync points** | Usually independent, but occasionally synchronize on shared events | UML composite state |
+| **Physical subsystems** | Correspond to different physical aspects of the same entity (e.g., movement + possession + animation) | Harel: "obvious application" |
+
+### Worked Example (LBP Execution)
+
+| Entity | Boundary decision | Reasoning |
+|--------|------------------|-----------|
+| PlayManager3D | Separate actor | Owns cursor + generation independently; communicates via events only |
+| BallStateService | Separate actor | Single writer for possession; independent state machine (held/flight); event communication |
+| FielderController (per slot) | Separate actor (spawned) | Independent lifecycle (swappable); owns its chain state privately; event-based completion |
+| PlayerCameraRig3D | NOT an actor (observer) | Owns no execution state; only reads public state; presentation boundary, not domain boundary |
+| RuntimeUILayer | NOT an actor (observer) | Same as camera — reads state, never writes |
+| RuntimeBranchState | Region or injected policy | Shares lifecycle with execution; PlayManager3D reads it for next-step; too coupled for separate actor |
+
 ## Does NOT
 
 - Write specs (that's `archwright-derive` — but now it READS the model)
