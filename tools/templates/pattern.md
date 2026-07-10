@@ -5,6 +5,7 @@ name: "Human-Readable Name"
 scale: loops-systems       # premise | loops-systems | verbs-interactions | feel-finish
 confidence: "—"            # ★★ | ★ | —
 status: active             # active | fog | deprecated
+serves: []                 # IDs of product-level desires this pattern helps satisfy
 context: []                # IDs of larger patterns this helps complete (upward links)
 completed_by: []           # IDs of smaller patterns needed to fill this out (downward links)
 resolves_into: []          # kind:id references to specs this produces
