@@ -13,4 +13,4 @@ Four mechanics from that work are the parts we're stealing:
 
 This book spawned software design patterns (Gang of Four, 1994; Ward Cunningham's original wiki was a pattern repository) and a games branch (Björk & Holopainen, *Patterns in Game Design*, 2005). Alexander's 1996 OOPSLA keynote essentially warned the software field that it had taken his catalogue and dropped the soul — the forces, and the question of whether the generated thing is actually good to inhabit.
 
-Our system is a deliberate attempt to keep the soul: forces stay first-class and confidence-weighted, all the way down to code.
+Our system is a deliberate attempt to keep the soul: forces stay first-class and confidence-weighted, all the way down to code. Product-level desires — what humans want to accomplish — are the primary forces. Architectural constraints exist to serve them. The moment patterns become fixed templates disconnected from the desires that generated them, the system dies.

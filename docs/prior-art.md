@@ -86,3 +86,21 @@ The emerging ecosystem that represents archwright's long-term verification backe
 - DeepSeek-Prover-V2 (2025). 88.9% on MiniF2F benchmark. AI-generated Lean proofs. https://arxiv.org/abs/2504.21801
 - Kleppmann, M. (2025). "Prediction: AI will make formal verification go mainstream." https://martin.kleppmann.com/2025/12/08/ai-formal-verification.html *(verified 2026-07-05)*
 - De Moura, L. (2026). "The Platform Is Ready." Lean FRO blog. https://leodemoura.github.io/blog/2026-4-20-signal-shot-the-platform-is-ready
+
+## 9. Jobs-To-Be-Done & Outcome-Driven Innovation
+
+The methodology for identifying and structuring the product-level desires that are archwright's primary forces. JTBD provides the "what humans want" vocabulary; archwright provides the "how to resolve it into verified architecture" pipeline.
+
+**References:**
+- Christensen, C. (2016). *Competing Against Luck.* The foundational JTBD framework — people "hire" products to make progress.
+- Ulwick, A. (2016). *Jobs to be Done: Theory to Practice.* Outcome-Driven Innovation — desired outcomes as measurable statements: "Minimize [metric] [object] [context]."
+- Moesta, B. & Spiek, C. *Switch Interviews.* The four forces of progress (push, pull, anxiety, habit) and the struggling moment.
+- Klement, A. (2013). *Replacing the User Story with the Job Story.* "When [situation], I want to [motivation], so I can [outcome]." Removes personas, focuses on context.
+- Alexander, C. (1979). *The Timeless Way of Building.* "Most of the forces which occur in an environment are the ones which people experience inside themselves." — the original statement that human desires are primary forces.
+
+**What archwright takes from this tradition:**
+- Forces include functional, emotional, and social jobs (not just technical constraints)
+- Product desires are extracted FIRST (from issues, user stories, domain analysis) before architectural forces
+- Inferred desires are classified by confidence (L1-stated → L5-speculated) and validated with the human
+- Every architectural force traces upward to a product desire via `serves` link
+
