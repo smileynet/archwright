@@ -110,28 +110,40 @@ RuntimeBranchState → PlayManager3D: next_step(step_index)
 
 ### 6. Output the domain model
 
-Write to `design/models/` (or inline in pattern documentation):
+Write to `design/models/` in the target project:
 
+**Machine-readable (for derive):** `design/models/<system>-actors.yaml`
 ```yaml
-# design/models/execution-actors.yaml
 actors:
-  - id: play-manager-3d
-    ...
   - id: ball-state-service
     ...
-  - id: fielder-controller
-    ...
-
 composition:
   root: practice-flow-coordinator
   children: ...
-
 event_flows:
   - from: play-manager-3d
     to: fielder-controller
     event: assign_chain
   ...
 ```
+
+**Human-readable (for review):** `design/models/<system>-actors.md`
+
+Must contain:
+
+1. **Actor System Diagram** (Mermaid flowchart) — all actors as boxes with owned state, arrows = event flows, nesting = composition, color = type (domain/observer/policy)
+
+2. **Per-Actor State Machine Diagrams** (Mermaid stateDiagram-v2) — one per domain actor showing states, transitions, guards. Annotate which transitions come from which pattern.
+
+3. **Event Sequence Diagrams** (Mermaid sequenceDiagram) — 2-3 key multi-actor scenarios showing events flowing through the system. Pick scenarios that exercise the most important invariants.
+
+4. **Boundary Decision Table** — why each entity is a separate actor vs region vs observer, citing the heuristic that determined it.
+
+**Why both formats:**
+- YAML is for tools (derive reads it to produce specs)
+- Markdown+Mermaid is for humans (review, onboarding, discussion)
+- They represent the same structural decisions — one phase, two projections
+- Mermaid is text-based, version-controlled, diffable, renders in GitHub/Marp
 
 ### 7. Derive specs FROM the model
 
