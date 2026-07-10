@@ -19,7 +19,7 @@ These are not two systems but one resolution, running in both directions.
 
 ## Core Commitment
 
-Keep *forces* first-class. The reusable IP is not a catalogue of patterns; it is the method of naming and resolving tensions. The moment patterns become fixed templates, the system dies.
+Keep *forces* first-class — and product-level desires (what humans need) are the primary forces. Architectural constraints exist to serve those desires via explicit traceability. The reusable IP is not a catalogue of patterns; it is the method of naming and resolving tensions that trace back to human purpose. The moment patterns become fixed templates disconnected from the desires that generated them, the system dies.
 
 ## What Archwright Is
 

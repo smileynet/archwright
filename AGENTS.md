@@ -9,12 +9,23 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 ├── README.md                      # Project overview & doc index
 ├── docs/
 │   ├── lineage.md                 # Origin: Alexander, what we keep vs. what software dropped
-│   ├── findings.md                # 9 load-bearing theoretical insights (stable core)
+│   ├── findings.md                # Load-bearing theoretical insights (stable core)
 │   ├── glossary.md                # All concepts and terminology
 │   ├── pattern-schema.md          # Proposed machine-readable schema for patterns
 │   ├── worked-examples.md         # Alexander patterns mapped to games/apps
 │   ├── prior-art.md              # 5 traditions with full references
 │   └── open-questions.md          # Prioritized research backlog
+├── skills/                        # Skill source-of-truth (deployed via tools/deploy-skills)
+│   ├── archwright-survey/         # Entry point: map project design state
+│   ├── archwright-forces/         # Extract desires + constraints from sources
+│   ├── archwright-tensions/       # Cluster forces into named tensions
+│   ├── archwright-resolve/        # Resolve tensions (HITL: human decides)
+│   ├── archwright-formalize/      # Write patterns from resolved tensions
+│   ├── archwright-derive/         # Generate specs from patterns
+│   └── archwright-check/          # Verify specs against implementation
+├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills)
+│   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
+│   └── subagent-reliability.md    # Failure handling for parallel dispatch
 ├── figures/                       # SVG diagrams
 │   ├── compilation.svg            # Fig 1: vertical compile from forces to architecture
 │   ├── invariant_boundary.svg     # Fig 2: invariant-as-no-go-region + pass-up hop
@@ -36,7 +47,6 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── research-plan.md           # Research topics & spike proposals
 │   ├── research-synthesis.md      # R1-R5 findings
 │   ├── research-synthesis-2.md    # R6-R11 findings
-│   ├── spike-results-s5-s8.md    # Alloy validation results
 │   └── adr/                       # Architecture decision records
 ├── .scratch/                      # Ephemeral working notes (gitignored)
 ├── .references/                   # Reference repos (gitignored)
@@ -89,12 +99,14 @@ Research + design-theory project transitioning to implementation. Primary output
 
 ## Key Constraints
 
-- Forces stay first-class — never reduce patterns to fixed templates
+- Forces stay first-class — product-level desires (what humans need) are primary; architectural constraints serve those desires via explicit `serves` links
+- Every pattern traces to a product desire — orphaned constraints (no `serves` link) are flagged for review
 - "Resolves into" not "compiles to" — the process is creative + verified, not mechanical
 - Pass-up is level-terminating (signals stop at the level that owns the violated force)
 - Confidence (★★/★/—) gates AI autonomy, checking rigor, and escalation
 - Specs are flat, typed (kind field), linked via `kind:id` references
 - The agent IS the system; tools are mechanical servants
+- Subagents extract (read files → structured output); main agent synthesizes (dedup, cluster, merge)
 
 ## Pipeline Phase Discipline
 
