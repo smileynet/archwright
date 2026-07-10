@@ -21,20 +21,58 @@ The orchestrator or user provides:
 - An area name (e.g., "play-data-pipeline", "editor-authoring")
 - Source files to read (grill Q-files, ADRs, spec requirements)
 
-### 2. Read sources
+### 2. Read sources — PRODUCT LEVEL FIRST
 
-For each source file:
+**Start with why.** Before reading architectural decisions, establish the product-level desires — what humans want to accomplish, not what the code wants to be.
+
+Product-level sources (read FIRST):
+- Project README — what the product IS and who it's FOR
+- GitHub issues (especially user stories, closed features) — what users asked for
+- Product backlogs, roadmaps, milestone descriptions — what's valued
+- Domain rules (sport rules, coaching conventions) — what's given by the world
+
+Then read architectural sources:
 - Grill Q-files: extract the **decision**, **rationale**, and **rejected alternatives**
 - ADRs: extract the **context** (forces), **decision**, and **consequences**
 - Spec requirements: extract the **requirement** and its **justification**
-- Domain docs: extract **rules**, **physical constraints**, **user expectations**
 
-### 3. Extract forces
+**The key question for every architectural decision:** "Which human desire does this serve?" If you can't trace an architectural constraint back to a product-level desire, either the desire is unnamed (name it) or the constraint is unmotivated (flag it).
 
+### 3. Extract forces at BOTH levels
+
+#### Product-level desires (the WHY)
+For each capability/feature, identify:
+- Who wants it (coach, player, team admin)
+- What they want to accomplish (JTBD — job to be done)
+- What quality they expect (feel, speed, correctness, learnability)
+
+These are phrased as human needs:
+- "A player wants to practice running plays from any position to learn their responsibilities"
+- "A coach wants to express any play they can draw on a whiteboard"
+- "Practice should feel like real lacrosse, not a quiz or animation viewer"
+
+#### Architectural forces (the HOW and WHAT)
 For each decision/requirement found, identify:
 - What **desire** motivated it (the pull — "we want X")
 - What **constraint** bounded it (the push — "but Y is given")
 - Whether the constraint is **hard** (inviolable) or **soft** (negotiable)
+
+### 4. Link levels
+
+Every architectural force should trace upward to a product-level desire:
+
+```yaml
+- id: play-manager-agnostic
+  polarity: constraint-hard
+  statement: "PlayManager3D must remain controller-type-agnostic"
+  serves: practice-any-position  # ← this is what was missing
+  # WHY: because players practice from any position, so the system must
+  # support player AND AI controllers uniformly
+```
+
+If an architectural force has no `serves` link, it's either:
+- An orphaned constraint (may be over-engineering)
+- Serving an unnamed product desire (name it)
 
 ### 4. Classify and deduplicate
 
@@ -48,15 +86,30 @@ Forces recur across multiple sources. Cluster them:
 ```yaml
 area: <area-name>
 sources_read:
+  - path: "README.md"
+    type: product
+  - path: "GitHub issues (closed features)"
+    type: product
   - path: ".memory/grills/play-data-schema/Q01-spec-authority.md"
     type: grill
   - path: ".memory/adr/0001-from-scratch.md"
     type: adr
 
+product_forces:
+  - id: <slug>
+    polarity: desire
+    statement: "<one sentence: what a human wants to accomplish>"
+    who: coach | player | team-admin
+    provenance:
+      - source: "issue:#34"
+        quote: "I want to be able to run plays as a given fielder, being shown the play to run"
+    tags: [explicit]
+
 forces:
   - id: <slug>
     polarity: desire | constraint-hard | constraint-soft
     statement: "<one sentence: what this force demands>"
+    serves: <product-force-id>
     provenance:
       - source: "grill:play-data-schema/Q01"
         quote: "<exact quote from source>"
@@ -71,6 +124,9 @@ forces:
 ## Quality Checks
 
 Before presenting output:
+- **Product forces exist.** If the inventory has zero product-level desires, you skipped the most important sources. Go read the README, issues, and user stories.
+- Every product force names WHO wants it and WHAT they want to accomplish
+- Every architectural force has a `serves` link to a product force (or is flagged as orphaned)
 - Every force has at least one provenance entry with a quote
 - No force is stated as a solution (forces are pressures, not decisions)
 - Desires are phrased as "X wants Y" (attractive)
@@ -111,11 +167,15 @@ Synthesis tasks (merging, deduplicating, clustering) should be done in the main 
 
 ## Common Force Sources
 
-| Source type | Where forces hide |
-|-------------|-------------------|
-| Grill decision | In the rationale ("we chose X because Y") |
-| Grill rejection | In the rejected alternative ("not Z because W") |
-| ADR context | Explicitly listed forces |
-| Spec requirement | The "why" behind each R-number |
-| Domain rules | Physical laws, sport rules, platform constraints |
-| User expectations | "A coach expects..." / "A player needs..." |
+| Source type | Where forces hide | Level |
+|-------------|-------------------|-------|
+| User stories / issues | "As a [user], I want [X] so that [Y]" | Product |
+| Product README | What the thing IS and who it serves | Product |
+| Domain rules | Physical laws, sport rules, coaching conventions | Product |
+| User expectations | "A coach expects..." / "A player needs..." | Product |
+| Grill decision | In the rationale ("we chose X because Y") | Architecture |
+| Grill rejection | In the rejected alternative ("not Z because W") | Architecture |
+| ADR context | Explicitly listed forces | Architecture |
+| Spec requirement | The "why" behind each R-number | Architecture |
+
+**If your inventory has no product-level forces, you haven't looked in the right places.** Every project exists to serve someone. Name those desires first — they're what gives architectural constraints meaning.

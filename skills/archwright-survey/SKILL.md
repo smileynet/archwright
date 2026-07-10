@@ -45,7 +45,15 @@ Triggered by: "Do a full state review" / "What's covered?" / "Design audit"
 
 ### 1. Read the project
 
-Assemble context from:
+**Start with purpose.** Before reading architectural decisions, establish WHY the project exists and WHO it serves.
+
+Product-level sources (read FIRST — these establish the generative desires):
+- Project README — what the product does and who it's for
+- GitHub issues (user stories, closed features, milestones) — what users want to accomplish
+- Product backlog / roadmap — what's valued and prioritized
+- Domain conventions (sport rules, coaching norms) — what's given by the world
+
+Then read architectural sources:
 - `design/patterns/` — existing formalized patterns
 - `design/specs/` — existing checkable specs
 - `.memory/grills/` — design decisions made in grill sessions
