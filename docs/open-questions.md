@@ -7,6 +7,8 @@ Prioritized. Resolved questions marked; new questions added from validation spik
 - ~~#3 Canonical form of the graph~~ → Statecharts. ADR 0002.
 - ~~#4 Invariant authoring model~~ → Inline authoring, holistic checking. R3 synthesis.
 - ~~#9 Tooling surface~~ → Agent + scripts on PATH. ADR 0001, 0004.
+- ~~#5 Confidence Calibration~~ → ★★ = mechanically verifiable, ★ = heuristically checkable, — = advisory. Promotion via evidence accumulation. Formalized in skills and CONTEXT.md.
+- ~~Product-level force extraction~~ → JTBD-informed process: read product sources first, Five Whys inversion, L1-L5 confidence classification, HITL validation gate. Formalized in archwright-forces skill.
 
 ## Active
 
@@ -36,9 +38,12 @@ Current status (mid-2026): CSLib has basic LTS + bisimulation. Temporal logics o
 
 A model checker can prove a trace infeasible, but "real design flaw vs. modeling artifact" often needs the Desire to adjudicate. Design the AI-proposes / human-confirms handshake, especially for ★★ invariants.
 
-### 5. Confidence Calibration
+### 5. Desire Validation at Scale ← NEW
 
-How do ★-ratings get assigned and revised as evidence accumulates? What promotes a — to a ★★, and what should demote one? R5 established the framework; needs empirical validation on real projects.
+When archwright operates on a large project (100+ files, multiple user roles), how do we validate inferred product desires efficiently? Current approach: present L4-L5 desires to user for confirmation. At scale:
+- Can we use competitive analysis or domain analysis to auto-promote L5 → L3?
+- Should we batch validation (present 10 desires at once) or sequence (one at a time)?
+- How do we detect when a product desire CHANGES over time (pivot, scope cut)?
 
 ### 6. Counterexample Classification Predicates ← updated
 

@@ -45,9 +45,10 @@ Mappings from Alexander's patterns to games/applications, showing how the force-
 ## Using These Examples
 
 Each mapping demonstrates:
-1. Identify the original forces (what Alexander was resolving)
-2. Translate the forces to the new domain (games/apps) — same tension, different vocabulary
-3. Find the resolution that works in the new medium
-4. Trace hands-down to architectural commitments (state machines, data models, UI patterns)
+1. Start from the **human desire** (what a person wants to experience or accomplish)
+2. Identify the original forces (what Alexander was resolving — these are predominantly human/social)
+3. Translate the forces to the new domain (games/apps) — same tension, different vocabulary
+4. Find the resolution that works in the new medium
+5. Trace hands-down to architectural commitments (state machines, data models, UI patterns)
 
-The worked examples are candidates for [Spike S1](../.memory/research-plan.md) — validating the pattern schema against concrete instances.
+Note: Alexander's forces are predominantly human and social ("most of the forces which occur in an environment are the ones which people experience inside themselves"). When mapping to software, resist the urge to jump straight to architectural forces — start with what the user wants to feel/accomplish, then identify what constrains that desire.
