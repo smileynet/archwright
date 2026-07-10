@@ -121,6 +121,7 @@ Link types:
 - Every constraint spec has a `check` block that can execute
 - Every behavior spec has at least one invariant
 - Behavior spec `check.trace.state_vars` matches `context.variables` keys
+- **Traceability check:** spec.from_patterns → pattern.serves → product desire. If this chain is broken (pattern has no `serves`), flag the pattern as needing a `serves` link before the spec is committed.
 
 ## Output Location
 

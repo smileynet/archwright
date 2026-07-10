@@ -27,9 +27,10 @@ Where does this pattern sit in the design hierarchy?
 
 | Scale | Applies to |
 |-------|-----------|
-| `verbs-interactions` | Single operations, state transitions, data transforms |
-| `loops-systems` | Component boundaries, data flow, lifecycle management |
-| `arcs-journeys` | User-facing flows, multi-step processes, session lifecycle |
+| `premise` | Foundational commitments that constrain everything below (coordinate systems, data authority, from-scratch policy) |
+| `loops-systems` | Component boundaries, data flow, lifecycle management, orchestration contracts |
+| `verbs-interactions` | Single operations, state transitions, user-facing actions, input/output |
+| `feel-finish` | Sensory qualities, accessibility, visual language, rendering conventions |
 
 ### 3. Write the pattern
 
@@ -107,6 +108,7 @@ List each as `"<kind>:<proposed-id>"` in the frontmatter.
 - Consequences are honest (include costs, not just benefits)
 - Evidence cites actual sources, not assertions
 - `resolves_into` links name specs that don't exist yet (they'll be created by `archwright-derive`)
+- `serves` links to at least one product-level desire from the force inventory — patterns without a human purpose are architectural indulgence
 
 ## Does NOT
 
