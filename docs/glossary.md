@@ -1,18 +1,19 @@
 # Glossary
 
-Concepts and terminology for the force-resolution design language and its compilation target.
+Concepts and terminology for the force-resolution design language and its architecture target.
 
 ## Design Domain
 
-- **Force** — any pressure acting on a design decision. Split by polarity into Desires and Constraints.
-- **Desire** — an *attractive* force: the intended feel, player fantasy, quality, aliveness. Directionless about limits. Desire alone is a mood board.
+- **Force** — any pressure acting on a design decision. Split by polarity into Desires and Constraints. Product-level desires (what humans want to accomplish) are the primary forces — architectural constraints exist to serve them.
+- **Desire** — an *attractive* force: the intended feel, quality, aliveness. Spans functional jobs (what it must accomplish), emotional jobs (how it should feel), and social jobs (how it positions the user). Directionless about limits. Desire alone is a mood board.
 - **Constraint** — a *bounding* force: platform, budget, ruleset, rating/compliance, capacity, fictional physics. Tagged **hard** (inviolable) or **soft** (negotiable). Constraint alone is a spec sheet or a prison.
 - **Tension** — the explicit statement of a conflict between forces (Desire vs Constraint, or Desire vs Desire under a Constraint). This is the actual *problem*.
-- **Pattern** — a recurring, reusable *resolution* of a named tension that hands specific commitments down to architecture. Defined by the [pattern schema](pattern-schema.md).
+- **Pattern** — a recurring, reusable *resolution* of a named tension that hands specific commitments down to architecture. Must trace to a product desire via `serves` link. Defined by the [pattern schema](pattern-schema.md).
 - **Resolution** — the generative move that balances the forces. A rule for making form, never a fixed artifact.
 - **Consequence** — a *new* force introduced by a resolution. Consequences propagate the design forward (downstream) and can also travel upward as emergent obligations.
-- **Confidence** — Alexander's asterisks (★★ / ★ / —): stated belief that a resolution names a true invariant vs. one workable arrangement. Drives AI autonomy and the pass-up stopping rule.
+- **Confidence** — Alexander's asterisks (★★ / ★ / —): ★★ = mechanically verifiable (model checker, type system, proof). ★ = heuristically checkable (code review, test, playtest). — = advisory (expert judgment, no mechanical check). Drives AI autonomy and the pass-up stopping rule.
 - **Evidence** — the grounding for belief in a pattern: playtests, prior art, empirical data. The running artifact is the ultimate evidence source.
+- **Scenario walk** — the derivation process: walk a human desire through the current architecture as concrete scenarios, identify where gaps or friction arise, generate architectural questions that expose the underlying tension. The primary method for translating desires into architectural form.
 
 ## Scales (large → small)
 
@@ -34,9 +35,9 @@ Concepts and terminology for the force-resolution design language and its compil
   - **Transition invariant** — pre/postconditions on an edge.
   - **Global / temporal invariant** — property over the whole graph across time (e.g., reachability/safety). What a model checker verifies.
 
-## The Compilation & Its Two Directions
+## The Resolution Flow & Its Two Directions
 
-- **Hands-down** — the downward compile: forces → pattern → sub-patterns → state / data / interface / invariant. *Concretizes.*
+- **Hands-down** — the downward resolution: forces → pattern → sub-patterns → state / data / interface / invariant. *Concretizes.*
 - **Pass-up** — the upward flow: downstream findings → revised design. *Generalizes.* Level-terminating, confidence-gated, follows provenance links.
 - **Provenance link** — the recorded "this came from that" trace laid down during hands-down; walked backward by pass-up. The routing table.
 - **Counterexample** — a trace that violates an invariant; a case where a Constraint defeats a Desire (or two Desires collide) that a resolution missed. Falsification.
