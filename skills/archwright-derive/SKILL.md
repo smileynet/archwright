@@ -105,9 +105,30 @@ When the resolution commits to a data shape:
 
 Use template: `tools/templates/spec-contract.yaml`
 
-### 4. Wire provenance
+### 4. Wire provenance and experience
 
-Every element in a spec traces back:
+Every spec must declare:
+
+```yaml
+# Required on ALL specs:
+protects_experience: "experience-id"    # which user experience this spec protects
+user_story: "When a player does X, they see Y"  # one sentence, user's perspective
+
+# Required on behavior specs:
+scenarios:
+  - name: "Human-readable scenario name"
+    narrative: "What the user experiences in this scenario"
+    trace: [EVENT_1, EVENT_2, EVENT_3]
+    verifies: [invariant-1, invariant-2]
+```
+
+**protects_experience** links to the model's experience layer. If you can't name which experience a spec protects, the spec may be an implementation detail, not a design guarantee.
+
+**user_story** tells the story from the user's (coach or player) perspective. Not "the system does X" but "the user sees/feels/experiences X."
+
+**scenarios** (behavior specs only) are the design intent made concrete. Each scenario is a story the user would recognize, paired with the event trace that verifies it. The state machine is the mechanical verification; scenarios are why it matters.
+
+Every element also traces back to patterns and forces:
 
 ```yaml
 states:
