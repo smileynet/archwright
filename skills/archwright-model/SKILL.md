@@ -79,7 +79,19 @@ actor:
     - "only this actor writes ball_holder"
 ```
 
-### 4. Map composition (actor hierarchy)
+### 4. Classify boundary entities
+
+Not everything is a full actor or a pure observer. Three intermediate classifications:
+
+| Classification | Criteria | Example |
+|---|---|---|
+| **Injected policy** | Shares lifecycle with parent; no independent FSM; read by parent or sibling directly (not via events) | RuntimeBranchState (cursor state, read by policy) |
+| **Boundary service** | Facade over external system; no domain events emitted; no state machine; input/output plumbing | PlayerInputSource (wraps InputMap) |
+| **Configuration authority** | Immutable reference data; no state transitions; provides config consumed by actors | ActionKindRegistry (action kinds, shapes, rules) |
+
+In the YAML output, group these under `boundary_entities:` (separate from `actors:` and `observers:`).
+
+### 5. Map composition (actor hierarchy)
 
 How do actors relate?
 
@@ -95,7 +107,7 @@ PracticeFlowCoordinator (root actor, persistent)
     └── RuntimeUILayer (observer, no state mutation)
 ```
 
-### 5. Map event flows between actors
+### 6. Map event flows between actors
 
 Which events cross actor boundaries?
 
@@ -108,7 +120,7 @@ PlayManager3D → RuntimeBranchState: step_completing(step_index)
 RuntimeBranchState → PlayManager3D: next_step(step_index)
 ```
 
-### 6. Output the domain model
+### 7. Output the domain model
 
 Write to `design/models/` in the target project:
 
@@ -131,13 +143,17 @@ event_flows:
 
 Must contain:
 
-1. **Actor System Diagram** (Mermaid flowchart) — all actors as boxes with owned state, arrows = event flows, nesting = composition, color = type (domain/observer/policy)
+1. **Composition Diagram** (Mermaid flowchart TB) — actor nesting and lifecycle relationships only. No event labels. Shows "who contains whom." Subgraphs for nesting, solid arrows for invocation, dashed for reads.
 
-2. **Per-Actor State Machine Diagrams** (Mermaid stateDiagram-v2) — one per domain actor showing states, transitions, guards. Annotate which transitions come from which pattern.
+2. **Event Flow Diagram** (Mermaid flowchart TB) — flat actor boxes with labeled event arrows. Shows "who talks to whom." Dashed arrows for observer reads. No nesting.
 
-3. **Event Sequence Diagrams** (Mermaid sequenceDiagram) — 2-3 key multi-actor scenarios showing events flowing through the system. Pick scenarios that exercise the most important invariants.
+3. **Per-Actor State Machine Diagrams** (smcat preferred, Mermaid stateDiagram-v2 fallback) — one per domain actor that has a non-trivial FSM. Stateless services and trivial actors documented in the boundary table only.
 
-4. **Boundary Decision Table** — why each entity is a separate actor vs region vs observer, citing the heuristic that determined it.
+4. **Event Sequence Diagrams** (Mermaid sequenceDiagram) — 2-3 key multi-actor scenarios showing events flowing through the system. Pick scenarios that exercise the most important invariants.
+
+5. **Boundary Decision Table** — why each entity is a separate actor vs boundary entity vs observer, citing the heuristic that determined it.
+
+6. **Key Invariants Summary** — numbered list of cross-actor invariants that are candidates for spec derivation. Each names the actors involved and the pattern source. This list is the primary input to `archwright-derive`.
 
 **Why both formats:**
 - YAML is for tools (derive reads it to produce specs)
@@ -145,13 +161,43 @@ Must contain:
 - They represent the same structural decisions — one phase, two projections
 - Mermaid is text-based, version-controlled, diffable, renders in GitHub/Marp
 
-### 7. Derive specs FROM the model
+### 8. Derive specs FROM the model
 
 Each actor's invariants become constraint or behavior specs:
 - Actor state machine → behavior spec (states, transitions, guards)
 - Actor ownership rules → constraint specs ("only X writes Y")
 - Actor composition rules → dependency specs ("X must not import Y")
 - Actor event contracts → contract specs (event payload shapes)
+
+## Rendering Guidance
+
+### Label length
+- Transition labels ≤ 30 chars. Move details (guards, actions) to invariant tables below the diagram.
+- Participant aliases ≤ 15 chars in sequence diagrams.
+- Edge labels on flowcharts ≤ 20 chars. Use abbreviations + legend.
+
+### Notes → Tables
+- Do NOT embed pattern attributions or invariants in Mermaid `note` blocks — they render as oversized opaque boxes that dominate the diagram.
+- Place invariant/pattern tables in markdown immediately after each diagram.
+
+### Direction hints
+- State machines with ≤ 4 states: `direction LR` (compact horizontal)
+- State machines with composite states: `direction TB` (vertical flow)
+- Composition diagrams: `flowchart TB` (hierarchy flows down)
+- Event flow diagrams: `flowchart TB` (data flows down)
+- Sequence diagrams: max 8 participants (beyond that, split into focused scenarios)
+
+### Tool selection
+- Composition + event flows: Mermaid flowchart via `merman-cli`
+- Sequence diagrams: Mermaid sequenceDiagram via `merman-cli`
+- Per-actor state machines: `smcat` preferred (purpose-built DSL, better nested state layout, SCXML export). Mermaid `stateDiagram-v2` as fallback.
+
+### Verification
+Render all diagrams to PNG before presenting. Fix any parse errors or label truncation. Use:
+```bash
+merman-cli -i model.md -o model.png -t dark -b transparent
+smcat -T png actor.smcat
+```
 
 ## Quality Checks
 
@@ -160,6 +206,10 @@ Each actor's invariants become constraint or behavior specs:
 - No shared mutable state between actors (if found → it's an implicit actor that needs naming)
 - Composition hierarchy matches the actual scene tree / object ownership in the codebase
 - Event flow diagram has no orphan events (every emitted event has a receiver)
+- Boundary entities (policy, service, authority) are classified — not force-fit into actor or observer
+- Not every actor needs a state machine diagram. Stateless services and trivial actors are documented in the boundary table only.
+- Observers are catalogued but do NOT get state machine diagrams (they have no state machine)
+- All diagrams render without parse errors and without label truncation
 
 ## Domain Boundary Heuristics
 

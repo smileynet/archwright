@@ -210,6 +210,64 @@ All fills use white text (`color:#fff`). Strokes are lighter tints of the fill f
 - ❌ Implementation details in architecture diagrams (show contracts, not code)
 - ❌ Mixing diagram levels (don't put C4 Context and Component in one diagram)
 
+## Tool Selection
+
+| Diagram type | Primary tool | Install | Rationale |
+|-------------|-------------|---------|-----------|
+| State machines (per-actor FSMs) | `smcat` | `npm i -g state-machine-cat` | Purpose-built DSL; Graphviz layout handles nested states cleanly; SCXML export for verification |
+| Composition / hierarchy | `merman-cli` (flowchart) | `cargo install merman-cli` | Subgraph nesting, dark theme, fast browserless render |
+| Event flows | `merman-cli` (flowchart TB) | (same) | Labeled edges between flat nodes |
+| Sequences | `merman-cli` (sequenceDiagram) | (same) | Standard notation, good rendering |
+| Traceability maps | `merman-cli` (flowchart LR) | (same) | Pipeline visualization |
+
+### smcat quick reference
+
+```bash
+smcat -T svg ball-state.smcat     # SVG (default)
+smcat -T png ball-state.smcat     # PNG (requires Graphviz `dot` on PATH)
+smcat -T dot ball-state.smcat     # Graphviz dot source
+smcat -T scxml ball-state.smcat   # SCXML (for formal verification)
+smcat -d top-down ball-state.smcat  # Direction override
+```
+
+### smcat syntax for archwright actors
+
+```smcat
+# BallStateService state machine
+initial,
+Held:
+  entry/ set holder,
+InFlight;
+
+initial   => Held;
+Held      => InFlight: REQUEST_TRANSFER [valid];
+Held      => Held: REQUEST_TRANSFER [invalid] / reject;
+InFlight  => Held: BALL_ARRIVED / complete transfer;
+```
+
+### merman-cli quick reference
+
+```bash
+# Render all mermaid blocks from markdown
+merman-cli -i model.md -o model.png -t dark -b transparent
+
+# Single .mmd file
+merman-cli -i diagram.mmd -o diagram.svg
+
+# Pipe from stdin
+printf "flowchart TD\nA --> B\n" | merman-cli -i - -o out.png
+```
+
+## Rendering Hygiene
+
+1. **Verify before presenting** — render all diagrams to PNG and confirm no parse errors or label truncation
+2. **Label length** — transition labels ≤ 30 chars; edge labels ≤ 20 chars; participant aliases ≤ 15 chars
+3. **Notes → Tables** — do NOT use Mermaid `note` blocks for invariants/attributions (oversized opaque boxes); use markdown tables below each diagram
+4. **Direction** — TB for state machines and composition; LR only for ≤4-state linear FSMs or pipeline flows
+5. **Participant cap** — max 8 participants per sequence diagram; split into focused scenarios beyond that
+6. **Dark theme** — `%%{init: {'theme': 'dark'}}%%` on all Mermaid blocks; transparent background for PNG export
+7. **Abbreviation + legend** — when labels must be short, add a legend note below the diagram explaining abbreviations
+
 ## Does NOT
 
 - Replace the domain model (diagrams are derived FROM the model, not independent)
