@@ -67,6 +67,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-model` — identify domains as actors, map state machines and event flows
 - `archwright-derive` — generate specs from domain models
 - `archwright-check` — verify specs against implementation
+- `archwright-review` — review code for design alignment (structural + behavioral + semantic)
 
 **Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates
