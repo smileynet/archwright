@@ -17,19 +17,45 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 
 ### 1. Receive input
 
-A formalized pattern (from `archwright-formalize`) with its `resolves_into` declarations.
+**Primary sources (either or both):**
+- Formalized patterns (from `archwright-formalize`) with `resolves_into` declarations
+- Domain model (from `archwright-model`) with actor boundaries, invariants, and event flows
 
-### 2. Read the pattern
+**When both exist:** The domain model is authoritative for actor boundaries, state machines, and composition. Patterns provide provenance (which force demanded what). Use both together — the model's invariant summary is the spec dispatch list.
 
-Extract from the pattern:
+### 2. Read the input
+
+**From patterns**, extract:
 - The resolution (what architecture was committed to)
 - The consequences (what downstream constraints exist)
 - The forces (for provenance: `from_force` on each spec element)
 - The confidence (inherited as starting point for spec confidence)
 
-### 3. For each `resolves_into` entry, write the spec
+**From the domain model** (`design/models/*-actors.yaml`), extract:
+- Actor state machines → behavior specs
+- Actor invariants → constraint specs
+- Actor event contracts (accepted/emitted events) → contract specs
+- Composition rules (lifecycle, spawn/invoke) → dependency specs
+- Key invariants summary → spec dispatch list (what to derive first)
+
+### 3. For each `resolves_into` entry (or model invariant), write the spec
 
 Route by kind:
+
+#### Model-driven derivation (preferred when model exists)
+
+When a domain model exists, derive specs from actor definitions:
+
+| Model element | Spec kind | What to check |
+|---|---|---|
+| `actor.state_machine` | behavior | States, transitions, guards match implementation |
+| `actor.invariants` | constraint | Rule holds in codebase (grep/ast-grep) |
+| `actor.owns` (single writer) | constraint | Only this actor writes the field |
+| `actor.accepts_events` + `emits_events` | contract | Event payload shapes match |
+| `composition.children` (lifecycle) | dependency | Child cannot exist without parent |
+| `boundary_entities` (injected policy) | constraint | Policy object is read-only to consumers |
+
+Priority: derive from the Key Invariants Summary first (these are the highest-value specs).
 
 #### Behavior specs (YAML)
 
