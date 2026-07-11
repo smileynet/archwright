@@ -35,11 +35,44 @@ In archwright terms:
 
 ## Process
 
-### 1. Receive input
+### 0. Frame the experience layer (do this FIRST)
+
+Before identifying actors, answer: **what user experiences does this architecture protect?**
+
+For each product desire (from the force inventory), write:
+```yaml
+experiences:
+  - id: experience-slug
+    desire: desire-id
+    who: coach | player | user
+    what_user_sees: "One sentence describing what the user experiences when this works correctly"
+    protected_by:
+      - spec: "kind:spec-id"
+        how: "How this spec protects the experience"
+```
+
+This section goes at the TOP of the model YAML. It is the entry point for anyone reading the model.
+
+**Why first:** If you can't articulate what experience an actor protects, the actor may be an implementation accident rather than a design necessity.
+
+### 1. Establish domain vocabulary
+
+Name actors in the user's language, not the codebase's language. The model uses domain names; implementation names are a mapping field.
+
+```yaml
+domain_vocabulary:
+  - domain_name: "Play Director"           # what a coach would call it
+    implementation_name: PlayManager3D      # what the Godot node is called
+    role: "Orchestrates 'everyone do this step, now this step'"
+```
+
+**Brownfield projects:** When domain vocabulary stabilizes, recommend renaming implementation to match. Add a `rename_recommendations` section listing current→proposed with priority and rationale. Public APIs and signals first, internal variables last.
+
+### 3. Receive input
 
 Formalized patterns (from `archwright-formalize`) with their resolutions and `resolves_into` declarations.
 
-### 2. Identify actors from patterns
+### 4. Identify actors from patterns
 
 For each pattern, ask:
 - **Who owns the state that the resolution introduces?** That's an actor.
@@ -54,16 +87,18 @@ Pattern resolution language maps to actors:
 | "A requests, B validates" | A and B are separate actors communicating via events |
 | "The system checks Z" | The checker is an actor (or invariant on an existing actor) |
 
-### 3. Define actor boundaries
+### 5. Define actor boundaries
 
 For each identified actor:
 
 ```yaml
 actor:
   id: ball-state-service
+  name: BallStateService                 # implementation class name
+  domain_name: Ball Authority             # user-comprehensible name
   owns:
-    - ball_holder: StringName       # encapsulated state
-    - transfer_state: enum          # (idle, in_flight, rejected)
+    - ball_holder: StringName
+    - transfer_state: enum
   accepts_events:
     - REQUEST_TRANSFER { from_slot, to_slot }
     - BALL_ARRIVED { to_slot }
@@ -77,9 +112,14 @@ actor:
   invariants:
     - "at most one holder at any time"
     - "only this actor writes ball_holder"
+  user_facing_invariants:
+    - "The ball is always visibly somewhere — never disappears or duplicates"
+    - "When you throw, the ball always arrives"
 ```
 
-### 4. Classify boundary entities
+**user_facing_invariants** are REQUIRED. They describe what the user experiences when the technical invariant holds. If you can't write one, the invariant may not serve a user desire.
+
+### 6. Classify boundary entities
 
 Not everything is a full actor or a pure observer. Three intermediate classifications:
 
@@ -91,7 +131,7 @@ Not everything is a full actor or a pure observer. Three intermediate classifica
 
 In the YAML output, group these under `boundary_entities:` (separate from `actors:` and `observers:`).
 
-### 5. Map composition (actor hierarchy)
+### 7. Map composition (actor hierarchy)
 
 How do actors relate?
 
@@ -107,7 +147,7 @@ PracticeFlowCoordinator (root actor, persistent)
     └── RuntimeUILayer (observer, no state mutation)
 ```
 
-### 6. Map event flows between actors
+### 8. Map event flows between actors
 
 Which events cross actor boundaries?
 
@@ -120,7 +160,7 @@ PlayManager3D → RuntimeBranchState: step_completing(step_index)
 RuntimeBranchState → PlayManager3D: next_step(step_index)
 ```
 
-### 7. Output the domain model
+### 9. Output the domain model
 
 Write to `design/models/` in the target project:
 
@@ -161,7 +201,7 @@ Must contain:
 - They represent the same structural decisions — one phase, two projections
 - Mermaid is text-based, version-controlled, diffable, renders in GitHub/Marp
 
-### 8. Derive specs FROM the model
+### 10. Derive specs FROM the model
 
 Each actor's invariants become constraint or behavior specs:
 - Actor state machine → behavior spec (states, transitions, guards)
