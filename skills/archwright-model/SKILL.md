@@ -13,6 +13,8 @@ Identify domains (actors) and model their state machines from resolved patterns.
 
 **Core principle:** Every pattern resolution implies one or more state-owning actors. Domain modeling makes those actors explicit — their boundaries, their events, their composition relationships. Specs are then projections of actor models, not standalone inventions.
 
+**This phase is MANDATORY — never skip it.** Even patterns that appear to be "just constraints" have enforcement actors with lifecycle. A build pipeline has states (idle → building → passed). A lint rule has a trigger/check/report cycle. A config authority has valid/invalid states. A constraint without an identified enforcer is an unenforced wish. The model phase forces you to ask "who owns this state?" for every pattern — this is what makes specs precise and checkable rather than aspirational.
+
 ## Why This Phase Exists
 
 Patterns say: "Resolve by X." (e.g., "Request/validate model for ball possession")
@@ -86,6 +88,19 @@ Pattern resolution language maps to actors:
 | "Only X may write Y" | X is the single writer actor for Y |
 | "A requests, B validates" | A and B are separate actors communicating via events |
 | "The system checks Z" | The checker is an actor (or invariant on an existing actor) |
+
+**Constraint patterns also imply actors.** Even "organizational" or "rule" patterns have an enforcement actor with lifecycle:
+
+| Pattern type | Actor to identify | Its state machine |
+|---|---|---|
+| Pipeline/workflow | The orchestrator (turbo, CI, build script) | idle → running → passed/failed |
+| Organizational rule | The enforcer (lint rule, build gate, hook) | trigger → check → report/pass/fail |
+| Data constraint | The owner (service, module, config file) | valid/invalid; loaded/unloaded |
+| Communication pattern | The router (event bus, dispatcher, registry) | idle → routing → delivered/failed |
+| Access control | The gatekeeper (auth layer, permission check) | open/closed; allowed/denied |
+| Composition rule | The lifecycle manager (parent, spawner) | creating → active → destroying |
+
+If you cannot identify an enforcement actor for a constraint pattern, flag it: "This constraint has no identified enforcer — it may be aspirational rather than architectural."
 
 ### 5. Define actor boundaries
 
