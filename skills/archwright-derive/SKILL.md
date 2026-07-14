@@ -178,6 +178,22 @@ Specs are written to the target project's `design/specs/` directory:
 - Dependency: `design/specs/<id>.md`
 - Contract: `design/specs/<id>.yaml`
 
+**One spec per file — no exceptions.** Each `resolves_into` target becomes its own file. Never group specs into shared files, even when they share a parent pattern. Reasons: addressability (`kind:id` references need unique files), independent lifecycle (specs evolve separately), clean git blame, and tooling compatibility (`archwright-check` targets individual files).
+
+## Check Method Guidance (for constraint specs)
+
+When writing the `check` block, prefer structural checks over text grep:
+
+| Language | Recommended check method | Why |
+|----------|------------------------|-----|
+| TypeScript/JavaScript | `ast-grep` (structural AST matching) | Grep produces false positives on comments, `import type`, string literals |
+| Python | `ast-grep` or `semgrep` | Same — comments and docstrings confuse grep |
+| YAML/JSON | `yq`/`jq` (structural query) | Path-based queries are precise |
+| Config files (turbo.json, tsconfig) | `node -e` script (parse + assert) | Handles nested structure |
+| Shell scripts | `grep` (acceptable — less structured) | Comments are rare enough |
+
+**When using grep:** exclude comment lines with patterns like `^[^/]*<target>` (no leading `//`). Note that `import type` in TypeScript is compile-time-only and should NOT be flagged as a runtime import.
+
 ## Does NOT
 
 - Write patterns (receives them from `archwright-formalize`)

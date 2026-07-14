@@ -121,7 +121,8 @@ Route each gap to the appropriate specialist:
 | Tensions not clustered | `archwright-tensions` | AFK |
 | Tension unresolved | `archwright-resolve` | HITL |
 | Tension resolved but no pattern | `archwright-formalize` | AFK |
-| Pattern exists but specs missing | `archwright-derive` | AFK |
+| Pattern exists but no model | `archwright-model` (ALWAYS — never skip) | AFK |
+| Model exists but specs missing | `archwright-derive` | AFK |
 | Specs exist but not verified | `archwright-check` | AFK |
 
 ### 5. Present the outline and STOP

@@ -26,6 +26,8 @@ If the tension comes from the pipeline (`archwright-tensions`), it arrives pre-a
 - **Partially resolved** (desire clear, architectural form unclear) → use the Scenario → Gap → Questions process below
 - **Open** (desire unclear or forces not yet named) → route back to grilling
 
+**When all tensions arrive pre-resolved (mature projects):** This phase becomes a CONFIRMATION PASS — present each resolution to the human, get explicit acknowledgment that it still holds. Do NOT skip this phase. Its value for mature projects is ensuring that decisions made months ago still reflect current intent. Present the resolutions grouped by confidence level, and ask: "Do these still hold, or has anything shifted?"
+
 ### 2. For partially-resolved tensions: Derive architectural form from desire
 
 When the product desire is clear but the architecture hasn't taken shape yet:

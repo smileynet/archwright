@@ -89,6 +89,7 @@ This pattern is incomplete unless it also contains:
 | `context` | no | IDs of larger patterns this helps complete (upward network links) |
 | `completed_by` | no | IDs of smaller patterns needed to fill this out (downward links) |
 | `resolves_into` | no | `kind:id` references to specs this pattern produces |
+| `resolution_source` | no | References to existing decision records (ADRs, grills, tenets) that this pattern formalizes. Use when the pattern captures an EXISTING decision rather than introducing a new one. Format: `["adr:ADR-004", "tenet:4"]` |
 | `links` | no | Same-level sibling relationships (`complements`, `conflicts-with`, `alternative-to`) |
 
 ## Body Sections
