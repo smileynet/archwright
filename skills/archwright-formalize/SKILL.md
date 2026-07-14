@@ -42,7 +42,7 @@ kind: pattern
 id: <slug>
 name: "<Human Name>"
 scale: <scale>
-confidence: "★★" | "★" | "—"
+confidence: pending  # Set after prior art research (Step 5)
 above:
   - <parent-pattern-id if any>
 resolves_into:
@@ -79,15 +79,63 @@ resolves_into:
 - <Cite with provenance: "Architecture interview decision #N", "grill:Q-file", "ADR-NNNN">
 ```
 
-### 4. Set confidence
+### 4. Research prior art
+
+After the full batch of patterns is written and reviewed for correctness, research independent validation of each resolution. This runs ONCE for the batch (not per-pattern) and is parallelizable via subagents.
+
+**Do not assign confidence until this step completes.** Confidence is set once, informed by research.
+
+**Search for (per pattern):**
+- Industry implementations of the same resolution (how do other platforms solve this tension?)
+- Academic papers formalizing the principle (has anyone proven this works?)
+- Cloud provider guidance recommending the approach (AWS Well-Architected, Azure, etc.)
+- Documented failures of the rejected alternatives (evidence that NOT doing this breaks things)
+
+**For each source found, record:**
+- Name/title and URL
+- Year
+- Relationship: `confirms` | `contradicts` | `extends` | `similar`
+- One-line note on how it relates
+
+**Output:** Add a `prior_art` section to the pattern's Evidence block:
+
+```yaml
+prior_art:
+  - title: "FrugalGPT: How to Use Large Language Models While Reducing Cost"
+    url: https://arxiv.org/abs/2305.05176
+    year: 2023
+    relationship: confirms
+    note: "98% cost reduction with cascade routing. Same exit-at-first-confident-tier principle."
+```
+
+**Present results as a summary table for human confirmation:**
+
+```
+┌─────────────────────────────┬─────┬─────────────────────────────────┐
+│ Pattern                     │ ★   │ Key source                      │
+├─────────────────────────────┼─────┼─────────────────────────────────┤
+│ tiered-classification       │ ★★  │ FrugalGPT + AWS Well-Architected│
+│ shadow-scoring-migration    │ ★   │ Components confirmed, combo novel│
+└─────────────────────────────┴─────┴─────────────────────────────────┘
+```
+
+The human confirms or overrides (can promote or demote any pattern's confidence).
+
+**When to skip:** If the pattern is a premise-level commitment unique to this project (e.g., a market-position choice like "self-deploy only"), note "deliberate project-specific choice — prior art not applicable" and assign ★ or — based on internal evidence only.
+
+### 5. Set confidence
+
+Confidence is assigned AFTER research completes:
 
 | Confidence | Criteria |
 |------------|----------|
-| ★★ | Multiple independent sources confirm. Prior art exists. Alloy/formal check passes. |
-| ★ | One credible source (grill decision, ADR). Believed correct. May be revised. |
-| — | Plausible arrangement. One approach among several. Low switching cost. |
+| ★★ | 2+ independent sources confirm from different categories (industry + academic, or industry + cloud guidance). OR Alloy/formal check passes. |
+| ★ | One credible source (grill decision, single prior art reference, ADR). Believed correct. May be revised. Resolution is novel or project-specific. |
+| — | No prior art found. Plausible arrangement. One approach among several. Low switching cost. |
 
-### 5. Declare `resolves_into`
+A contradicting source does not automatically prevent ★★ — it may reveal a scope boundary ("this works in context X but not Y"). Flag contradictions in the Evidence section and explain why the resolution still holds for this project's context.
+
+### 6. Declare `resolves_into`
 
 For each architectural commitment in the Resolution section, identify what spec kind it demands:
 
@@ -100,7 +148,7 @@ For each architectural commitment in the Resolution section, identify what spec 
 
 List each as `"<kind>:<proposed-id>"` in the frontmatter.
 
-### 6. Validate
+### 7. Validate
 
 - Pattern has at least one desire AND one constraint
 - Tension is stated as a conflict, not a solution
@@ -116,7 +164,7 @@ List each as `"<kind>:<proposed-id>"` in the frontmatter.
 - Identify tensions (receives from `archwright-tensions`)
 - Derive specs (outputs `resolves_into` links; `archwright-derive` creates the specs)
 - Resolve open tensions (only formalizes already-resolved ones)
-- Set confidence to ★★ without formal verification evidence
+- Set confidence to ★★ without prior art research or formal verification evidence
 
 ## Batch Discipline
 
@@ -125,6 +173,7 @@ When formalizing multiple patterns in one session:
 - After each group, pause for human feedback before writing the next group
 - Cross-check network links (`context`, `completed_by`) across the batch — don't create orphan references
 - If a pattern's `resolves_into` targets overlap with another pattern's, flag the overlap
+- **Research runs ONCE after ALL patterns in the batch are written and approved.** Dispatch one subagent per pattern (or per cluster of related patterns) in parallel. Do not research between groups — it interrupts the writing flow.
 
 ## Writing Quality
 
