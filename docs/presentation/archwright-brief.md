@@ -259,7 +259,7 @@ Confidence can be **promoted** (evidence accumulates) or **demoted** (counterexa
 ## The Pipeline (Phase-Gated)
 
 ```
-survey → forces → tensions → resolve → formalize → derive → check
+survey → forces → tensions → resolve → formalize → model → derive → check
 ```
 
 Each phase produces an artifact. Human reviews before the next phase begins.
