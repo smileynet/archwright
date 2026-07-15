@@ -24,7 +24,9 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-model/          # Identify domains as actors, map state machines
 │   ├── archwright-contract/       # Derive typed data contracts from domain model
 │   ├── archwright-derive/         # Generate specs from domain models
-│   └── archwright-check/          # Verify specs against implementation
+│   ├── archwright-check/          # Verify specs against implementation
+│   ├── archwright-review/         # Review code for design alignment
+│   └── archwright-audit/          # Audit docs for truth (surface contradictions)
 ├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
 │   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
 │   └── subagent-reliability.md    # Failure handling for parallel dispatch
@@ -70,6 +72,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-derive` — generate specs from domain models
 - `archwright-check` — verify specs against implementation
 - `archwright-review` — review code for design alignment (structural + behavioral + semantic)
+- `archwright-audit` — audit docs for truth (surface contradictions between docs and code)
 
 **Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates
