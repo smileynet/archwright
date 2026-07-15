@@ -22,6 +22,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-resolve/        # Resolve tensions (HITL: human decides)
 │   ├── archwright-formalize/      # Write patterns from resolved tensions
 │   ├── archwright-model/          # Identify domains as actors, map state machines
+│   ├── archwright-contract/       # Derive typed data contracts from domain model
 │   ├── archwright-derive/         # Generate specs from domain models
 │   └── archwright-check/          # Verify specs against implementation
 ├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
@@ -65,6 +66,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-resolve` — resolve a tension (HITL: human decides between options)
 - `archwright-formalize` — write a pattern from a resolved tension
 - `archwright-model` — identify domains as actors, map state machines and event flows
+- `archwright-contract` — derive typed data contracts from domain model
 - `archwright-derive` — generate specs from domain models
 - `archwright-check` — verify specs against implementation
 - `archwright-review` — review code for design alignment (structural + behavioral + semantic)
@@ -113,7 +115,7 @@ Research + design-theory project transitioning to implementation. Primary output
 
 ## Pipeline Phase Discipline
 
-The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → derive → check`) is a sequence of **discrete phases with human checkpoints between them**.
+The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`) is a sequence of **discrete phases with human checkpoints between them**.
 
 **Rules:**
 1. Each skill invocation = one phase. Produce its artifact, present it, STOP.
