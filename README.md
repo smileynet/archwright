@@ -28,7 +28,8 @@ Archwright is a **methodology embodied as agent skills**, with supporting tools 
 - **Skills** (global, `~/.kiro/skills/`) — the design methodology: force identification, resolution, verification, correction
 - **Tools** (on PATH, `tools/`) — mechanical operations: schema validation, spec → Alloy compilation, checking, parsing
 - **Patterns** (in target project, `design/patterns/`) — captured design intent
-- **Specs** (in target project, `design/specs/`) — verified architectural commitments
+- **Models** (in target project, `design/models/`) — domain actors, state machines, event flows, composition
+- **Specs** (in target project, `design/specs/`) — verified architectural commitments (behavior, constraint, contract, dependency)
 
 ## Documentation
 

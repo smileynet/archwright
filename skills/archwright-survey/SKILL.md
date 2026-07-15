@@ -72,6 +72,12 @@ Do NOT read implementation code at this stage. Forces live in decisions, not in 
 - ❌ Not read: [areas, reason, remediation plan]
 ```
 
+### 1b. Audit existing documentation (auto-triggered)
+
+Before classifying design state, run `archwright-audit` on the project's docs to establish a baseline of known contradictions. Doc lies may surface unnamed tensions — a doc that claims X while code does Y indicates a decision was made but never propagated.
+
+Include the audit summary in the survey output under a "Known Contradictions" section. HIGH-severity findings may block force extraction (you can't extract forces from docs that lie about the system).
+
 ### 2. Classify each area
 
 For each capability/domain area in the project, assess:
