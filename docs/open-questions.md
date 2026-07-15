@@ -59,3 +59,16 @@ Checking an abstracted model proves properties of the ABSTRACTION, not necessari
 ### 8. Quiescence / Shipping Criteria
 
 Formalize "stable under its own pass-up": which residual tensions are acceptable to ship as logged zero-star known issues.
+
+
+### 9. Game-Specific Predicate Library ← NEW (from Catalyst pipeline run)
+
+Game design patterns use domain-specific predicates that recur across projects (e.g., "pacing via scarcity," "locality of mastery," "tonal contrast amplification," "teaching metaphor"). An initial library of 13 predicates exists in `tools/domains/game/predicates.yaml`. Questions:
+
+- Should predicates be formalized with checkable structure (like constraints) or remain advisory?
+- How do predicates compose? (e.g., "earned-not-given" + "locality-of-mastery" = "earned route mastery")
+- Can predicates be validated empirically (via playtesting metrics) or only by design review?
+- How does the predicate library grow? (Add from each pipeline run? Curate quarterly?)
+- Relationship to the 12 counterexample classification predicates (#6): are game predicates a superset, subset, or orthogonal?
+
+Current state: `tools/domains/game/predicates.yaml` has 13 entries from the Catalyst MLP pipeline run, covering pacing, progression, agency, UI, and world design.

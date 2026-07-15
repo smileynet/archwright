@@ -218,3 +218,15 @@ Before committing constraint specs, verify check targets against the actual code
 - **Specs are flat.** No nested specs. Use links for relationships.
 - **Prefer constraint specs when a grep can check it.** Don't model a full state machine for "X must never import Y."
 - **Behavior specs for temporal properties only.** If the property is point-in-time ("this field is never null"), it's a constraint, not a behavior.
+
+## Write All Declared Specs Regardless of Implementation Timeline
+
+Every `resolves_into` entry in a formalized pattern should have its spec written during the derive phase — even if the system won't be built for months. Do NOT withhold specs as "not yet needed."
+
+**Rationale:**
+- Specs GUIDE implementation (they're acceptance criteria written BEFORE code, not post-hoc checks)
+- Specs reveal design gaps cheaply (finding a contradiction at spec time is free; finding it during implementation is expensive)
+- Specs are not sacred — they update when spikes produce findings or decisions change
+- A spec that exists but needs revision is more useful than a spec that doesn't exist yet
+
+**The only reason to defer a spec:** The PATTERN isn't resolved yet (forces unclear, tension open). If the pattern is formalized with `resolves_into` entries, derive every spec immediately.

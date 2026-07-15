@@ -4,7 +4,7 @@ Applies when working on archwright methodology, archwright skills, or running ar
 
 ## Pipeline Phase Discipline
 
-The archwright pipeline (`survey → forces → tensions → resolve → formalize → derive → check`) is a sequence of **discrete phases with human checkpoints between them**.
+The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → derive → check`) is a sequence of **discrete phases with human checkpoints between them**.
 
 **Rules:**
 1. Each skill invocation = one phase. Produce its artifact, present it, STOP.
@@ -34,6 +34,7 @@ When archwright operates on a target project, it produces:
 target-project/
   design/
     patterns/          # Markdown+frontmatter (forces, tensions, resolutions)
+    models/            # YAML (machine-readable) + MD (human-readable with Mermaid diagrams)
     specs/             # Behavior/contract: YAML. Constraint/dependency: Markdown+frontmatter.
 ```
 

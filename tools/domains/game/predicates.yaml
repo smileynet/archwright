@@ -1,0 +1,87 @@
+# Game Domain Predicates
+# Reusable design predicates for game projects.
+# Referenced by archwright patterns in their Evidence/Verification sections.
+
+predicates:
+  # --- Pacing & Frequency ---
+  - id: pacing-via-scarcity
+    statement: "Rarer events have more impact; frequency dilutes meaning"
+    applicable_when: "narrative delivery, loot drops, encounters, memory/flashback systems"
+    prior_art: "Hades priority queue (never repeats → each line lands), Returnal house sequences (6 total → each is an event)"
+    anti_pattern: "Flooding (too frequent → noise), Disco Elysium with max all skills (constant interjections)"
+
+  - id: cooldown-as-pacing
+    statement: "A minimum interval between events of the same type prevents fatigue without removing the system"
+    applicable_when: "dialogue barks, narrative fragments, encounter spawning, notification systems"
+    prior_art: "PulseGeek bark systems (category cooldowns 12-40s), fragment queue (300s cooldown)"
+    anti_pattern: "No cooldown → every door triggers a bark → player mutes dialogue"
+
+  - id: tonal-contrast-amplification
+    statement: "Rare serious moments earn impact through contrast with a dominant lighter tone"
+    applicable_when: "narrative delivery, horror pacing, music transitions"
+    prior_art: "Game-design-salon: 'Default ~80% warm/playful. Never telegraph serious moments.'"
+    anti_pattern: "Constant dread → desensitization. Constant humor → nothing lands."
+
+  # --- Progression & Mastery ---
+  - id: earned-not-given
+    statement: "Rewards feel meaningful when preceded by effort proportional to reward value"
+    applicable_when: "unlocks, fast travel, skill sharing, ability upgrades"
+    prior_art: "Gothic Remake route mastery, Hades keepsake tiers, ME2 loyalty missions"
+    anti_pattern: "Free unlocks (no effort → no value), excessive grind (disproportionate effort → resentment)"
+
+  - id: locality-of-mastery
+    statement: "Mastery of one instance doesn't transfer to other instances without demonstrated competence"
+    applicable_when: "route mastery, area knowledge, NPC relationships, weapon proficiency"
+    prior_art: "Earned-route-mastery (per-route, not global), Xenoblade affinity (per-pair, not roster-wide)"
+    anti_pattern: "Global mastery (master one route → all routes trivial → world feels dead)"
+
+  - id: teaching-metaphor
+    statement: "Sharing capability is framed as knowledge transfer, not extraction — generous, not transactional"
+    applicable_when: "character unlocks, skill sharing, team progression"
+    prior_art: "Tiered-skill-sharing pattern, Fire Emblem Engage inherit skills, Xenoblade skill link"
+    anti_pattern: "Grind-gated sharing (feels like extraction), instant full access (removes specialist value)"
+
+  # --- Agency & Narrative ---
+  - id: agency-through-sequence
+    statement: "Player agency can exist in choosing WHAT ORDER to experience content, not only in altering outcomes"
+    applicable_when: "non-linear narrative, episode selection, side quest ordering"
+    prior_art: "13 Sentinels, Octopath Traveler (with isolation caveat), 80 Days NPC agency"
+    anti_pattern: "Forced linearity (no agency), full branching (unsustainable authoring cost)"
+
+  - id: canonical-with-acknowledgment
+    statement: "Fixed NPC behavior across episodes is acceptable IF characters acknowledge each other at convergence points"
+    applicable_when: "multi-protagonist narratives, perspective layering, canonical behavior"
+    prior_art: "13 Sentinels (Cloud Sync gating), Nier Automata (Route C requires A+B)"
+    anti_pattern: "Octopath Traveler (zero cross-story recognition → characters feel like strangers)"
+
+  - id: consequence-not-ceremony
+    statement: "Unlocks and rewards should flow naturally from narrative completion, not interrupt with explicit reward screens"
+    applicable_when: "character unlocks, ability gains, area access"
+    prior_art: "Hades keepsake system, ME2 loyalty power unlock (integrated into mission end)"
+    anti_pattern: "Achievement popup → breaks immersion, makes reward feel extrinsic"
+
+  # --- UI & Interaction ---
+  - id: depth-behind-threshold
+    statement: "Complex systems are accessible via a deliberate 'I want to manage now' action, never intruding during flow"
+    applicable_when: "inventory, crafting, character sheets, map management"
+    prior_art: "RE4 attache case (pause for management), The Long Dark (radial for immediate, menu for deep)"
+    anti_pattern: "Real-time inventory management under pressure (Tarkov — intentional but hostile for tutorials)"
+
+  - id: gate-legibility
+    statement: "When the player is blocked, the UI must immediately communicate WHAT is blocking and HOW to resolve it"
+    applicable_when: "crafting requirements, skill gates, locked doors, progression blocks"
+    prior_art: "CDDA crafting feedback (#53498), Metroidbrainia theory (knowledge vs physical gates)"
+    anti_pattern: "Generic 'cannot do this' → player disengages without understanding the puzzle"
+
+  # --- World & Space ---
+  - id: precision-by-construction
+    statement: "Avoid float precision problems by architectural design (zones near origin) rather than runtime correction"
+    applicable_when: "large worlds, zone architecture, coordinate systems"
+    prior_art: "Zone-overmap architecture, Godot large world coordinates docs"
+    anti_pattern: "Floating origin correction (complex, fragile, breaks addons)"
+
+  - id: travel-as-spectrum
+    statement: "Travel friction should decrease with familiarity: first trip = adventure, mastered trip = instant"
+    applicable_when: "fast travel, overmap traversal, route systems"
+    prior_art: "Gothic Remake, Death Stranding infrastructure, earned-route-mastery pattern"
+    anti_pattern: "Always-free (world = menu) OR always-friction (DD2 backlash on repeat trips)"

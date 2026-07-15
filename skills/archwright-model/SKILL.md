@@ -162,6 +162,8 @@ PracticeFlowCoordinator (root actor, persistent)
     └── RuntimeUILayer (observer, no state mutation)
 ```
 
+**When composition is flat:** Not all systems have deep hierarchies. If most actors share lifecycle (all created at session start, all persist until quit), the composition IS flat — document WHY it's flat rather than forcing artificial nesting. Flat composition is common in: single-player games (all systems active for whole session), event-driven architectures (actors communicate via bus, no hierarchy), and early-stage projects (nesting emerges as systems mature). A flat diagram with a rationale note is more honest than forced nesting.
+
 ### 8. Map event flows between actors
 
 Which events cross actor boundaries?
