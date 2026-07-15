@@ -124,6 +124,7 @@ actor:
   lifecycle:
     invoked_by: practice-execution
     active_during: execution running
+  persistence: transient  # durable | transient | session-scoped
   invariants:
     - "at most one holder at any time"
     - "only this actor writes ball_holder"
@@ -131,6 +132,8 @@ actor:
     - "The ball is always visibly somewhere — never disappears or duplicates"
     - "When you throw, the ball always arrives"
 ```
+
+**Event payload notation:** The `{ field, field }` shorthand in `accepts_events`/`emits_events` is a sketch — it names what the event carries without full typing. The **authoritative typed payload** (types, nullability, required/optional) lives in contract specs produced by `archwright-contract`. The model identifies WHICH events exist and WHO produces/consumes them; the contract phase specifies WHAT they carry in detail.
 
 **user_facing_invariants** are REQUIRED. They describe what the user experiences when the technical invariant holds. If you can't write one, the invariant may not serve a user desire.
 
@@ -210,7 +213,7 @@ Must contain:
 
 5. **Boundary Decision Table** — why each entity is a separate actor vs boundary entity vs observer, citing the heuristic that determined it.
 
-6. **Key Invariants Summary** — numbered list of cross-actor invariants that are candidates for spec derivation. Each names the actors involved and the pattern source. This list is the primary input to `archwright-derive`.
+6. **Key Invariants Summary** — numbered list of cross-actor invariants that are candidates for spec derivation. Each names the actors involved and the pattern source. This list is the primary input to `archwright-contract` and `archwright-derive`. Include BOTH behavioral invariants (→ behavior/constraint specs) AND structural contracts (→ contract specs for state schemas, event payloads, persistence).
 
 **Why both formats:**
 - YAML is for tools (derive reads it to produce specs)

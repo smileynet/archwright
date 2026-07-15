@@ -1,6 +1,7 @@
 # Contract Spec Template
 # Describes a typed data shape with lifecycle constraints.
 # Machine-primary: validated structurally (types, presence, relationships).
+# Use for: state schemas, event payloads, persistence schemas, interface surfaces.
 
 kind: contract
 id: data-shape-name
@@ -8,10 +9,15 @@ from_patterns:
   - "pattern:source-pattern-id"
 confidence: "★"
 
+protects_experience: "experience-id"
+user_story: "One sentence describing what the user experiences when this contract is upheld."
+
 fields:
   field_name:
-    type: string  # string | int | float | bool | enum | reference | list
+    type: string  # string | int | float | bool | enum | reference | list | map | vector3
     required: true
+    nullable: false
+    initial: ""
     description: "What this field represents"
     from_force: force-id
   another_field:
@@ -20,6 +26,27 @@ fields:
     min: 0
     max: 100
 
+# Sub-schemas for complex owned types (value objects, nested structures)
+sub_schemas:
+  SubTypeName:
+    fields:
+      sub_field:
+        type: string
+        required: true
+        description: "Field within the sub-schema"
+
+# Event payloads (for event contract specs)
+events:
+  EVENT_NAME:
+    producer: actor-id
+    consumers: [actor-id-1, actor-id-2]
+    stability: public  # public | internal
+    payload:
+      field_name:
+        type: string
+        required: true
+        description: "What this event field carries"
+
 lifecycle:
   - state: "produced"
     by: "component:producer-id"
@@ -27,6 +54,17 @@ lifecycle:
   - state: "consumed"
     by: "component:consumer-id"
     invariant: "field_name matches expected format"
+
+# Persistence (for state schema specs with durable actors)
+persistence:
+  persisted:
+    - field_name
+  excluded:
+    - other_field: "Reason it doesn't need persisting"
+  rationale: "Why these fields are authoritative vs reconstructible"
+  versioning:
+    strategy: additive  # additive | migration | envelope
+    current_version: 1
 
 links:
   - target: "behavior:producing-component"

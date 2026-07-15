@@ -21,6 +21,12 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 - Formalized patterns (from `archwright-formalize`) with `resolves_into` declarations
 - Domain model (from `archwright-model`) with actor boundaries, invariants, and event flows
 
+**Also check:** existing contract specs from `archwright-contract` phase.
+- Do NOT re-derive contract specs that already exist (state schemas, event payloads, persistence schemas)
+- DO cross-reference: behavior specs should link to contract specs via `consumes` type
+- If a contract spec defines event payloads, behavior specs should reference those payload shapes in their transitions (not redefine the field list)
+- The derive phase produces BEHAVIOR specs (temporal/FSM) and CONSTRAINT specs (rules). Contract specs are produced by the contract phase — not duplicated here.
+
 **When both exist:** The domain model is authoritative for actor boundaries, state machines, and composition. Patterns provide provenance (which force demanded what). Use both together — the model's invariant summary is the spec dispatch list.
 
 ### 2. Read the input
