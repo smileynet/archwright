@@ -42,8 +42,8 @@ _.path = ["~/code/archwright/tools"]
 
 Or symlink tools to `~/.local/bin`:
 ```bash
-ln -sf ~/code/archwright/tools/archwright-check ~/.local/bin/
-ln -sf ~/code/archwright/tools/archwright-validate ~/.local/bin/
+ln -sf ~/code/archwright/tools/archwright-check.py ~/.local/bin/archwright-check
+ln -sf ~/code/archwright/tools/archwright-validate.py ~/.local/bin/archwright-validate
 ```
 
 Decision: use `mise.toml` PATH entry (project-scoped, doesn't pollute global PATH).
