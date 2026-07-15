@@ -94,6 +94,21 @@ Before committing a new resolution:
 - Prefer composition (orthogonal regions, new entities) over modification (changing existing transitions)
 - If a new invariant conflicts with an existing one, surface it as a NEW tension — don't silently override
 
+### 5b. Resolution type: Scope Deferral
+
+When a tension is real but not yet active (the system doesn't exist, or it's explicitly post-MVP/MLP scope):
+
+1. **Record the tension and its forces** — they're architecturally real even if not yet implemented
+2. **Record the CONSTRAINT as a quality gate** — "when this IS built, it must satisfy X"
+3. **Name the activation trigger** — "becomes active when spike S2 executes" or "when multi-character play is built"
+4. **Do NOT research options or make decisions** — the decision is "not yet" and that's sufficient
+
+Deferred tensions still proceed to formalization (the constraint is load-bearing). Their patterns get `resolves_into` declarations. Their specs get written (to guide future implementation). But the resolve phase itself is fast: acknowledge the deferral, record the quality gate, move on.
+
+**When to defer vs decide:**
+- Defer if: the system literally doesn't exist yet AND no near-term work depends on the decision
+- Decide if: the decision affects how CURRENT work is structured (even if the full system is future)
+
 ### 6. Hand off
 
 Once decided:

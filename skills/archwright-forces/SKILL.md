@@ -114,6 +114,7 @@ We built [feature X]
 - L1-L3 product forces can drive pattern formalization directly
 - L4-L5 product forces MUST be presented to the user for validation before they enter the tension map
 - Tag every inferred force explicitly: "⚠️ Inferred — needs validation"
+- **Auto-promotion (L4 → L3):** If an inferred force (L4) is corroborated by 2+ internal project sources (e.g., decisions.md + CONTEXT.md, or ADR + mechanics doc), auto-promote to L3 and skip individual HITL confirmation. Present promotions as a summary: "N forces auto-promoted L4→L3 based on internal corroboration." Only genuinely speculative forces (L5 — no internal corroboration) require individual confirmation.
 
 ### 6. Validate inferred forces with user (HITL gate)
 

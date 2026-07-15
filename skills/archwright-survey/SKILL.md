@@ -14,7 +14,7 @@ The entry point for archwright. Routes to the right specialist, or maps a projec
 ## The Pipeline
 
 ```
-survey → forces → tensions → resolve → formalize → derive → check
+survey → forces → tensions → resolve → formalize → model → derive → check
 ```
 
 ## Route to the Right Skill
