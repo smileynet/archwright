@@ -211,10 +211,22 @@ When writing the `check` block, prefer structural checks over text grep:
 ## Pre-Commit Verification
 
 Before committing constraint specs, verify check targets against the actual codebase:
-1. Run `find` or `ls` to confirm the `check.target` path exists
+1. Run `find` or `ls` to confirm the `check.target` path exists — **if it doesn't, either fix the path or mark the spec as `check.target_status: pending` (target not yet implemented)**
 2. If using `expect: absent`, verify the grep pattern would match violations (test against a known-bad example if possible)
-3. If using `expect: present`, verify the pattern matches something that currently exists
-4. Run `archwright-check --static` against the batch before committing — fix target paths before the pre-commit hook rejects
+3. If using `expect: present`, verify the pattern matches something that currently exists — if nothing matches because the system isn't built yet, set `check.target_status: pending`
+4. Run `archwright-check --structural` against the batch before committing — fix target paths before the pre-commit hook rejects
+
+**Target status field:** When a spec's check target doesn't yet exist in the codebase (system not implemented), add:
+```yaml
+check:
+  method: grep
+  target: "game/addons/catalyst_framework/narrative/"
+  target_status: pending  # Target path doesn't exist yet. Check activates when it does.
+  pattern: "..."
+  expect: present
+```
+
+This makes it explicit which specs are checkable NOW vs which activate later — preventing false "N/A" results that hide real issues.
 
 **Common pitfall:** File/directory names in the target project may differ from spec names (e.g., `practice_setup/` vs `setup/`). Always verify.
 

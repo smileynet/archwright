@@ -25,7 +25,7 @@ Surface contradictions between documentation and implementation. Docs rot faster
 
 | Category | Pattern | Example |
 |----------|---------|---------|
-| **Lies** | Docs claim X, code does Y | "GLoot addon as foundation" but no GLoot in codebase |
+| **Damn Lies** | Docs claim X, code does Y | "GLoot addon as foundation" but no GLoot in codebase |
 | **Stale references** | Docs mention things that don't exist | "CollisionTransform" in AGENTS.md but class is `CustomTransform` |
 | **Missing coverage** | Code features undocumented | Object placement system exists but isn't in any doc |
 | **Terminology drift** | Docs and code use different names | Doc says "ItemData", code uses "ObjectData" |
@@ -120,7 +120,7 @@ One ticket per finding:
 - Claims verified: M
 - Contradictions found: K (X high, Y medium, Z low)
 
-## Lies (docs claim what code doesn't do)
+## Damn Lies (docs claim what code doesn't do)
 | # | File:Line | Claim | Truth | Severity | Fix |
 |---|-----------|-------|-------|----------|-----|
 

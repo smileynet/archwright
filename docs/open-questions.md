@@ -72,3 +72,43 @@ Game design patterns use domain-specific predicates that recur across projects (
 - Relationship to the 12 counterexample classification predicates (#6): are game predicates a superset, subset, or orthogonal?
 
 Current state: `tools/domains/game/predicates.yaml` has 13 entries from the Catalyst MLP pipeline run, covering pacing, progression, agency, UI, and world design.
+
+
+### 10. Audit Findings as Force Input ← NEW (from Catalyst pipeline run)
+
+Should audit findings ("Damn Lies") feed BACK into the force inventory? A doc that claims X while code does Y means a decision was made but never propagated — that's an unnamed tension between "what we said" and "what we did." Should the audit skill produce force-candidates that the forces phase can consume?
+
+Current state: audit produces fix tickets. Forces are extracted from decisions/grills. These are separate tracks.
+
+### 11. Code Generation from Contract Specs ← NEW
+
+Can the contract phase produce implementation stubs? The typed schemas in contract specs (fields, types, lifecycle) contain enough information to generate:
+- GDScript Resource class stubs (`class_name X extends Resource` with @export fields)
+- Signal declarations with typed parameters
+- Save/load serialization boilerplate
+
+Prior art: Alchemy (Alloy → SQL), Overture (VDM → Java+JML), XState typegen v4 (machine → TypeScript types). All generate implementation from formal specs.
+
+Question: Should this be part of contract, a separate `archwright-scaffold` skill, or left to the developer?
+
+### 12. Architecture-as-Documentation ← NEW (from Jaysen Draney)
+
+Can archwright's pipeline output (patterns + models + specs) serve AS the project's documentation, rather than being separate artifacts that describe the same system the docs describe? If the patterns ARE the architecture documentation, there's no drift to detect — the docs and the design are the same artifact.
+
+Options:
+- Generate a browsable docs site from design/ artifacts (patterns → pages, models → diagrams, specs → API reference)
+- Make design/ the canonical source, existing docs/ becomes views/exports
+- Keep both but generate cross-links (doc references spec, spec references doc)
+
+This is the "docs website as a view of architecture" idea. The pipeline already produces the architecture — rendering it as documentation is a presentation layer.
+
+### 13. Check Tooling Interface (cross-language) ← NEW (from Catalyst check run)
+
+How should archwright-check.py interface with target project languages? Research validated a tiered architecture:
+- Tier 1 (text): ripgrep for presence/naming/import checks
+- Tier 2 (structural): ast-grep with tree-sitter grammars for structural AST matching
+- Tier 3 (formal): Alloy for model checking invariants
+
+Key finding: tree-sitter-gdscript (PrestonKnopp) is production-ready. ast-grep supports custom languages via dynamic .so loading. tree-sitter-language-pack provides 306 languages (including GDScript) for Python-native parsing.
+
+Next step: Build the spec-to-check compiler that routes constraint specs to the appropriate tier based on `check.method`.
