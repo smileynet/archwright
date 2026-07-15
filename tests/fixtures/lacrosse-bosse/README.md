@@ -46,7 +46,7 @@ design/
 ## Running
 
 ```bash
-./tools/run-fixture-tests
+./tools/run-fixture-tests.sh
 ```
 
 All 14 checks should pass.

@@ -15,7 +15,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── worked-examples.md         # Alexander patterns mapped to games/apps
 │   ├── prior-art.md              # 5 traditions with full references
 │   └── open-questions.md          # Prioritized research backlog
-├── skills/                        # Skill source-of-truth (deployed via tools/deploy-skills)
+├── skills/                        # Skill source-of-truth (deployed via tools/deploy-skills.sh)
 │   ├── archwright-survey/         # Entry point: map project design state
 │   ├── archwright-forces/         # Extract desires + constraints from sources
 │   ├── archwright-tensions/       # Cluster forces into named tensions
@@ -24,7 +24,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-model/          # Identify domains as actors, map state machines
 │   ├── archwright-derive/         # Generate specs from domain models
 │   └── archwright-check/          # Verify specs against implementation
-├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills)
+├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
 │   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
 │   └── subagent-reliability.md    # Failure handling for parallel dispatch
 ├── figures/                       # SVG diagrams
@@ -76,9 +76,9 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 **Tools** (on PATH, `tools/`):
 - Schema validation, spec → Alloy compilation, Alloy execution, counterexample parsing
 - Templates for patterns and each spec kind (`tools/templates/`)
-- `deploy-skills` — sync skills + steering from repo to global `~/.kiro/`
+- `deploy-skills.sh` — sync skills + steering from repo to global `~/.kiro/`
 
-**Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills` to push to global.
+**Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills.sh` to push to global.
 
 ## Project Type
 
