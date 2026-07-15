@@ -14,7 +14,7 @@ The entry point for archwright. Routes to the right specialist, or maps a projec
 ## The Pipeline
 
 ```
-survey → forces → tensions → resolve → formalize → model → derive → check
+survey → forces → tensions → resolve → formalize → model → contract → derive → check
 ```
 
 ## Route to the Right Skill
@@ -122,6 +122,7 @@ Route each gap to the appropriate specialist:
 | Tension unresolved | `archwright-resolve` | HITL |
 | Tension resolved but no pattern | `archwright-formalize` | AFK |
 | Pattern exists but no model | `archwright-model` (ALWAYS — never skip) | AFK |
+| Model exists but no data contracts | `archwright-contract` | AFK |
 | Model exists but specs missing | `archwright-derive` | AFK |
 | Specs exist but not verified | `archwright-check` | AFK |
 

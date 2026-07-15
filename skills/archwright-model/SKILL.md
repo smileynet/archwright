@@ -321,7 +321,7 @@ How to decide what constitutes a separate domain (actor) vs a region within one 
 ## Relationship to Existing Pipeline
 
 ```
-... → formalize → MODEL → derive → check
+... → formalize → MODEL → contract → derive → check
 ```
 
 The model phase sits between formalize and derive. It transforms pattern resolutions into explicit actor structures that derive can project into specs.

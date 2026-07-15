@@ -151,7 +151,7 @@ When a violation is found (by `archwright-check`):
 ## The Skill Pipeline
 
 ```
-archwright-survey → archwright-forces → archwright-tensions → archwright-resolve (this) → archwright-formalize → archwright-model → archwright-derive → archwright-check
+archwright-survey → archwright-forces → archwright-tensions → archwright-resolve (this) → archwright-formalize → archwright-model → archwright-contract → archwright-derive → archwright-check
 ```
 
 ## Does NOT Cover
