@@ -25,12 +25,14 @@ Surface contradictions between documentation and implementation. Docs rot faster
 
 | Category | Pattern | Example |
 |----------|---------|---------|
-| **Damn Lies** | Docs claim X, code does Y | "GLoot addon as foundation" but no GLoot in codebase |
-| **Stale references** | Docs mention things that don't exist | "CollisionTransform" in AGENTS.md but class is `CustomTransform` |
+| **Lies** | Docs are wrong but truth is quickly discoverable | "CollisionTransform" in AGENTS.md but class is `CustomTransform` — one grep reveals the truth |
+| **Damn Lies** | Docs are wrong AND following them leads you down the wrong path | "GLoot addon as foundation" — developer goes hunting for GLoot API docs, tries to use its classes, wastes hours |
 | **Missing coverage** | Code features undocumented | Object placement system exists but isn't in any doc |
-| **Terminology drift** | Docs and code use different names | Doc says "ItemData", code uses "ObjectData" |
+| **Terminology drift** | Docs and code use different names for the same thing | Doc says "ItemData", code uses "ObjectData" |
 | **Architecture drift** | Diagrams don't match file structure | Player3D shown inside framework but lives in game/ |
 | **Planned-as-current** | Aspirational features described as implemented | "Nested containers" documented as working but listed as deferred |
+
+**Lies vs Damn Lies:** A lie is wrong. A damn lie is wrong AND harmful — following it sends you down a path that wastes significant time, builds against non-existent APIs, or creates incorrect assumptions about system boundaries. The distinction is: can you recover in 5 minutes (lie), or does it cost hours and potentially propagate into your own code (damn lie)?
 
 ## Process
 
@@ -118,15 +120,15 @@ One ticket per finding:
 ## Summary
 - Documents scanned: N
 - Claims verified: M
-- Contradictions found: K (X high, Y medium, Z low)
+- Contradictions found: K (X damn lies, Y lies, Z other)
 
-## Damn Lies (docs claim what code doesn't do)
-| # | File:Line | Claim | Truth | Severity | Fix |
-|---|-----------|-------|-------|----------|-----|
+## Damn Lies (wrong AND following them wastes hours / builds against non-existent APIs)
+| # | File:Line | Claim | Truth | Harm if followed | Fix |
+|---|-----------|-------|-------|-----------------|-----|
 
-## Stale References (names/paths that don't exist)
-| # | File:Line | Reference | Status | Fix |
-|---|-----------|-----------|--------|-----|
+## Lies (wrong but truth discoverable in minutes)
+| # | File:Line | Claim | Truth | Fix |
+|---|-----------|-------|-------|-----|
 
 ## Missing Coverage (code features without docs)
 | # | Code Location | Feature | Impact | Fix |
