@@ -215,7 +215,14 @@ Key outcomes: 5 dead-flag/broken-tool references fixed in skills/steering; surve
 
 **Phase 5 reconciliation (2026-07-16):** Upstream's Phase 5 (polyglot check tooling, `.memory/specs/polyglot-check-tooling.md`) absorbs B4, C1, C2. Their unique deltas were folded into that spec (CK-05: comment false-positives + `expect:` typo → exit 2; CK-09: ★★ `escalate: true`); the spec's two false premises were corrected against A1 evidence (trace-validate.sh is broken, `--model` flag doesn't exist). Remaining independent audit work: B7 → A3 + A5, B1–B3, B5, B6, C3–C7, D3.
 **B7 ✅ (2026-07-16):** Fixture `design/` restored (3 patterns + 5 specs written, joining upstream's contract spec); `run-fixture-tests.sh` repaired (set-e find death, stale extensionless paths) and extended (behavior-spec section); broken `archwright-trace-validate.{sh,mjs}` deleted (canonical: `archwright-check.py --trace`). Verified: 16 passed / 0 failed / 1 skipped (Alloy jar); negative test — injected `ball_holder = self` violation caught by both ★★ specs with file:line, then reverted to green. A4/DL1 doc lie corrected in fixture README. **A3 is now unblocked.**
-**Next:** A3 + A5, then B-workstream (B1–B3, B5, B6) and C-tickets.
+**A3 + A5 ✅ (2026-07-16):** Pipeline dry run (`.memory/audit/pipeline-dryrun.md`): 0.79s full check suite (DoD-5 pass); prior-plan DoD re-verified — 2 pass, 2 external, 1 partial-fail (provenance), 1 fail (emitter → C4). Top findings: forces have no artifact (provenance roots are hollow ID strings → new ticket **C8**); quality gates are honor-system (no tool checks them); model mandate lacks artifact enforcement (→ C7 scope); resolve-gate-on-pre-resolved = concrete C6 evidence. Coverage audit (`.memory/audit/test-coverage.md`): 4/9 tool modes covered, 0 automated failure paths → propose Phase 5 **CK-20** (fixture test hardening, ~2.5h: violation overlay, bad-spec fixtures, trace fixtures).
+
+| ID | Title | Priority | Effort | Source |
+|----|-------|:--------:|:------:|--------|
+| C8 | Forces as first-class artifact: define `design/forces/` format; extend link validation to `serves:`/`from_force:`; backfill fixture | P1 | 3h | A3 finding 1 — core-promise gap |
+| CK-20 | Fixture test hardening (violation overlay + bad-spec + trace fixtures) — execute under Phase 5a | P2 | 2.5h | A5 |
+
+**Next:** C6 (gate re-evaluation — A3 supplies the evidence) · C8 · B-workstream (B1–B3, B5, B6) · C3/C4/C7. Phase 5 execution under `.memory/PLAN.md`.
 
 ---
 
