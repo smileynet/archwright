@@ -222,7 +222,8 @@ Key outcomes: 5 dead-flag/broken-tool references fixed in skills/steering; surve
 | C8 | Forces as first-class artifact: define `design/forces/` format; extend link validation to `serves:`/`from_force:`; backfill fixture | P1 | 3h | A3 finding 1 — core-promise gap |
 | CK-20 | Fixture test hardening (violation overlay + bad-spec + trace fixtures) — execute under Phase 5a | P2 | 2.5h | A5 |
 
-**Next:** C6 (gate re-evaluation — A3 supplies the evidence) · C8 · B-workstream (B1–B3, B5, B6) · C3/C4/C7. Phase 5 execution under `.memory/PLAN.md`.
+**C6 ✅ (2026-07-16):** ADR 0007 accepted (`.memory/adr/0007-hitl-only-gates.md`) with the gate classification table. HITL-blocking: resolve (batched confirmation when pre-resolved), L4/L5 desire validation, ★★ events, fog, end-of-span digest. Flow-through: everything else, guarded by pre-authorized span + `archwright-validate.py` pass + digest entry. Updated: conventions steering (rules + "proceed" semantics), AGENTS.md §Pipeline Phase Discipline, survey step 5 (now proposes a span). Residual per-skill "present and STOP" phrasing → B5. DoD item 7 satisfied.
+**Next:** C8 (forces artifact) · B-workstream (B1–B3, B5, B6) · C3/C4/C7 · D3. Phase 5 execution under `.memory/PLAN.md`.
 
 ---
 
