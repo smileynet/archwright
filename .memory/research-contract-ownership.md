@@ -18,6 +18,8 @@ Where identity is language-level (Terraform addresses, Rego packages, K8s kind/n
 
 ## Recommendation (updates C7) — RATIFIED 2026-07-16, edits landed
 
+> **Errata (post-ratification refinement):** R2's "from ONE producer" was refined during landing to "one protocol, owned by one authority actor" — the counterparty's request leg belongs to the same protocol cluster. Read literally, "one producer" would outlaw the fixture's `ball-possession-events.yaml` (its `request_transfer` is produced by the fielder, not the ball authority) — the very example this doc declares legal. The contract skill carries the authoritative wording.
+
 **R1 — Contract phase solely owns contract specs.**
 - `archwright-model`: stop emitting contract specs (Step 10). Instead emit a **contract-candidates list** (event name, producer actor, consumers, direction) — identity and semantics only, no payloads.
 - `archwright-contract`: formalizes each candidate into a contract spec, organized **per owning producer actor**, each spec carrying `from_model:` provenance back to the model entry (F1, F2).

@@ -23,7 +23,7 @@ Write a pattern from a resolved tension. The pattern captures the forces, names 
 
 ### 2. Determine scale
 
-Where does this pattern sit in the design hierarchy? Load the domain overlay's `tools/domains/<domain>/scales.yaml` (domain comes from the survey's intake outline; fallback `general`) and use its labels/examples when discussing scale with the human. The `scale:` frontmatter field always stores the **canonical id** — the enum in `tools/pattern-schema.yaml` is domain-invariant:
+Where does this pattern sit in the design hierarchy? Load the domain overlay's `../archwright-survey/references/domains/<domain>/scales.yaml` (deployed; source: `tools/domains/` in the archwright repo) (domain comes from the survey's intake outline; fallback `general`) and use its labels/examples when discussing scale with the human. The `scale:` frontmatter field always stores the **canonical id** — the enum in `tools/pattern-schema.yaml` is domain-invariant:
 
 | Canonical id (stored) | Level | Domain overlay provides |
 |-----------------------|-------|-------------------------|
@@ -32,7 +32,7 @@ Where does this pattern sit in the design hierarchy? Load the domain overlay's `
 | `verbs-interactions` | Single operations, state transitions, user-facing actions | native label + examples |
 | `feel-finish` | Sensory/ergonomic qualities, accessibility, polish | native label + examples |
 
-Also load `tools/domains/<domain>/predicates.yaml` (plus `general/predicates.yaml` for non-general domains) — predicates are named prior art for the Evidence section.
+Also load `../archwright-survey/references/domains/<domain>/predicates.yaml` (plus `general/predicates.yaml` for non-general domains) — predicates are named prior art for the Evidence section.
 
 ### 3. Write the pattern
 
@@ -45,6 +45,8 @@ id: <slug>
 name: "<Human Name>"
 scale: <scale>
 confidence: pending  # Set after prior art research (Step 5)
+serves:
+  - <product-desire-force-id>   # REQUIRED — validation gate rejects patterns without a serves link
 above:
   - <parent-pattern-id if any>
 resolves_into:
@@ -161,14 +163,14 @@ List each as `"<kind>:<proposed-id>"` in the frontmatter.
 - Resolution is specific enough to derive specs from (not "do it well")
 - Consequences are honest (include costs, not just benefits)
 - Evidence cites actual sources, not assertions
-- `resolves_into` links name specs that don't exist yet (they'll be created by `archwright-derive`)
+- `resolves_into` links name specs that don't exist yet (created downstream: contract specs by `archwright-contract`, the rest by `archwright-derive`)
 - `serves` links to at least one product-level desire from the force inventory — patterns without a human purpose are architectural indulgence
 
 ## Does NOT
 
 - Extract forces (receives them from `archwright-forces`)
 - Identify tensions (receives from `archwright-tensions`)
-- Derive specs (outputs `resolves_into` links; `archwright-derive` creates the specs)
+- Derive specs (outputs `resolves_into` links; downstream phases create them — `archwright-model` structures actors, `archwright-contract` writes contract specs, `archwright-derive` writes behavior/constraint/dependency specs)
 - Resolve open tensions (only formalizes already-resolved ones)
 - Set confidence to ★★ without prior art research or formal verification evidence
 

@@ -50,7 +50,7 @@ Triggered by: "Do a full state review" / "What's covered?" / "Design audit"
 
 ### 1. Read the project
 
-**Detect the domain FIRST.** Apply the manifest rules in `tools/domains/detect.yaml` (archwright repo) — game / web / general. An explicit `domain:` in the target's `design/domain.yaml`, or the human stating it, overrides detection. Record the domain and what triggered it in the intake outline; downstream phases (forces, tensions, formalize, model) load `tools/domains/<domain>/{scales,predicates}.yaml` for vocabulary and prior art. Detection reads the architecture, not the theme — a game-themed project on an express backend is `web`.
+**Detect the domain FIRST.** Apply the manifest rules in `references/domains/detect.yaml` (deployed with this skill; source: `tools/domains/` in the archwright repo) — game / web / general. An explicit `domain:` in the target's `design/domain.yaml`, or the human stating it, overrides detection. Record the domain and what triggered it in the intake outline; downstream phases (forces, tensions, formalize, model) load `references/domains/<domain>/{scales,predicates}.yaml` (via `../archwright-survey/` from their own skill dirs) for vocabulary and prior art. Detection reads the architecture, not the theme — a game-themed project on an express backend is `web`.
 
 **Start with purpose.** Before reading architectural decisions, establish WHY the project exists and WHO it serves.
 

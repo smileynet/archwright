@@ -108,3 +108,7 @@ The tightly-coupled messages of ONE protocol, owned by one authority actor, that
 
 **Contract candidate**:
 Model-phase output naming an event's identity/direction/producer WITHOUT payload shape — the contract phase (sole owner of contract specs) formalizes it, carrying `from_model:` provenance (C7 R1, ratified 2026-07-16).
+
+**Domain overlay**:
+Per-domain vocabulary pack (`tools/domains/<domain>/` — game, web, general): `scales.yaml` maps the four canonical scale IDs to domain-native labels/examples; `predicates.yaml` holds advisory, prior-art-backed design rules. Detected via `detect.yaml` manifest rules (architecture over theme — a game-themed express backend is `web`); explicit override wins. Deployed with the survey skill (`references/domains/`).
+_Avoid_: per-domain scale IDs — the enum is canonical; only labels vary.

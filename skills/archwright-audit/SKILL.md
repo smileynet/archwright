@@ -53,7 +53,7 @@ Map documentation to the code it describes:
 - Framework docs → framework source files
 - Architecture docs → actual directory structure
 - Mechanic docs → implementing classes
-- Glossary terms → class_name declarations
+- Glossary terms → type/component declarations (game: `class_name`; web: exported components; general: public modules)
 
 ### 3. Extract claims from each doc
 
@@ -68,17 +68,17 @@ Skip subjective/aspirational content (goals, philosophy, future plans marked as 
 
 ### 4. Verify claims against code
 
-For each claim:
+For each claim (verification methods are domain-generic; the examples column shows per-domain instantiations — the domain comes from the survey intake or `../archwright-survey/references/domains/detect.yaml`):
 
-| Claim type | Verification method |
-|------------|-------------------|
-| Class/node exists | `grep -r "class_name X"` or check file exists |
-| Method exists on class | Read the file, check method list |
-| Signal exists | `grep "signal X"` in the class file |
-| Data flow described | Trace the actual connection in code |
-| File structure | Compare against `ls` / directory listing |
-| Addon dependency | Check `project.godot` or addon directory |
-| Feature status | Check if code exists vs. only design docs |
+| Claim type | Verification method | Domain examples |
+|------------|-------------------|-----------------|
+| Type/component exists | grep for the declaration or check file exists | game: `class_name X` · web: exported class/component · general: module/struct def |
+| Method exists on type | Read the file, check method list | any |
+| Event/signal exists | grep the declaration in the defining file | game: `signal X` · web: event emitter/route · general: callback registration |
+| Data flow described | Trace the actual connection in code | any |
+| File structure | Compare against `ls` / directory listing | any |
+| Dependency declared | Check the manifest | game: `project.godot`/addon dir · web: `package.json` · general: `Cargo.toml`/`pyproject.toml` |
+| Feature status | Check if code exists vs. only design docs | any |
 
 ### 5. Classify findings
 
@@ -107,7 +107,7 @@ One ticket per finding:
 **Source:** `path/to/doc.md` line N
 **Claim:** "What the doc says"
 **Truth:** What the code actually does
-**Evidence:** `path/to/code.gd` line M — [what it shows]
+**Evidence:** `path/to/source-file` line M — [what it shows]
 **Severity:** HIGH | MEDIUM | LOW
 **Fix type:** doc-fix | code-fix | both | remove
 **Proposed action:** One sentence describing the fix
@@ -165,9 +165,9 @@ For projects with 15+ doc files, dispatch subagents per doc group:
 | Framework docs | `docs/framework/*.md` | Claims about framework code match actual classes |
 | Design docs | `docs/design/*.md` | Feature status claims match implementation plan |
 | Architecture | AGENTS.md + architecture.md | Structure claims match actual directories |
-| Glossary | `.memory/CONTEXT.md` | Terms match actual class_name/signal names |
+| Glossary | `.memory/CONTEXT.md` | Terms match actual type/event declarations in code |
 
-Per `subagent-reliability` steering: each subagent reads specific doc files + corresponding code files. Small prompts ("read X.md, read Y.gd, find contradictions"). Synthesis (dedup, severity) done directly.
+Per `subagent-reliability` steering: each subagent reads specific doc files + corresponding code files. Small prompts ("read X.md, read the corresponding source files, find contradictions"). Synthesis (dedup, severity) done directly.
 
 ## Integration with Pipeline
 
