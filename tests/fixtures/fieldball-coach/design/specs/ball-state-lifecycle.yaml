@@ -1,0 +1,66 @@
+kind: behavior
+id: ball-state-lifecycle
+from_patterns:
+  - "pattern:ball-possession"
+
+context:
+  variables:
+    possession:
+      type: enum
+      values: [held, in_flight]
+      initial: held
+      from_force: single-holder
+
+initial: held
+
+states:
+  held:
+    type: atomic
+    on:
+      REQUEST_TRANSFER:
+        target: in_flight
+        from_force: any-fielder-receives
+        from_pattern: ball-possession
+    invariant:
+      predicate: "exactly one holder"
+      confidence: "★★"
+      from_force: single-holder
+    from_pattern: ball-possession
+
+  in_flight:
+    type: atomic
+    on:
+      VALIDATE_ACCEPT:
+        target: held
+        from_force: any-fielder-receives
+        from_pattern: ball-possession
+      VALIDATE_REJECT:
+        target: held
+        from_force: single-holder
+        from_pattern: ball-possession
+    invariant:
+      predicate: "no holder during flight"
+      confidence: "★★"
+      from_force: single-holder
+    from_pattern: ball-possession
+
+invariants:
+  - id: at-most-one-holder
+    type: temporal
+    predicate: "always (holders <= 1)"
+    confidence: "★★"
+    from_force: single-holder
+    from_pattern: ball-possession
+    description: "At most one entity holds the ball at any time"
+
+links:
+  - target: "contract:ball-possession-events"
+    type: consumes
+  - target: "constraint:single-ball-writer"
+    type: constrained-by
+
+abstraction_notes:
+  included: [possession states, transfer protocol, validation outcome]
+  excluded: [physics, proximity checks, animation timing, network latency]
+  justification: "Checked properties (single holder, no double possession) are independent of physics/proximity — those affect WHEN transfers happen, not WHETHER the invariant holds."
+  scope_limit: "Checked at scope 4, 8 steps."
