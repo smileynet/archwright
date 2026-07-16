@@ -41,7 +41,8 @@ Workstream C: INTENT GAPS (original brief → fuller realization — depends on 
 ├── C2  Correction routing as first-class output
 ├── C3  Confidence lifecycle tooling (promote/demote)
 ├── C4  T7 GDScript trace emitter (close out or descope)
-└── C5  Growth rules validation (R18/S15 trigger criteria)
+├── C5  Growth rules validation (R18/S15 trigger criteria)
+└── C6  Re-evaluate phase gates: block only where human input is needed
 
 Workstream D: HYGIENE (independent — can run immediately)
 ├── D1  Fix AGENTS.md / README drift
@@ -156,6 +157,13 @@ Workstream D: HYGIENE (independent — can run immediately)
 **Acceptance:** One validated change-propagation walkthrough documented; growth-rules reference updated with corrections; S15 trigger criterion stated where it will be seen (check output or conventions).
 **Effort:** 2h · **Priority:** P3 · **Depends:** A3
 
+### C6 — Re-evaluate phase gates: block only where human input is needed
+**Source:** Operator feedback 2026-07-16. Current pipeline discipline (steering/archwright-conventions.md, AGENTS.md, survey skill) mandates a hard STOP after **every** phase — "present the phase output, ask whether to proceed — never auto-advance."
+**Problem:** Universal stops treat all checkpoints as equal, but only some phases genuinely require a human: resolve (decisions), grilling (unknown forces), ★★ escalations, and final acceptance. For AFK phases (forces, tensions clustering, formalize, model, contract, derive, check) the stop is review-availability, not review-necessity — it adds turnaround latency on every run without adding decision quality.
+**Action:** Classify every gate in the 9-phase pipeline as **HITL-blocking** (human decision/input/review is required to proceed correctly) or **flow-through** (artifact is produced and reviewable, but the pipeline may auto-advance when the human has pre-authorized a run span). Draft an ADR — this reverses a deliberate documented decision, so it must engage the original rationale ("skipping review compounds errors silently"). Candidate mitigations for that rationale: auto-advance only when the prior phase's artifact passes mechanical validation (`archwright-validate`); confidence-gating (any — or ★★-touching output forces a stop); an end-of-span digest listing every artifact produced for batched review. Then update: steering/archwright-conventions.md, AGENTS.md §Pipeline Phase Discipline, survey skill's STOP instructions, and any per-skill "present and STOP" language. A3's dry run should record where stops added value vs. pure latency — use that as evidence.
+**Acceptance:** ADR accepted with an explicit gate classification table (phase → blocking? → why). Conventions/skills updated consistently: HITL gates (resolve, grill, ★★ escalation, final acceptance) still hard-block; flow-through phases chain within a pre-authorized span and emit a review digest. A pipeline run on the fixture completes survey→check with exactly the HITL stops and no others.
+**Effort:** 3h (1h ADR + 2h edits) · **Priority:** P1 · **Depends:** A3 (gate-friction evidence)
+
 ---
 
 ## Workstream D: Hygiene (immediate)
@@ -196,11 +204,12 @@ Workstream D: HYGIENE (independent — can run immediately)
 | C3 | Confidence lifecycle tooling | P2 | 4h | — |
 | C4 | Trace emitter close-out/descope | P2 | 2h | A3 |
 | C5 | Growth rules validation | P3 | 2h | A3 |
+| C6 | Phase gates: block only on HITL need | P1 | 3h | A3 |
 | D1 | Fix AGENTS.md/README residual drift | P1 | 45m | — |
 | D2 | Archive prior plan | P1 | 10m | — |
 | D3 | Clean .scratch findings | P3 | 10m | B1–B4 started |
 
-**Total:** ~35h. **Recommended first batch (one session):** D1 + D2 + A1 + A2 + A4 (~7h) — establishes ground truth and fixes drift before any behavior changes. A4 doubles as the first dogfood run of the new audit skill.
+**Total:** ~38h. **Recommended first batch (one session):** D1 + D2 + A1 + A2 + A4 (~7h) — establishes ground truth and fixes drift before any behavior changes. A4 doubles as the first dogfood run of the new audit skill.
 
 ---
 
@@ -221,3 +230,4 @@ New open questions #10–#12 from the upstream catalyst run are proposal materia
 4. The pipeline runs end-to-end on the in-repo fixture with per-phase timing recorded.
 5. Check output carries the full brief-promised shape: provenance chain, fix direction, contrast pair, escalation flag.
 6. Prior-plan loose ends (T7, R18, S15) are closed or explicitly descoped.
+7. Every pipeline gate is classified HITL-blocking or flow-through, and the pipeline stops only at HITL gates.
