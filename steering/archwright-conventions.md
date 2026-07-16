@@ -62,7 +62,7 @@ Before committing a pattern:
 - Forces section: polarity is clear, each force is one sentence, no solutions disguised as forces
 - Evidence section: ≥70% of the pattern body, cited, not "it's standard practice"
 - Therefore section: specific enough that two developers would implement the same architecture
-- Verification section: names a mechanical check (★★) or heuristic check (★)
+- Verification section: names a mechanical check (★★), a heuristic check (★), or — for advisory patterns — states explicitly why no check exists (— is a legitimate confidence, not a missing field; vocabulary map in `docs/glossary.md`)
 
 ## Spec Quality Gates
 

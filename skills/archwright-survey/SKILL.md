@@ -69,6 +69,23 @@ Then read architectural sources:
 
 Do NOT read implementation code at this stage. Forces live in decisions, not in functions.
 
+**Source Quality Assessment (emit this table before proceeding):** Assess the richness of what you found, so the human can predict what kind of run this will be BEFORE dispatching work.
+
+| Source | Present? | Richness |
+|--------|----------|----------|
+| README / product purpose | ✓/✗ | rich / thin / absent |
+| Vision or roadmap | ✓/✗ | rich / thin / absent |
+| Tenets / design principles | ✓/✗ | rich / thin / absent |
+| ADRs | ✓/✗ | rich (rationale + alternatives) / thin (decision only) / absent |
+| Grills / decision records | ✓/✗ | rich / thin / absent |
+| Feature specs / requirements | ✓/✗ | rich / thin / absent |
+| Conventions (AGENTS.md, glossary) | ✓/✗ | rich / thin / absent |
+
+**Mode prediction (state it explicitly):**
+- Mostly rich → **formalization run** — forces are latent in the sources; extraction is reading, not asking. Expect few HITL stops.
+- Mixed → **hybrid run** — some areas extract cleanly, others need grilling. Flag which areas fall on which side.
+- Mostly thin/absent → **grilling run** — forces live in humans' heads, not documents. Expect heavy HITL; propose grill sessions before dispatching `archwright-forces`.
+
 **At scale (>15 source files):** Dispatch subagents per area/session. See `subagent-reliability` steering for sizing and failure handling. Report coverage before proceeding:
 ```
 ## Source Coverage
@@ -98,9 +115,6 @@ For each capability/domain area in the project, assess:
 | Is there a domain model? | ✓ in design/models/ / ✗ missing |
 | Are data contracts derived? | ✓ contract specs exist / ○ partial / ✗ missing |
 | Do docs match code? | ✓ audited / ○ untested / ✗ known contradictions |
-| Is there a domain model? | ✓ in design/models/ / ✗ missing |
-| Are data contracts derived? | ✓ contract specs exist / ○ partial / ✗ missing |
-| Do docs match code? | ✓ audited / ○ untested / ✗ known contradictions |
 
 ### 3. Produce the intake outline
 
@@ -111,6 +125,9 @@ Write to `.memory/archwright-survey.md`:
 
 ## Destination
 <what "fully covered" looks like for this project>
+
+## Source Quality
+<the assessment table from step 1 + the mode prediction (formalization / hybrid / grilling run)>
 
 ## Coverage Map
 | Area | Forces | Tensions | Patterns | Specs | Status |

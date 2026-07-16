@@ -7,6 +7,9 @@ id: component-name
 from_patterns:
   - "pattern:source-pattern-id"
 
+protects_experience: "experience-id"  # modeled experience (preferred) or product-force id
+user_story: "One sentence describing what the user experiences when this behavior holds."
+
 context:
   variables:
     example_var:

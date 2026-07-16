@@ -4,6 +4,8 @@ id: rule-slug
 from_patterns:
   - "pattern:source-pattern-id"
 confidence: "★"
+protects_experience: "experience-id"  # modeled experience (preferred) or product-force id
+user_story: "One sentence describing what the user experiences when this rule holds."
 allowed:
   - source: "ComponentA"
     target: "ComponentB"

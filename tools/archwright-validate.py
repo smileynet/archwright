@@ -172,14 +172,14 @@ def validate_constraint_or_dependency(data, path):
 
 
 def validate_file(path):
-    """Validate a single file. Returns (status, errors)."""
+    """Validate a single file. Returns (status, errors, warnings)."""
     path = Path(path)
     if not path.exists():
-        return "error", [f"File not found: {path}"]
+        return "error", [f"File not found: {path}"], []
 
     data, kind, load_errors = load_file(path)
     if load_errors:
-        return "error", load_errors
+        return "error", load_errors, []
 
     if kind == "pattern":
         errors = validate_pattern(data, path)
@@ -194,7 +194,14 @@ def validate_file(path):
     else:
         errors = [f"unknown kind '{kind}'"]
 
-    return ("pass" if not errors else "fail"), errors
+    warnings = []
+    if kind in ("behavior", "contract", "constraint", "dependency") and not data.get("protects_experience"):
+        warnings.append(
+            "no 'protects_experience' — link a modeled experience id (preferred) or a "
+            "product-force id, so the spec traces to what users feel"
+        )
+
+    return ("pass" if not errors else "fail"), errors, warnings
 
 
 def _collect_from_force_refs(node, out):
@@ -292,7 +299,7 @@ def main():
 
     exit_code = 0
     for filepath in sys.argv[1:]:
-        status, errors = validate_file(filepath)
+        status, errors, warnings = validate_file(filepath)
         path = Path(filepath)
         data, kind, _ = load_file(path)
         kind_str = f" (kind: {kind})" if kind else ""
@@ -304,6 +311,8 @@ def main():
             for e in errors:
                 print(f"  - {e}")
             exit_code = 1
+        for w in warnings:
+            print(f"  WARN: {w}")
 
     sys.exit(exit_code)
 

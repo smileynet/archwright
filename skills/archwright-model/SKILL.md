@@ -70,11 +70,11 @@ domain_vocabulary:
 
 **Brownfield projects:** When domain vocabulary stabilizes, recommend renaming implementation to match. Add a `rename_recommendations` section listing current→proposed with priority and rationale. Public APIs and signals first, internal variables last.
 
-### 3. Receive input
+### 2. Receive input
 
 Formalized patterns (from `archwright-formalize`) with their resolutions and `resolves_into` declarations.
 
-### 4. Identify actors from patterns
+### 3. Identify actors from patterns
 
 For each pattern, ask:
 - **Who owns the state that the resolution introduces?** That's an actor.
@@ -102,7 +102,7 @@ Pattern resolution language maps to actors:
 
 If you cannot identify an enforcement actor for a constraint pattern, flag it: "This constraint has no identified enforcer — it may be aspirational rather than architectural."
 
-### 5. Define actor boundaries
+### 4. Define actor boundaries
 
 For each identified actor:
 
@@ -137,7 +137,7 @@ actor:
 
 **user_facing_invariants** are REQUIRED. They describe what the user experiences when the technical invariant holds. If you can't write one, the invariant may not serve a user desire.
 
-### 6. Classify boundary entities
+### 5. Classify boundary entities
 
 Not everything is a full actor or a pure observer. Three intermediate classifications:
 
@@ -149,7 +149,7 @@ Not everything is a full actor or a pure observer. Three intermediate classifica
 
 In the YAML output, group these under `boundary_entities:` (separate from `actors:` and `observers:`).
 
-### 7. Map composition (actor hierarchy)
+### 6. Map composition (actor hierarchy)
 
 How do actors relate?
 
@@ -167,7 +167,7 @@ PracticeFlowCoordinator (root actor, persistent)
 
 **When composition is flat:** Not all systems have deep hierarchies. If most actors share lifecycle (all created at session start, all persist until quit), the composition IS flat — document WHY it's flat rather than forcing artificial nesting. Flat composition is common in: single-player games (all systems active for whole session), event-driven architectures (actors communicate via bus, no hierarchy), and early-stage projects (nesting emerges as systems mature). A flat diagram with a rationale note is more honest than forced nesting.
 
-### 8. Map event flows between actors
+### 7. Map event flows between actors
 
 Which events cross actor boundaries?
 
@@ -180,7 +180,7 @@ PlayManager3D → RuntimeBranchState: step_completing(step_index)
 RuntimeBranchState → PlayManager3D: next_step(step_index)
 ```
 
-### 9. Output the domain model
+### 8. Output the domain model
 
 Write to `design/models/` in the target project:
 
@@ -197,7 +197,7 @@ event_flows:
     to: fielder-controller
     event: assign_chain
   ...
-contract_candidates:        # identity + direction only — see step 10
+contract_candidates:        # identity + direction only — see step 9
   - event: assign_chain
     producer: play-manager-3d
     consumers: [fielder-controller]
@@ -218,7 +218,7 @@ Must contain:
 
 5. **Boundary Decision Table** — why each entity is a separate actor vs boundary entity vs observer, citing the heuristic that determined it.
 
-6. **Key Invariants Summary** — numbered list of cross-actor invariants that are candidates for spec derivation. Each names the actors involved and the pattern source. This list is the primary input to `archwright-derive` (behavioral invariants → behavior/constraint specs). Structural contracts flow to `archwright-contract` via the `contract_candidates` list in the model YAML (step 10) — do not restate them here as spec-ready contracts.
+6. **Key Invariants Summary** — numbered list of cross-actor invariants that are candidates for spec derivation. Each names the actors involved and the pattern source. This list is the primary input to `archwright-derive` (behavioral invariants → behavior/constraint specs). Structural contracts flow to `archwright-contract` via the `contract_candidates` list in the model YAML (step 9) — do not restate them here as spec-ready contracts.
 
 **Why both formats:**
 - YAML is for tools (derive reads it to produce specs)
@@ -226,7 +226,7 @@ Must contain:
 - They represent the same structural decisions — one phase, two projections
 - Mermaid is text-based, version-controlled, diffable, renders in GitHub/Marp
 
-### 10. Point downstream: spec projections and contract candidates
+### 9. Point downstream: spec projections and contract candidates
 
 Each actor's invariants become constraint or behavior specs (written by `archwright-derive`):
 - Actor state machine → behavior spec (states, transitions, guards)
@@ -242,7 +242,7 @@ contract_candidates:
     consumers: [fielder-controller, runtime-ui-layer]
 ```
 
-`archwright-contract` formalizes each candidate into a contract spec (typed payloads, stability, persistence), carrying `from_model:` provenance back to this entry. The `{ field }` shorthand in `emits_events` remains a sketch (see step 5) — the contract phase owns the authoritative shape.
+`archwright-contract` formalizes each candidate into a contract spec (typed payloads, stability, persistence), carrying `from_model:` provenance back to this entry. The `{ field }` shorthand in `emits_events` remains a sketch (see step 4) — the contract phase owns the authoritative shape.
 
 ## Rendering Guidance
 
@@ -273,6 +273,7 @@ Render all diagrams to PNG before presenting. Fix any parse errors or label trun
 merman-cli -i model.md -o model.png -t dark -b transparent
 smcat -T png actor.smcat
 ```
+**If `merman-cli`/`smcat` are not installed** (they are external tools, not part of archwright — check with `which`): skip PNG rendering, present the Mermaid/smcat source directly, and note that diagrams are unverified. Do not block the phase on missing renderers.
 
 ## Quality Checks
 

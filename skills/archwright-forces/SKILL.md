@@ -74,7 +74,7 @@ If an architectural force has no `serves` link, it's either:
 - An orphaned constraint (may be over-engineering)
 - Serving an unnamed product desire (name it)
 
-### 4. Infer unstated product desires
+### 5. Infer unstated product desires
 
 Many product-level desires are never explicitly stated — they're implied by features built, decisions made, and domain conventions. Use these techniques:
 
@@ -89,7 +89,7 @@ We built [feature X]
 
 **Domain Workflow Mapping** — What does a [coach/player] do in a typical [practice/game/season]? Each workflow step implies a job regardless of software.
 
-**Workaround Detection** — Custom scripts, repeated manual steps, TODOs, or hacks in the codebase reveal unmet desires.
+**Workaround Detection** — Custom scripts, repeated manual steps, TODOs, or hacks reveal unmet desires. Source these from signals already surfaced (survey/audit reports, issue trackers, commit messages, grill mentions) — this skill does not read implementation code itself (see Does NOT).
 
 **Competitive Analysis** — What do ALL similar tools do? (table stakes desires). What do SOME do? (differentiators). What does NONE do? (potential unmet or invalid desires).
 
@@ -100,7 +100,7 @@ We built [feature X]
 | Emotional | How the user wants to FEEL | "Feel confident I'm running the route correctly" |
 | Social | How the user wants to be PERCEIVED | "Show my coach I know the play at tomorrow's practice" |
 
-### 5. Classify confidence of each force
+### 6. Classify confidence of each force
 
 | Level | Label | Meaning |
 |-------|-------|---------|
@@ -110,13 +110,15 @@ We built [feature X]
 | L4 | Inferred | Logical derivation from one source (Five Whys, domain analysis) |
 | L5 | Speculated | Plausible but no direct evidence |
 
+**Relationship to confidence stars (★★/★/—):** L-levels are a different axis — they measure evidence for a FORCE's existence; stars measure checkability of a RESOLUTION. Evidence bounds confidence downstream: a resolution serving only L4/L5 forces should not start above ★. Full vocabulary map: `docs/glossary.md` in the archwright repo.
+
 **Rules:**
 - L1-L3 product forces can drive pattern formalization directly
 - L4-L5 product forces MUST be presented to the user for validation before they enter the tension map
 - Tag every inferred force explicitly: "⚠️ Inferred — needs validation"
 - **Auto-promotion (L4 → L3):** If an inferred force (L4) is corroborated by 2+ internal project sources (e.g., decisions.md + CONTEXT.md, or ADR + mechanics doc), auto-promote to L3 and skip individual HITL confirmation. Present promotions as a summary: "N forces auto-promoted L4→L3 based on internal corroboration." Only genuinely speculative forces (L5 — no internal corroboration) require individual confirmation.
 
-### 6. Validate inferred forces with user (HITL gate)
+### 7. Validate inferred forces with user (HITL gate)
 
 Present inferred product desires to the user grouped by confidence:
 
@@ -141,7 +143,7 @@ Present inferred product desires to the user grouped by confidence:
 
 Do NOT proceed past this gate until the user confirms or rejects each inferred force.
 
-### 7. Deduplicate and link levels
+### 8. Deduplicate and link levels
 
 After validation, merge the full inventory:
 - Same force stated differently in multiple grills → one force, multiple provenance entries
@@ -150,7 +152,7 @@ After validation, merge the full inventory:
 
 **Granularity:** `serves` links can be per-force (precise) or per-theme (practical). Per-theme is acceptable when all forces in a theme serve the same product desires. Per-force is required when forces within one theme serve different product desires.
 
-### 8. Output the force inventory
+### 9. Output the force inventory
 
 Two artifacts:
 
@@ -236,7 +238,7 @@ Include exact quotes as provenance. Output as structured YAML.
 **Deduplication — do directly, not via subagent:**
 Synthesis tasks (merging, deduplicating, clustering) should be done in the main context. Subagents read well but synthesize provided text poorly.
 
-**If survey already extracted raw forces:** Skip re-extraction. Read the survey subagent results from `.scratch/archwright-raw/` or the survey output directly. The forces phase becomes pure dedup + validation — done directly.
+**If survey already extracted raw forces:** Skip re-extraction. Read the survey subagent results from `.scratch/subagent-raw/` or the survey output directly. The forces phase becomes pure dedup + validation — done directly.
 
 **Validation after subagent return:**
 - Count forces vs files read. Expect ≥1 force per source file on average.

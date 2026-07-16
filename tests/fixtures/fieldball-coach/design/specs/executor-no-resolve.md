@@ -4,6 +4,8 @@ id: executor-no-resolve
 from_patterns:
   - "pattern:execution-purity"
 confidence: "★"
+protects_experience: "predictable-practice-runs"  # product-force id
+user_story: "When a coach runs the same play twice, it unfolds the same way — execution never re-resolves mid-run."
 check:
   method: grep
   target: "client/src/execution"

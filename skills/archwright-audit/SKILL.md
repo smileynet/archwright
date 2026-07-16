@@ -89,6 +89,8 @@ For each contradiction:
 - **MEDIUM** — confusing. Takes time to discover the truth. Creates friction during development.
 - **LOW** — cosmetic. Outdated detail that doesn't affect decision-making.
 
+(Severity measures a finding's IMPACT — it is not the confidence scale ★★/★/—, which measures checkability of resolutions. Vocabulary map: `docs/glossary.md` in the archwright repo.)
+
 **Fix type:**
 - **doc-fix** — the code is right, update the doc
 - **code-fix** — the doc describes the intended behavior, fix the code

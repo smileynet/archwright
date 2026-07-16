@@ -59,8 +59,11 @@ For resolved tensions, determine:
 | `formalized` | Pattern exists in `design/patterns/` |
 | `decided-not-formalized` | Decision made in grill/ADR but no pattern file |
 | `coded-not-formalized` | Resolution is in the code but never written as a pattern |
+| `none` | No decision and no pattern — the tension is open |
 
 ### 6. Output tension map
+
+Write to `.memory/archwright-tensions-<area>.yaml` (working scaffolding, same convention as the forces inventory — durable resolutions later become patterns in `design/patterns/`):
 
 ```yaml
 area: <area-name>
