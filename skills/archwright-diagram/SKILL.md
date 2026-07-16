@@ -78,18 +78,16 @@ stateDiagram-v2
     WaitingForCompletion --> Advancing : CHAIN_COMPLETED [last slot]
     Advancing --> RunComplete : cursor >= total_steps
     RunComplete --> [*]
-
-    state WaitingForCompletion {
-        note right of WaitingForCompletion
-            INVARIANT: pending_slots non-empty
-            INVARIANT: stale generation ignored
-        end note
-    }
 ```
+
+| State | Invariant |
+|-------|-----------|
+| WaitingForCompletion | pending_slots non-empty |
+| WaitingForCompletion | stale generation ignored |
 
 **Conventions:**
 - Guards in `[brackets]` after event name
-- `note` blocks for invariants (what must be true IN this state)
+- Invariants in a markdown table below the diagram — never `note` blocks (see Rendering Hygiene #3)
 - Composite states for orthogonal regions
 - Keep to ≤8 states per diagram (split into sub-diagrams if larger)
 - Name states as domain concepts, not implementation (`WaitingForCompletion`, not `_pending_check`)
@@ -124,7 +122,7 @@ sequenceDiagram
 - Order participants left-to-right by information flow
 - Solid arrows (`->>`) for commands/events
 - Dashed arrows (`-->>`) for responses/signals
-- `Note over` for important state changes or invariants
+- `Note over` only for brief action context (≤1 line, e.g., "Player moves toward target") — invariants and attributions go in tables below the diagram (Rendering Hygiene #3)
 - Keep to ≤12 messages per diagram (split long flows into phases)
 - Title each diagram with the scenario name
 
@@ -272,7 +270,7 @@ printf "flowchart TD\nA --> B\n" | merman-cli -i - -o out.png
 
 - Replace the domain model (diagrams are derived FROM the model, not independent)
 - Generate code (visual only)
-- Produce binary image files (text-based Mermaid rendered at view time)
+- Commit binary image files as deliverables (the text-based Mermaid/smcat source is the artifact; PNG rendering per Rendering Hygiene #1 is a verification step, and skipped gracefully when renderers aren't installed)
 - Own the data (if model.yaml changes, re-generate diagrams)
 
 ## Integration with Model Phase

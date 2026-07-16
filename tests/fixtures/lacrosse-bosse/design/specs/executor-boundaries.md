@@ -4,6 +4,8 @@ id: executor-boundaries
 from_patterns:
   - "pattern:execution-purity"
 confidence: "★"
+protects_experience: "testable-in-isolation"  # product-force id
+user_story: "When a developer tests the executor, it runs without dragging in resolution machinery."
 allowed:
   - source: "PlayManager3D"
     target: "ResolvedPlayView"

@@ -10,7 +10,7 @@ from_patterns:
 from_model: "model:producer-actor-id"  # provenance to the model entry (actor or contract candidate) this formalizes
 confidence: "★"
 
-protects_experience: "experience-id"
+protects_experience: "experience-id"  # modeled experience (preferred) or product-force id
 user_story: "One sentence describing what the user experiences when this contract is upheld."
 
 fields:

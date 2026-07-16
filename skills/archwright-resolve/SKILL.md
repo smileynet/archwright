@@ -62,9 +62,9 @@ Then [observable outcome that satisfies the desire]
 
 **e) Present the questions (not pre-formed options) to the human.** The answers become the resolution.
 
-### 3. For fully-resolved tensions: Research and present options
+### 3. For open (unresolved) tensions: Research and present options
 
-(Standard path when architecture isn't yet decided but the tension is clear)
+(Standard path when architecture isn't yet decided but the tension is clear. Fully-resolved tensions take the confirmation pass in step 1 — never this path.)
 
 - Domain conventions (how does the sport/industry handle this?)
 - Software patterns (what do similar systems do?)
@@ -154,7 +154,7 @@ When a violation is found (by `archwright-check`):
 archwright-survey → archwright-forces → archwright-tensions → archwright-resolve (this) → archwright-formalize → archwright-model → archwright-contract → archwright-derive → archwright-check
 ```
 
-## Does NOT Cover
+## Does NOT
 
 - Project planning (use `spec-driven-development` for phases/tasks)
 - Implementation (specs tell you WHAT, coding does HOW)

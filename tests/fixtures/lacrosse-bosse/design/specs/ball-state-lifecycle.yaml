@@ -3,6 +3,9 @@ id: ball-state-lifecycle
 from_patterns:
   - "pattern:ball-possession"
 
+protects_experience: "ball-always-somewhere"  # product-force id (fixture has no modeled experience layer)
+user_story: "When a coach watches a practice run, the ball is always visibly somewhere — it never disappears or duplicates during a transfer."
+
 context:
   variables:
     possession:

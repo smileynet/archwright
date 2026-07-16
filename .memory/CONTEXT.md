@@ -50,7 +50,8 @@ A counterexample paired with the nearest satisfying instance. The diff between t
 _Avoid_: "error report" (contrast pair carries the fix direction, not just the problem)
 
 **Confidence (★★ / ★ / —)**:
-Stated belief that a resolution names a true invariant vs. one workable arrangement. ★★ = mechanically verifiable (model checker, type system, proof). ★ = heuristically checkable (code review, test coverage, playtests). — = advisory (expert judgment, no mechanical check). Gates AI autonomy, pass-up escalation, and checking rigor.
+Stated belief that a resolution names a true invariant vs. one workable arrangement. ★★ = mechanically verifiable (model checker, type system, proof). ★ = heuristically checkable (code review, test coverage, playtests). — = advisory (expert judgment, no mechanical check). Gates AI autonomy, pass-up escalation, and checking rigor. Anchor vocabulary — derived scales (autonomy actions, check severities) and related-but-distinct axes (force evidence L1–L5, audit finding severity HIGH/MED/LOW) are mapped in `docs/glossary.md`.
+_Avoid_: using error/warn/info or HIGH/MED/LOW as if they were confidence values — they derive from or sit beside it.
 
 **Scenario walk**:
 The derivation process for discovering forces from desires: walk a human desire through the current architecture as concrete scenarios, identify where gaps or friction arise, generate architectural questions that expose the underlying tension. The primary method for translating product desires into architectural form.

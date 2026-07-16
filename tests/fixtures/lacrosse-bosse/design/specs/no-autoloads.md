@@ -4,6 +4,8 @@ id: no-autoloads
 from_patterns:
   - "pattern:explicit-dependencies"
 confidence: "★"
+protects_experience: "testable-in-isolation"  # product-force id
+user_story: "When a developer opens any scene in isolation, it runs without hidden global state."
 check:
   method: grep
   target: "project.godot"

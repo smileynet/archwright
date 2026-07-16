@@ -117,7 +117,11 @@ scenarios:
     verifies: [invariant-1, invariant-2]
 ```
 
-**protects_experience** links to the model's experience layer. If you can't name which experience a spec protects, the spec may be an implementation detail, not a design guarantee.
+**protects_experience** accepts either reference kind:
+- A modeled-experience ID from the model's experience layer (**preferred** — the model names what users feel)
+- A product-force ID (**acceptable** when the experience lives at product-force level and no experience layer entry exists — don't invent a hollow experience just to fill the field)
+
+If you can't name which experience OR product desire a spec protects, the spec may be an implementation detail, not a design guarantee. `archwright-validate.py` warns (never fails) when the field is absent.
 
 **user_story** tells the story from the user's (coach or player) perspective. Not "the system does X" but "the user sees/feels/experiences X."
 

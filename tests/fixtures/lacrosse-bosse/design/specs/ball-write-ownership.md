@@ -4,6 +4,8 @@ id: ball-write-ownership
 from_patterns:
   - "pattern:ball-possession"
 confidence: "★★"
+protects_experience: "single-holder"  # product-force id
+user_story: "When two fielders contend for the ball, exactly one ends up holding it — never both."
 allowed:
   - source: "BallStateService"
     target: "ball_holder"

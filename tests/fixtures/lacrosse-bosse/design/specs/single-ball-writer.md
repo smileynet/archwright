@@ -4,6 +4,8 @@ id: single-ball-writer
 from_patterns:
   - "pattern:ball-possession"
 confidence: "★★"
+protects_experience: "single-holder"  # product-force id
+user_story: "When possession changes, every fielder and the UI agree on who holds the ball — there is one writer of truth."
 check:
   method: grep
   target: "client/src"

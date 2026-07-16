@@ -11,8 +11,23 @@ Concepts and terminology for the force-resolution design language and its archit
 - **Pattern** — a recurring, reusable *resolution* of a named tension that hands specific commitments down to architecture. Must trace to a product desire via `serves` link. Defined by the [pattern schema](pattern-schema.md).
 - **Resolution** — the generative move that balances the forces. A rule for making form, never a fixed artifact.
 - **Consequence** — a *new* force introduced by a resolution. Consequences propagate the design forward (downstream) and can also travel upward as emergent obligations.
-- **Confidence** — Alexander's asterisks (★★ / ★ / —): ★★ = mechanically verifiable (model checker, type system, proof). ★ = heuristically checkable (code review, test, playtest). — = advisory (expert judgment, no mechanical check). Drives AI autonomy and the pass-up stopping rule.
+- **Confidence** — Alexander's asterisks (★★ / ★ / —): ★★ = mechanically verifiable (model checker, type system, proof). ★ = heuristically checkable (code review, test, playtest). — = advisory (expert judgment, no mechanical check). Drives AI autonomy and the pass-up stopping rule. **This is the anchor vocabulary** — see the mapping table below for how other scales relate.
 - **Evidence** — the grounding for belief in a pattern: playtests, prior art, empirical data. The running artifact is the ultimate evidence source.
+
+### Confidence vocabulary map (anchor: ★★ / ★ / —)
+
+Two vocabularies are direct 1:1 derivations of confidence:
+
+| Confidence | AI autonomy on violation (survey/resolve) | Check severity (check/review output) |
+|:----------:|-------------------------------------------|--------------------------------------|
+| ★★ | Escalate to human | `error` |
+| ★ | Propose fix | `warning` |
+| — | Auto-adjust or log | `info` |
+
+Two other scales are **different axes** — related to confidence, not aliases of it:
+
+- **Evidence levels L1–L5** (forces phase; `evidence_level` on force files) measure how well-evidenced a FORCE is: L1 stated, L2 observed, L3 corroborated, L4 inferred, L5 speculated. Relationship: evidence bounds confidence downstream — a resolution serving only L4/L5 forces should not start above ★ (the force itself may not survive validation), while L1–L3 forces place no ceiling.
+- **Finding severity HIGH/MEDIUM/LOW** (audit skill) measures the IMPACT of a doc contradiction (actively misleading / friction / cosmetic). It is not a confidence claim at all — an audit finding has a severity; the spec or pattern it implicates has a confidence.
 - **Scenario walk** — the derivation process: walk a human desire through the current architecture as concrete scenarios, identify where gaps or friction arise, generate architectural questions that expose the underlying tension. The primary method for translating desires into architectural form.
 
 ## Scales (large → small)
