@@ -4,6 +4,15 @@
 **Goal:** archwright-check.py becomes a real polyglot tool that any archwright-enabled project can use: executes checks from specs, produces structured JSON (MCP-compatible + SARIF), supports baseline ratchet, works across languages (GDScript, TypeScript, Rust, Python).
 **Status:** Design complete (.scratch/check-tool-design.md). Implementation not started.
 
+**Audit reconciliation (2026-07-16, see `.memory/audit/tools.md` + `audit-plan.md`):**
+- This spec **absorbs** audit-plan.md **B4** (tiered check routing + grep hardening): CK-05 (ripgrep backend), CK-11–13 (ast-grep), CK-06 (`target_status: pending`). B4's remaining delta — comment false-positive hardening for Tier 1 and erroring on unknown `expect:` values (A1/F3 silent false-pass) — is folded into CK-05's acceptance below.
+- This spec **absorbs** audit-plan.md **C1** (contrast pairs → CK-10) and most of **C2** (provenance/routing → CK-09, structured output → CK-03). C2's ★★ `escalate` flag: add to CK-09.
+- A1 findings that adjust tickets: current `--json` drops violations/provenance the tool already computes (CK-03 is partly re-plumbing, not greenfield); unknown `expect:` values silently pass (fix in CK-05); Alloy jar path is hardcoded to `~/code/archwright/.references/` (fix opportunistically in CK-04's error handling).
+- Naming: success criterion 1 says `--structural` — today's flag is `--static`, and skills/steering were just corrected to `--static` (A2). If Phase 5 introduces `--structural` as a NEW mode (schema+links), update skills/steering/AGENTS.md in CK-17 as a breaking rename, not silently.
+
+**CK-05 acceptance additions (from B4):** a constraint keyword appearing only in a comment does not match (comment-stripping or rg pattern guidance per language); `expect:` values outside `absent|present|only-in` are a tool error (exit 2), not a silent pass.
+**CK-09 acceptance addition (from C2):** violations on ★★ specs carry `escalate: true`.
+
 ---
 
 ## Success Criteria
@@ -147,8 +156,8 @@ CK-01 → CK-03 → CK-05 → CK-07 → CK-17 → CK-19
 
 ## Out of Scope (for this spec)
 
-- Alloy integration (already exists as archwright-compile-alloy.py + archwright-check --model)
-- Trace validation (already exists as archwright-trace-validate.sh)
+- Alloy integration (already exists as archwright-compile-alloy.py; behavior dispatch in archwright-check.py — note: there is NO `--model` flag; verified `.memory/audit/tools.md`)
+- Trace validation (working implementation is `archwright-check.py --trace`; `archwright-trace-validate.{sh,mjs}` are BROKEN — schema fork + TS syntax, see `.memory/audit/tools.md` F2 — repair/deletion tracked as audit-plan.md B7)
 - MCP server (future enhancement, tracked as R33)
 - Auto-fix capabilities (tool reports, agent/human decides fix)
 - Custom rule DSL (specs ARE the rules — no separate language needed)
