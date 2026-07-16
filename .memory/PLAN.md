@@ -1,7 +1,7 @@
 # PLAN: Live Design Checking for Lacrosse-Bosse-Platform
 
 > **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) added same day and ACTIVE.**
-> Loose ends tracked in [/audit-plan.md](../audit-plan.md): T7 trace emitter → ticket C4; R18 growth rules validation + S15 selective re-checking → ticket C5. Phase 5 overlaps audit-plan.md B4 (tiered check routing) — reconcile before starting either.
+> Loose ends tracked in [/audit-plan.md](../audit-plan.md): T7 trace emitter → ticket C4; R18 growth rules validation + S15 selective re-checking → ticket C5. Phase 5 reconciled with the audit plan 2026-07-16: it absorbs audit tickets B4/C1/C2 (deltas folded into the spec — see its "Audit reconciliation" section).
 
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
 

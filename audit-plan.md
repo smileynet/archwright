@@ -111,30 +111,18 @@ Workstream D: HYGIENE (independent — can run immediately)
 **Acceptance:** Survey skill emits the table; intake outline template includes it.
 **Effort:** 45m · **Priority:** P2
 
-### B4 — Tiered check routing + grep false-positive hardening
-**Source:** Finding #3 (guidance landed in `9ec9ca3`) + open question #13, which validated the target architecture: Tier 1 ripgrep (text), Tier 2 ast-grep/tree-sitter (structural), Tier 3 Alloy (formal), and names the next step — "build the spec-to-check compiler that routes constraint specs to the appropriate tier based on `check.method`."
-**Problem:** `archwright-check.py` still executes naive text patterns: comments explaining a rule trigger the rule's grep; `import type` triggers runtime-import checks.
-**Action:** Implement the tier router in `archwright-check.py`: route on `check.method` (grep → ripgrep, ast-grep → structural, alloy → model). For Tier 1, apply comment-stripping preprocessing for known languages (`//`, `#`) before matching. Add fixture tests for both known false-positive cases. Honor the new `check.target_status: pending` field (skip-with-note, not false pass).
-**Acceptance:** A constraint spec whose keyword appears only in a comment passes; `import type` does not trip import constraints; a spec with `check.method: ast-grep` executes structurally. Fixture tests prove all three.
-**Effort:** 4h · **Priority:** P1 · **Depends:** A1
+### B4 — Tiered check routing + grep false-positive hardening → **ABSORBED by Phase 5 (2026-07-16)**
+Upstream added Phase 5 "Polyglot + Agent-Native Check Tool" (`.memory/specs/polyglot-check-tooling.md`) covering this ticket's full scope: CK-05 (ripgrep backend), CK-11–13 (ast-grep + tree-sitter-gdscript), CK-06 (`target_status: pending`). B4's unique deltas were folded into the Phase 5 spec as CK-05 acceptance additions (comment false-positive hardening; error on unknown `expect:` values per A1/F3). No separate work remains here — execute via Phase 5.
 
 ---
 
 ## Workstream C: Intent Gaps (fuller realization of the brief)
 
-### C1 — Contrast pairs in check output
-**Source:** Brief Key Idea #5 ("the diff is the diagnosis"); spike-validated per README.
-**Problem:** Check failures likely report raw violations without the nearest-valid-alternative contrast the brief promises. (Confirm via A4.)
-**Action:** If unshipped: add contrast-pair section to violation output — for constraint violations, show the allowed pattern from the spec next to the offending line; for behavior violations, show the nearest legal transition next to the illegal one.
-**Acceptance:** A constraint failure and a trace failure each render `violation / nearest-valid` side by side, sourced from the spec.
-**Effort:** 3h · **Priority:** P2 · **Depends:** A4
+### C1 — Contrast pairs in check output → **ABSORBED by Phase 5 CK-10 (2026-07-16)**
+A4/P2 confirmed the gap (trace output has the `valid_events` primitive; no contrast rendering; constraint checks have none). Phase 5 ticket CK-10 implements `contrast_pair: {expected, actual}` — exactly this scope. Execute via Phase 5.
 
-### C2 — Correction routing as first-class output
-**Source:** Brief Step 5 — violation → invariant → pattern → force, with fix direction and ★★ escalation.
-**Problem:** Provenance exists in specs; whether check output actually renders the full route (FROM pattern → force, FIX DIRECTION, escalation flag) is unverified.
-**Action:** After A4: make check output include the full provenance chain and a `fix_direction` (sourced from spec/pattern), plus an `escalate: true` flag for ★★ violations. Wire into JSON schema (check-results spec).
-**Acceptance:** A ★★ violation output contains pattern ID, force ID, fix direction, and escalation flag; matches the brief's Step 5 example shape.
-**Effort:** 3h · **Priority:** P1 · **Depends:** A4
+### C2 — Correction routing as first-class output → **ABSORBED by Phase 5 CK-03/CK-09 (2026-07-16)**
+A4/L3 confirmed the gap with evidence (constraint FAIL shows invariant+★★ only; trace FAIL has `from_pattern` but `from_force: null`; no fix direction; no escalation flag; `--json` drops data the tool computes). Phase 5 CK-03 (structured output: `spec_id`, `from_pattern`, `from_force`, `suggested_route`) + CK-09 (provenance + suggested_route) cover it; the ★★ `escalate: true` flag was added to CK-09's acceptance in the spec. Execute via Phase 5.
 
 ### C3 — Confidence lifecycle tooling
 **Source:** Brief §Confidence System — "promoted (evidence accumulates) or demoted (counterexample found)."
@@ -198,9 +186,9 @@ Workstream D: HYGIENE (independent — can run immediately)
 | B1 | Domain overlays / adaptive scales | P1 | 4h | — |
 | B2 | protects_experience flexibility | P2 | 1h | — |
 | B3 | Source quality assessment in survey | P2 | 45m | — |
-| B4 | Tiered check routing + grep hardening | P1 | 4h | A1 |
-| C1 | Contrast pairs in check output | P2 | 3h | A4 |
-| C2 | Correction routing first-class | P1 | 3h | A4 |
+| B4 | Tiered check routing + grep hardening | — | — | ABSORBED → Phase 5 (CK-05/06/11–13) |
+| C1 | Contrast pairs in check output | — | — | ABSORBED → Phase 5 (CK-10) |
+| C2 | Correction routing first-class | — | — | ABSORBED → Phase 5 (CK-03/09) |
 | C3 | Confidence lifecycle tooling | P2 | 4h | — |
 | C4 | Trace emitter close-out/descope | P2 | 2h | A3 |
 | C5 | Growth rules validation | P3 | 2h | A3 |
@@ -224,7 +212,9 @@ Workstream D: HYGIENE (independent — can run immediately)
 
 **Batch 1 (2026-07-16):** D2 ✅ · A1 ✅ (`.memory/audit/tools.md`) · D1 ✅ · A2 ✅ (`.memory/audit/skills.md`, fix-now edits landed) · A4 ✅ (`.memory/audit/claims.md`, dogfood of archwright-audit).
 Key outcomes: 5 dead-flag/broken-tool references fixed in skills/steering; survey routing completed to 12 skills; `subagent-reliability.md` source-of-truth restored; AGENTS.md/README now match verified reality; claims matrix: 6 shipped, 3 spike-only, 4 aspirational.
-**Next:** B7 (unblocks A3) → A3 + A5, then B-workstream.
+
+**Phase 5 reconciliation (2026-07-16):** Upstream's Phase 5 (polyglot check tooling, `.memory/specs/polyglot-check-tooling.md`) absorbs B4, C1, C2. Their unique deltas were folded into that spec (CK-05: comment false-positives + `expect:` typo → exit 2; CK-09: ★★ `escalate: true`); the spec's two false premises were corrected against A1 evidence (trace-validate.sh is broken, `--model` flag doesn't exist). Remaining independent audit work: B7 → A3 + A5, B1–B3, B5, B6, C3–C7, D3.
+**Next:** B7 (unblocks A3) → A3 + A5, then B-workstream. Phase 5 execution proceeds under `.memory/PLAN.md` with the reconciled spec.
 
 ---
 
