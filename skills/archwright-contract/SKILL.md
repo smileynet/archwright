@@ -29,6 +29,7 @@ Derive typed structural contracts from a domain model. The bridge between WHO ow
 
 The domain model (from `archwright-model`):
 - `design/models/<system>-actors.yaml` — actor definitions with `owns:`, `emits_events:`, `accepts_events:`, `lifecycle:`
+- `contract_candidates:` — the model's list of cross-boundary events (event name, producer, consumers) awaiting formalization. **This phase is the sole producer of contract specs** — the model names WHICH events exist; this phase decides WHAT they carry. Every candidate must end up in exactly one contract spec (or an explicit skip note).
 
 ### 2. For each actor, produce structural specs
 
@@ -50,6 +51,7 @@ For each actor that has `owns:` fields, produce a contract spec:
 kind: contract
 id: <actor-id>-state-schema
 from_patterns: ["pattern:<source-pattern>"]
+from_model: "model:<actor-id>"          # provenance back to the model entry
 confidence: "<inherited from pattern>"
 
 fields:
@@ -73,15 +75,21 @@ lifecycle:
 
 ### 4. Event payload contracts
 
-For each event in any actor's `emits_events:` that crosses an actor boundary:
+For each entry in the model's `contract_candidates:` (every event that crosses an actor boundary):
+
+**Granularity rule — the spec unit is the independently-evolving contract:**
+- **Default: one contract spec per event type.** Independent events evolve independently; each gets its own file and lifecycle.
+- **Sanctioned exception — protocol cluster:** the tightly-coupled messages of ONE protocol, owned by one authority actor, that evolve in lockstep (e.g., the request/accept/reject legs of a single transfer protocol — the request leg produced by the counterparty belongs to the same protocol). Cluster specs are **named for the protocol** (`ball-possession-events`), not the system.
+- **Prohibited: per-system grand event files.** Never collect a system's unrelated events into one `<system>-events.yaml` — that shared artifact kills independent evolution and muddies git history.
 
 ```yaml
 kind: contract
-id: <system>-events
+id: <event-name>              # or <protocol-name>-events for a protocol cluster
 from_patterns: ["pattern:<source-pattern>"]
+from_model: "model:<producer-actor-id>"   # provenance to the model's candidate entry
 
 events:
-  <event_name>:
+  <event_name>:               # one event by default; a cluster lists its lockstep siblings
     producer: <actor-id>
     consumers: [<actor-ids>]
     payload:
@@ -169,7 +177,9 @@ internal:
 ### 7. Validate
 
 - Every state schema field traces to the model's `owns:` declaration
-- Every event payload matches the model's `emits_events` signature
+- Every model `contract_candidates` entry is covered by exactly one contract spec (or an explicit skip note)
+- Every event payload matches the model's `emits_events` signature; every contract spec carries `from_model:` provenance
+- Event specs follow the granularity rule: one per event type, protocol clusters named for the protocol, no per-system dumping grounds
 - Persisted fields are a subset of owned fields (can't persist what you don't own)
 - Stability annotations exist for all cross-boundary events
 - No contract spec duplicates information already in a behavior spec (state schemas describe SHAPE, behavior specs describe TRANSITIONS — complementary, not overlapping)
@@ -194,9 +204,9 @@ Present the batch grouped by actor:
 
 ## Output Location
 
-Contract specs are written to `design/specs/` alongside behavior and constraint specs:
+Contract specs are written to `design/specs/` alongside behavior and constraint specs, **organized per owning producer actor**. File path is always `design/specs/<spec-id>.yaml` — the deterministic `kind:id` → path mapping is absolute:
 - State schemas: `design/specs/<actor-id>-state-schema.yaml`
-- Event payloads: `design/specs/<system>-events.yaml` (grouped by system, not per-event)
+- Event payloads: `design/specs/<event-name>.yaml` (one per event type; a protocol cluster uses `design/specs/<protocol-name>-events.yaml`)
 - Persistence schemas: `design/specs/<actor-id>-persistence.yaml`
 - Interface surfaces: `design/specs/<actor-id>-interface.yaml`
 

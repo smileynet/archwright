@@ -7,6 +7,7 @@ kind: contract
 id: data-shape-name
 from_patterns:
   - "pattern:source-pattern-id"
+from_model: "model:producer-actor-id"  # provenance to the model entry (actor or contract candidate) this formalizes
 confidence: "★"
 
 protects_experience: "experience-id"
