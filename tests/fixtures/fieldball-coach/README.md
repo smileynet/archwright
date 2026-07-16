@@ -25,6 +25,7 @@ design/
     explicit-dependencies.md      # Pattern: no autoloads, explicit injection
   specs/
     ball-state-lifecycle.yaml     # Behavior spec (statechart)
+    ball-possession-events.yaml   # Contract spec (event payloads)
     single-ball-writer.md         # Constraint: only BallStateService writes ball_holder
     ball-write-ownership.md       # Dependency: forbidden writers
     executor-no-resolve.md        # Constraint: execution/ never references PlayResolver

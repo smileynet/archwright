@@ -45,6 +45,12 @@ properties:
       type: string
     description: "IDs of larger patterns this one helps complete (upward network links)."
 
+  serves:
+    type: array
+    items:
+      type: string
+    description: "IDs of product-level desires this pattern helps satisfy. Patterns without serves links are flagged for review (may be architectural indulgence)."
+
   completed_by:
     type: array
     items:
