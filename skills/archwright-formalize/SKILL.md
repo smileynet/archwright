@@ -145,8 +145,12 @@ For each architectural commitment in the Resolution section, identify what spec 
 | "Only Y may write Z" | `constraint` | Single ball writer |
 | "X must not import Y" | `dependency` | Executor boundaries |
 | "Data shape must include fields A, B, C" | `contract` | Play data contract |
+| "Event X carries fields Y, Z" | `contract` | Fragment delivery events |
+| "Actor state must persist across save/load" | `contract` | Zone persistence schema |
 
 List each as `"<kind>:<proposed-id>"` in the frontmatter.
+
+**Include contract specs proactively.** Every pattern that introduces actors with owned state or cross-boundary events should declare contract specs in `resolves_into` alongside behavior/constraint specs. The `archwright-contract` phase produces these, but they need to be declared here so the pipeline knows to expect them.
 
 ### 7. Validate
 

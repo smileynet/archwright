@@ -90,6 +90,12 @@ For each capability/domain area in the project, assess:
 | Is it formalized as a pattern? | ✓ in design/patterns/ / ✗ missing |
 | Are specs derived? | ✓ checkable specs exist / ○ partial / ✗ missing |
 | Are specs verified? | ✓ checks pass / ○ checks exist but not wired / ✗ no checks |
+| Is there a domain model? | ✓ in design/models/ / ✗ missing |
+| Are data contracts derived? | ✓ contract specs exist / ○ partial / ✗ missing |
+| Do docs match code? | ✓ audited / ○ untested / ✗ known contradictions |
+| Is there a domain model? | ✓ in design/models/ / ✗ missing |
+| Are data contracts derived? | ✓ contract specs exist / ○ partial / ✗ missing |
+| Do docs match code? | ✓ audited / ○ untested / ✗ known contradictions |
 
 ### 3. Produce the intake outline
 
@@ -131,6 +137,8 @@ Route each gap to the appropriate specialist:
 | Model exists but no data contracts | `archwright-contract` | AFK |
 | Model exists but specs missing | `archwright-derive` | AFK |
 | Specs exist but not verified | `archwright-check` | AFK |
+| Docs may contradict code | `archwright-audit` | AFK |
+| Code may violate specs | `archwright-review` | AFK |
 
 ### 5. Present the outline and STOP
 
