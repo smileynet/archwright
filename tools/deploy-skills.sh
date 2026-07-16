@@ -52,6 +52,18 @@ if [ -d "$SKILLS_SRC" ]; then
   done
 fi
 
+# Deploy domain overlays (source of truth: tools/domains/) into the survey
+# skill's references dir — skills load them via references/domains/ (survey)
+# or ../archwright-survey/references/domains/ (other skills), so overlays
+# work on machines where this repo isn't cloned.
+DOMAINS_SRC="$REPO_DIR/tools/domains"
+if [ -d "$DOMAINS_SRC" ] && [ -d "$SKILLS_DST/archwright-survey" ]; then
+  rm -rf "$SKILLS_DST/archwright-survey/references/domains"
+  mkdir -p "$SKILLS_DST/archwright-survey/references"
+  cp -r "$DOMAINS_SRC" "$SKILLS_DST/archwright-survey/references/domains"
+  echo "  ✓ domains: $(ls "$DOMAINS_SRC" | tr '\n' ' ')"
+fi
+
 # Deploy steering
 if [ -d "$STEERING_SRC" ]; then
   for file in "$STEERING_SRC"/*.md; do

@@ -32,6 +32,8 @@ Two other scales are **different axes** — related to confidence, not aliases o
 
 ## Scales (large → small)
 
+The four scale IDs are canonical and domain-invariant (they're levels of Alexander's tower); domain overlays in `tools/domains/{game,web,general}/scales.yaml` provide native labels and examples per domain (web: "Product Vision" for premise; general: "Purpose & Commitments"). Patterns always store the canonical ID. The labels below are the game overlay's:
+
 - **Premise** — genre, fantasy, whole experience. (Alexander's region/town.)
 - **Loops & Systems** — core loop, meta loop, session shape, economies. (Buildings/neighborhoods.)
 - **Verbs & Interactions** — moment-to-moment actions and feedback. (Rooms.)

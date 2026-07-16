@@ -82,7 +82,7 @@ This pattern is incomplete unless it also contains:
 | `kind` | yes | Always `pattern` |
 | `id` | yes | Unique slug — the token to reference this pattern |
 | `name` | yes | Human-readable name |
-| `scale` | yes | Design tower level: `premise` / `loops-systems` / `verbs-interactions` / `feel-finish` |
+| `scale` | yes | Design tower level: `premise` / `loops-systems` / `verbs-interactions` / `feel-finish` — canonical IDs, domain-invariant. Domain overlays (`tools/domains/<domain>/scales.yaml`) provide native labels per domain; the stored value is always the canonical ID. |
 | `confidence` | yes | `★★` (mechanically verifiable) / `★` (heuristically checkable) / `—` (advisory, no mechanical check) |
 | `status` | yes | `active` / `fog` (known gap) / `deprecated` (superseded) |
 | `serves` | yes | IDs of product-level desires this pattern helps satisfy — **every pattern must trace to a human need** |

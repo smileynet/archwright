@@ -56,6 +56,7 @@
 |----|-------|-------------|--------|---------|
 | CK-01 | Spec YAML schema validation | archwright-check --structural validates all specs against spec-schema.yaml + contract template. Reports malformed specs with file+line+error. | Small | None |
 | CK-02 | Link resolution check | Walk all specs, extract `kind:id` references from `links:`, `from_patterns:`, `resolves_into:`. Verify each target exists as a file in design/. Report orphan references. | Small | CK-01 |
+| CK-20 | Fixture test hardening (from audit A5 + B1/B2 reviews) | `run-fixture-tests.sh` gains: (a) violation-overlay test (inject known violation, assert FAIL with file:line, revert); (b) bad-spec fixtures (malformed YAML, dangling refs → assert FAIL); (c) trace fixtures (valid + violating trace → assert `--trace` verdicts); (d) B2 warn-path assertion — spec missing `protects_experience` emits WARN and still exits 0; (e) domain-overlay structural check — every `tools/domains/*/scales.yaml` id list equals the pattern-schema enum in canonical order, predicates have no dup ids and all 4 required fields. | Medium (~2.5h) | None (independent of check.py rewrite) |
 | CK-03 | Structured JSON output contract | Define and implement the output JSON schema. All modes produce conforming output. Include `status`, `scope`, `violations[]`, `remaining_delta`, `coverage`. | Medium | CK-01 |
 | CK-04 | Exit code contract | Exit 0 = pass, 1 = violations, 2 = tool error. Wire through all modes. | Trivial | CK-03 |
 
