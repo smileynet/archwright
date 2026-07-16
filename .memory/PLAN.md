@@ -10,33 +10,62 @@
 ## Task Graph
 
 ```
-Phase 0: Foundation
+Phase 0: Foundation ✅
 ├── C1  Commit design/ in LBP
 ├── T1  Make tools PATH-accessible (mise.toml)
 ├── U2  Add assurance field to check-results schema
 └── U3  Add abstraction_notes to spec-schema.yaml
 
-Phase 1: Static Layer (depends on Phase 0)
+Phase 1: Static Layer ✅ (depends on Phase 0)
 ├── T5  Constraint spec check extraction
 ├── T3  archwright-check --static batch mode
 ├── T4  Structured JSON output
 └── S13 Wire pre-commit hook, prove violations blocked
 
-Phase 2: Trace Layer Design (depends on Phase 0)
+Phase 2: Trace Layer Design ✅ (depends on Phase 0)
 ├── U1  Finalize trace JSON schema
 ├── U4  Add check block to behavior spec schema
-├── R20 [IN SPEC] Trace validation algorithm
-└── R18 [IN SPEC] Growth rules derivation → U5
+├── R20 Trace validation algorithm
+└── R18 Growth rules derivation → U5
 
-Phase 3: Trace Layer Implementation (depends on Phase 2)
+Phase 3: Trace Layer Implementation ✅ (depends on Phase 2)
 ├── T7  GDScript trace emitter (~20 lines)
 ├── T6  Build archwright-check --trace
 └── S14 Conformance test for ball-state-lifecycle
 
-Phase 4: Integration (depends on Phases 1 + 3)
+Phase 4: Integration ✅ (depends on Phases 1 + 3)
 ├── U5  Growth rules in spec check.trace.scope fields
 ├── S15 Selective re-checking via affected algorithm
 └── CI  Wire trace + static into unified gate
+
+Phase 5: Polyglot + Agent-Native Check Tool (depends on Phase 4)
+├── 5a: Foundation
+│   ├── CK-01  Spec YAML schema validation
+│   ├── CK-02  Link resolution check
+│   ├── CK-03  Structured JSON output contract (MCP-compatible)
+│   └── CK-04  Exit code contract
+├── 5b: Static Checks + Baseline (CRITICAL PATH)
+│   ├── R32   Research: violation fingerprinting
+│   ├── CK-05  Grep backend (ripgrep subprocess)
+│   ├── CK-06  target_status: pending handling
+│   ├── CK-07  Baseline file implementation
+│   ├── CK-08  Baseline ratchet enforcement
+│   ├── CK-09  Provenance in violation output
+│   └── CK-10  Contrast pair generation
+├── 5c: ast-grep + GDScript (parallel after S20)
+│   ├── S20   Spike: ast-grep + tree-sitter-gdscript on Windows
+│   ├── CK-12  Compile tree-sitter-gdscript grammar
+│   ├── CK-11  ast-grep backend
+│   └── CK-13  GDScript pattern library
+├── 5d: SARIF Output (parallel)
+│   ├── R31   Research: minimum viable SARIF for GitHub
+│   ├── CK-14  SARIF output mode
+│   ├── CK-15  GitHub Actions workflow template
+│   └── CK-16  Fingerprinting for SARIF dedup
+└── 5e: Agent Interface (after 5b)
+    ├── CK-17  Update archwright-check skill
+    ├── CK-18  remaining_delta convergence tracking
+    └── CK-19  Scope selection from git diff
 ```
 
 ### Dependency Graph
@@ -112,14 +141,52 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 
 **Milestone:** Full live test operational. Selective re-checking keeps it fast.
 
+### Phase 5: Polyglot + Agent-Native Check Tool (8-12 hours across sub-phases)
+
+| ID | Task | Spec | Status |
+|----|------|------|--------|
+| CK-01 | Spec YAML schema validation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-02 | Link resolution check | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-03 | Structured JSON output (MCP-compatible) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-04 | Exit code contract | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| R32 | Research: violation fingerprinting | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-05 | Grep backend (ripgrep) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-06 | target_status: pending handling | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-07 | Baseline file implementation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-08 | Baseline ratchet enforcement | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-09 | Provenance in violation output | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-10 | Contrast pair generation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| S20 | Spike: ast-grep + GDScript on Windows | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-11 | ast-grep backend | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-12 | Compile tree-sitter-gdscript | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-13 | GDScript pattern library | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| R31 | Research: minimum viable SARIF | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-14 | SARIF output mode | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-15 | GitHub Actions workflow template | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-16 | Fingerprinting for SARIF dedup | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-17 | Update archwright-check skill | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-18 | remaining_delta convergence tracking | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-19 | Scope selection from git diff | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+
+**Critical path:** CK-01 → CK-03 → CK-05 → CK-07 → CK-17 → CK-19
+**Milestone 5a:** `archwright-check --structural` validates specs (link integrity gate)
+**Milestone 5b:** `archwright-check --static` with baseline runs on catalyst-mono (core value)
+**Milestone 5c:** ast-grep parses GDScript (structural checks beyond regex)
+**Milestone 5d:** SARIF output + GitHub Actions template (ecosystem integration)
+**Milestone 5e:** Skill invokes tool in closed repair loop (agent-native)
+
 ---
 
 ## Outstanding Research
 
 | ID | Question | Location | Status |
 |----|----------|----------|--------|
-| R20 | Trace validation algorithm | [trace-schema.md](specs/trace-schema.md) § Research: R20 | Drafted (pseudocode complete) |
-| R18 | Growth rules / change propagation | [growth-rules.md](specs/growth-rules.md) § Research: R18 | Drafted (6 rules + algorithm) |
+| R20 | Trace validation algorithm | [trace-schema.md](specs/trace-schema.md) § Research: R20 | ✅ Done |
+| R18 | Growth rules / change propagation | [growth-rules.md](specs/growth-rules.md) § Research: R18 | Drafted |
+| R30 | ast-grep GDScript integration (Windows) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| R31 | Minimum viable SARIF for GitHub | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| R32 | Violation fingerprinting strategy | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| R33 | MCP tool exposure | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Deferred |
 
 Both research topics are resolved to draft level. Implementation will validate or revise.
 
@@ -147,6 +214,7 @@ Both research topics are resolved to draft level. Implementation will validate o
 | drift-gate | S13, T1, C1, C3 | [specs/drift-gate.md](specs/drift-gate.md) |
 | conformance-test | S14, T7, C2 | [specs/conformance-test.md](specs/conformance-test.md) |
 | growth-rules | U5, S15, R18 | [specs/growth-rules.md](specs/growth-rules.md) |
+| polyglot-check-tooling | CK-01–CK-19, S20, R30–R33 | [specs/polyglot-check-tooling.md](specs/polyglot-check-tooling.md) |
 
 ---
 
