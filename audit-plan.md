@@ -214,7 +214,8 @@ A4/L3 confirmed the gap with evidence (constraint FAIL shows invariant+★★ on
 Key outcomes: 5 dead-flag/broken-tool references fixed in skills/steering; survey routing completed to 12 skills; `subagent-reliability.md` source-of-truth restored; AGENTS.md/README now match verified reality; claims matrix: 6 shipped, 3 spike-only, 4 aspirational.
 
 **Phase 5 reconciliation (2026-07-16):** Upstream's Phase 5 (polyglot check tooling, `.memory/specs/polyglot-check-tooling.md`) absorbs B4, C1, C2. Their unique deltas were folded into that spec (CK-05: comment false-positives + `expect:` typo → exit 2; CK-09: ★★ `escalate: true`); the spec's two false premises were corrected against A1 evidence (trace-validate.sh is broken, `--model` flag doesn't exist). Remaining independent audit work: B7 → A3 + A5, B1–B3, B5, B6, C3–C7, D3.
-**Next:** B7 (unblocks A3) → A3 + A5, then B-workstream. Phase 5 execution proceeds under `.memory/PLAN.md` with the reconciled spec.
+**B7 ✅ (2026-07-16):** Fixture `design/` restored (3 patterns + 5 specs written, joining upstream's contract spec); `run-fixture-tests.sh` repaired (set-e find death, stale extensionless paths) and extended (behavior-spec section); broken `archwright-trace-validate.{sh,mjs}` deleted (canonical: `archwright-check.py --trace`). Verified: 16 passed / 0 failed / 1 skipped (Alloy jar); negative test — injected `ball_holder = self` violation caught by both ★★ specs with file:line, then reverted to green. A4/DL1 doc lie corrected in fixture README. **A3 is now unblocked.**
+**Next:** A3 + A5, then B-workstream (B1–B3, B5, B6) and C-tickets.
 
 ---
 

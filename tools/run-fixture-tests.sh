@@ -3,9 +3,10 @@
 # Exit 0 if all pass (or fixture is empty), 1 if any fail.
 set -euo pipefail
 
-FIXTURE="$(dirname "$0")/../tests/fixtures/lacrosse-bosse"
-VALIDATE="$(dirname "$0")/archwright-validate"
-CHECK="$(dirname "$0")/archwright-check"
+TOOLS="$(dirname "$0")"
+FIXTURE="$TOOLS/../tests/fixtures/lacrosse-bosse"
+VALIDATE="$TOOLS/archwright-validate.py"
+CHECK="$TOOLS/archwright-check.py"
 PASS=0
 FAIL=0
 SKIP=0
@@ -24,9 +25,9 @@ report() {
   fi
 }
 
-# Schema Validation (patterns + specs)
-patterns=$(find "$FIXTURE/design/patterns" -name "*.md" 2>/dev/null | sort)
-specs=$(find "$FIXTURE/design/specs" -name "*.md" -o -name "*.yaml" 2>/dev/null | sort)
+# Schema Validation (patterns + specs) — `|| true` guards set -e when dirs are absent
+patterns=$(find "$FIXTURE/design/patterns" -name "*.md" 2>/dev/null | sort || true)
+specs=$(find "$FIXTURE/design/specs" \( -name "*.md" -o -name "*.yaml" \) 2>/dev/null | sort || true)
 
 if [ -z "$patterns" ] && [ -z "$specs" ]; then
   echo "=== Fixture is empty — no patterns or specs to validate ==="
@@ -52,21 +53,40 @@ else
   report FAIL "broken links" "$(python3 "$VALIDATE" --links "$FIXTURE/design/" 2>&1)"
 fi
 
-# Conformance Checks (only for specs with check blocks)
+# Conformance Checks (constraint/dependency specs with check blocks)
 echo ""
 echo "=== Conformance Checks ==="
-constraint_specs=$(find "$FIXTURE/design/specs" -name "*.md" 2>/dev/null | sort)
-if [ -z "$constraint_specs" ]; then
-  report SKIP "no constraint specs to check"
+md_specs=$(find "$FIXTURE/design/specs" -name "*.md" 2>/dev/null | sort || true)
+if [ -z "$md_specs" ]; then
+  report SKIP "no constraint/dependency specs to check"
 else
-  for f in $constraint_specs; do
-    result=$(python3 "$CHECK" "$f" 2>&1)
+  for f in $md_specs; do
+    result=$(python3 "$CHECK" "$f" 2>&1 || true)
     if echo "$result" | grep -q "PASS"; then
       report PASS "$(basename "$f" .md)"
     elif echo "$result" | grep -q "SKIP"; then
       report SKIP "$(basename "$f" .md)"
     else
       report FAIL "$(basename "$f" .md)" "$result"
+    fi
+  done
+fi
+
+# Behavior Checks (Alloy if jar present, else SKIP)
+echo ""
+echo "=== Behavior Checks ==="
+yaml_behavior=$(grep -l "^kind: behavior" "$FIXTURE"/design/specs/*.yaml 2>/dev/null | sort || true)
+if [ -z "$yaml_behavior" ]; then
+  report SKIP "no behavior specs"
+else
+  for f in $yaml_behavior; do
+    result=$(python3 "$CHECK" "$f" 2>&1 || true)
+    if echo "$result" | grep -q "PASS"; then
+      report PASS "$(basename "$f" .yaml)"
+    elif echo "$result" | grep -q "SKIP"; then
+      report SKIP "$(basename "$f" .yaml) (alloy jar unavailable)"
+    else
+      report FAIL "$(basename "$f" .yaml)" "$result"
     fi
   done
 fi

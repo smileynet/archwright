@@ -50,4 +50,4 @@ design/
 ./tools/run-fixture-tests.sh
 ```
 
-All 14 checks should pass.
+Expected: **16 passed, 0 failed, 1 skipped** (behavior spec skips without `.references/alloy6.jar` — `.references/` is gitignored).

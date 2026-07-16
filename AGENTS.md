@@ -40,8 +40,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
-│   ├── archwright-trace-validate.{sh,mjs} # BROKEN (schema fork w/ check.py --trace; see .memory/audit/tools.md F2)
-│   ├── run-fixture-tests.sh       # BROKEN (stale paths + missing fixture design/; see .memory/audit/tools.md F1)
+│   ├── run-fixture-tests.sh       # Full check suite vs tests/fixtures/lacrosse-bosse
 │   ├── deploy-skills.sh           # Sync skills + steering to ~/.kiro/ (or --project <path>)
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
@@ -116,7 +115,7 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `tools/run-fixture-tests.sh` — BROKEN, see `.memory/audit/tools.md` F1 (repair = audit-plan.md B7) |
+| Run fixture tests | `tools/run-fixture-tests.sh` — 16 checks + 1 skip (Alloy jar) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
