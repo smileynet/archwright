@@ -1,5 +1,8 @@
 # PLAN: Live Design Checking for Lacrosse-Bosse-Platform
 
+> **STATUS: COMPLETE (2026-07-16).** This plan is closed and kept as the historical record.
+> Loose ends are tracked in [/audit-plan.md](../audit-plan.md): T7 trace emitter → ticket C4; R18 growth rules validation + S15 selective re-checking → ticket C5.
+
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
 
 **Target project:** `~/code/lacrosse-bosse-platform`
