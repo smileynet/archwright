@@ -25,7 +25,7 @@ Review implementation for design alignment — does the code honor the architect
 | Layer | Method | Tool | CI-able? | What it catches |
 |-------|--------|------|----------|----------------|
 | **Structural** | AST pattern matching | semgrep + grep | ✅ Yes | Import violations, silent catches, mutation in observers, plaintext secrets |
-| **Behavioral** | Trace validation | archwright-trace-validate | ✅ Yes (with instrumented tests) | Wrong state transitions, skipped phases, invalid targets |
+| **Behavioral** | Trace validation | archwright-check.py --trace | ✅ Yes (with instrumented tests) | Wrong state transitions, skipped phases, invalid targets |
 | **Semantic** | AI-assisted review | Subagent dispatch | ⚠️ Periodic (non-deterministic) | Intent drift, edge case reasoning, experience degradation |
 
 ## Process
@@ -66,7 +66,7 @@ If the project has instrumented tests that emit traces:
 npm test  # traces land in design/specs/traces/
 
 # Validate each trace against its behavior spec
-archwright-trace-validate design/specs/<behavior-spec>.yaml design/specs/traces/<trace>.json
+python3 tools/archwright-check.py --trace design/specs/<behavior-spec>.yaml design/specs/traces/<trace>.json
 ```
 
 **Output:** Pass/fail per trace. Violations show which event violated which transition.
@@ -184,7 +184,7 @@ For each violation, read `from_pattern` + `from_force`:
 |------|---------|---------|
 | `archwright-check` | Structural (grep) checks | In archwright/tools/ |
 | `semgrep` | Structural (AST) checks | `pip install semgrep` or `pipx install semgrep` |
-| `archwright-trace-validate` | Behavioral trace validation | In archwright/tools/ |
+| `archwright-check.py --trace` | Behavioral trace validation | In archwright/tools/ |
 | `archwright-check-compile` | Generate checks from intents | In archwright/tools/ |
 
 ## Does NOT

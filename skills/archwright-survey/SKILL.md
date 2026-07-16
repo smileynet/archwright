@@ -22,12 +22,17 @@ survey → forces → tensions → resolve → formalize → model → contract 
 | You want to... | Use |
 |----------------|-----|
 | Full state review of a project | This skill (full mode below) |
+| Audit docs for truth (contradictions, drift) | `archwright-audit` |
 | Name the forces in an area | `archwright-forces` |
 | Find what tensions exist | `archwright-tensions` |
 | Resolve a design tension (make a decision) | `archwright-resolve` |
 | Capture a decision as a pattern | `archwright-formalize` |
-| Generate specs from a pattern | `archwright-derive` |
+| Map domains, actors, state machines | `archwright-model` |
+| Derive typed data contracts from the model | `archwright-contract` |
+| Generate specs from a pattern + model | `archwright-derive` |
 | Verify specs against implementation | `archwright-check` |
+| Review code for design alignment | `archwright-review` |
+| Render models/patterns as diagrams | `archwright-diagram` |
 
 ## Core Principles
 
