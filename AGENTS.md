@@ -26,7 +26,8 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-derive/         # Generate specs from domain models
 │   ├── archwright-check/          # Verify specs against implementation
 │   ├── archwright-review/         # Review code for design alignment
-│   └── archwright-audit/          # Audit docs for truth (surface contradictions)
+│   ├── archwright-audit/          # Audit docs for truth (surface contradictions)
+│   └── archwright-diagram/        # Render models/patterns as Mermaid diagrams
 ├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
 │   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
 │   └── subagent-reliability.md    # Failure handling for parallel dispatch
@@ -34,9 +35,17 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── compilation.svg            # Fig 1: vertical compile from forces to architecture
 │   ├── invariant_boundary.svg     # Fig 2: invariant-as-no-go-region + pass-up hop
 │   └── pass_up_tower.svg          # Fig 3: pass-up as level-terminating climb
-├── tools/                         # Mechanical operations (on PATH)
+├── tools/                         # Mechanical operations
+│   ├── archwright-validate.py     # Schema + link validation for patterns/specs
+│   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static
+│   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
+│   ├── archwright-check-compile.mjs # Intent patterns → check blocks
+│   ├── archwright-trace-validate.{sh,mjs} # BROKEN (schema fork w/ check.py --trace; see .memory/audit/tools.md F2)
+│   ├── run-fixture-tests.sh       # BROKEN (stale paths + missing fixture design/; see .memory/audit/tools.md F1)
+│   ├── deploy-skills.sh           # Sync skills + steering to ~/.kiro/ (or --project <path>)
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
+│   ├── trace-schema.ts            # Trace event type definitions
 │   ├── templates/                 # Document templates
 │   │   ├── pattern.md             # New pattern template
 │   │   ├── spec-behavior.yaml    # Behavior spec template
@@ -44,14 +53,15 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   │   ├── spec-constraint.md    # Constraint spec template
 │   │   └── spec-dependency.md    # Dependency spec template
 │   └── domains/                   # Domain-specific overlays
-│       ├── game/                  # Game design predicates + scales
-│       └── general/               # General structural predicates
+│       └── game/                  # Game design predicates (scales + general/ planned — audit-plan.md B1)
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
-│   ├── research-plan.md           # Research topics & spike proposals
-│   ├── research-synthesis.md      # R1-R5 findings
-│   ├── research-synthesis-2.md    # R6-R11 findings
+│   ├── PLAN.md                    # COMPLETE — historical (live checking for LBP)
+│   ├── specs/                     # Specs for the prior plan's deliverables
+│   ├── audit/                     # Audit reports (tools, skills, claims)
+│   ├── research-*.md              # Research plans & syntheses
 │   └── adr/                       # Architecture decision records
+├── audit-plan.md                  # Active standalone audit plan (tickets A/B/C/D)
 ├── .scratch/                      # Ephemeral working notes (gitignored)
 ├── .references/                   # Reference repos (gitignored)
 └── AGENTS.md                      # This file
@@ -73,15 +83,17 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-check` — verify specs against implementation
 - `archwright-review` — review code for design alignment (structural + behavioral + semantic)
 - `archwright-audit` — audit docs for truth (surface contradictions between docs and code)
+- `archwright-diagram` — render models/patterns as Mermaid diagrams
 
 **Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates
 - `subagent-reliability.md` — failure handling for parallel dispatch
 
-**Tools** (on PATH, `tools/`):
-- Schema validation, spec → Alloy compilation, Alloy execution, counterexample parsing
+**Tools** (`tools/`, invoked via interpreter — see Commands):
+- `archwright-validate.py` — schema + link validation; `archwright-check.py` — check dispatcher (static/trace/Alloy)
+- `archwright-compile-alloy.py` — behavior spec → Alloy 6 model; `archwright-check-compile.mjs` — intent → check blocks
 - Templates for patterns and each spec kind (`tools/templates/`)
-- `deploy-skills.sh` — sync skills + steering from repo to global `~/.kiro/`
+- `deploy-skills.sh` — sync skills + steering from repo to global `~/.kiro/` (or `--project <path>`)
 
 **Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills.sh` to push to global.
 
@@ -91,12 +103,20 @@ Research + design-theory project transitioning to implementation. Primary output
 
 ## Commands
 
+Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
+
 | Task | Command |
 |------|---------|
-| Validate pattern | `archwright-validate <pattern.yaml>` |
-| Validate spec | `archwright-validate <spec.yaml>` |
-| Check spec (Alloy) | `archwright-check <spec.yaml>` |
-| Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` |
+| Validate pattern/spec | `python3 tools/archwright-validate.py <file>...` |
+| Validate links | `python3 tools/archwright-validate.py --links <dir>` |
+| Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` |
+| Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>]` |
+| Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` |
+| Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
+| Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
+| Deploy skills | `bash tools/deploy-skills.sh [--project <path>]` |
+
+Note: `archwright-check.py` has no `--structural` flag — the flag is `--static`.
 
 ## Workflows
 

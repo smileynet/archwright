@@ -26,7 +26,7 @@ Keep *forces* first-class — and product-level desires (what humans need) are t
 Archwright is a **methodology embodied as agent skills**, with supporting tools for mechanical tasks. The AI agent IS the system — it holds the design methodology. Humans express intent through conversation; the agent resolves it into checkable specifications.
 
 - **Skills** (global, `~/.kiro/skills/`) — the design methodology: force identification, resolution, verification, correction
-- **Tools** (on PATH, `tools/`) — mechanical operations: schema validation, spec → Alloy compilation, checking, parsing
+- **Tools** (`tools/`, invoked via interpreter) — mechanical operations: schema validation, spec → Alloy compilation, checking, parsing
 - **Patterns** (in target project, `design/patterns/`) — captured design intent
 - **Models** (in target project, `design/models/`) — domain actors, state machines, event flows, composition
 - **Specs** (in target project, `design/specs/`) — verified architectural commitments (behavior, constraint, contract, dependency)
@@ -53,9 +53,9 @@ Archwright is a **methodology embodied as agent skills**, with supporting tools 
 
 ## Project Status
 
-Research + design phase. Spikes validated: pattern schema, spec layer, Alloy as checking backend (94ms counterexample finding), contrast pair generation, game failure predicates, live validation feasibility.
+Methodology operational; hardening in progress. Spikes validated: pattern schema, spec layer, Alloy as checking backend (94ms counterexample finding), contrast pair generation, game failure predicates, live validation feasibility. The live-checking tracer bullet against lacrosse-bosse-platform is complete (`.memory/PLAN.md`): static constraint checks block commits, trace validation catches behavior violations with provenance.
 
-**Next:** Tracer bullet against lacrosse-bosse — encode existing design decisions as patterns + specs, verify invariants, demonstrate violation detection.
+**Next:** Audit & intent-alignment pass — see [audit-plan.md](audit-plan.md) for tickets (tool audit, skill consistency, claims verification, domain overlays, gate re-evaluation).
 
 ## Lineage
 
