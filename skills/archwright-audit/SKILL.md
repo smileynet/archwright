@@ -180,7 +180,7 @@ Per `subagent-reliability` steering: each subagent reads specific doc files + co
 
 - Check code against specs (that's `archwright-review`)
 - Fix documentation (generates tickets; human decides and acts)
-- Validate spec schema/links (that's `archwright-check --structural`)
+- Validate spec schema/links (that's `archwright-validate.py`)
 - Run on every PR (too expensive; periodic or event-triggered)
 - Judge documentation quality/style (only truth — is it accurate?)
 

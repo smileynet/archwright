@@ -7,10 +7,10 @@ Applies when working on archwright methodology, archwright skills, or running ar
 The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`) is a sequence of **discrete phases with human checkpoints between them**.
 
 **Check is continuous, not terminal:**
-- After contract/derive: run `archwright-check --structural` (validate spec schema, link resolution)
-- After any code change: run `archwright-check --static` (verify constraint specs against code)
-- After test suite runs: run `archwright-check --trace` (verify behavior specs against execution traces)
-- Design audits: run `archwright-check --design` (spatial distribution, graph validity, interface stability)
+- After contract/derive: run `python3 tools/archwright-validate.py <specs>... && python3 tools/archwright-validate.py --links design/` (spec schema, link resolution)
+- After any code change: run `python3 tools/archwright-check.py --static design/specs/` (verify constraint specs against code)
+- After test suite runs: run `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` (verify behavior specs against execution traces)
+- Design audits: AI-assisted via `archwright-review` (no dedicated tool flag exists)
 
 **Rules:**
 1. Each skill invocation = one phase. Produce its artifact, present it, STOP.
