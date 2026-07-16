@@ -140,17 +140,12 @@ Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`
 
 ## Pipeline Phase Discipline
 
-The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`) is a sequence of **discrete phases with human checkpoints between them**.
+The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`) is a sequence of discrete phases. **Gates block only where human input is needed** (ADR 0007, `.memory/adr/0007-hitl-only-gates.md`):
 
-**Rules:**
-1. Each skill invocation = one phase. Produce its artifact, present it, STOP.
-2. After presenting the phase output, ask whether to proceed to the next phase — never auto-advance.
-3. "Proceed" after orientation means "run the current phase" (the one named in Next Steps[1]), not "run all phases."
-4. The survey skill explicitly does NOT write patterns, specs, or resolve tensions. It produces an intake outline and dispatch queue.
-5. Phases that require human input (resolve, grill) are HITL gates — they cannot be skipped even if prior decisions exist.
-6. A skill's "Does NOT" section is a hard boundary, not a suggestion.
+- **HITL-blocking (always stop):** resolve (decisions; pre-resolved = one batched confirmation), L4/L5 desire validation in forces, any ★★ event (violation / unratified assignment / demotion), fog (unknown forces mid-span), end-of-span digest acceptance.
+- **Flow-through (auto-advance):** all other phase transitions — only within a human-pre-authorized span, only when the phase's artifacts pass `archwright-validate.py`, and only with a digest entry written. No span authorized → stop after each phase.
 
-**Why:** Each phase produces an artifact the human should review before it feeds the next. Pattern quality depends on force quality. Spec quality depends on pattern quality. Skipping review compounds errors silently.
+Constants: survey never writes patterns/specs or resolves tensions; a skill's "Does NOT" section is a hard boundary; "proceed" authorizes the next phase or an explicitly accepted span — never a silent run to completion.
 
 ## Target Project Artifacts
 

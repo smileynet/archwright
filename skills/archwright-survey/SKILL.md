@@ -145,17 +145,16 @@ Route each gap to the appropriate specialist:
 | Docs may contradict code | `archwright-audit` | AFK |
 | Code may violate specs | `archwright-review` | AFK |
 
-### 5. Present the outline and STOP
+### 5. Present the outline, propose a span, and STOP
 
 Show the human:
 1. What's already complete (celebrate coverage)
 2. What can be done without them (AFK dispatch queue)
-3. What needs their input (HITL items — unresolved tensions, unexplored areas)
+3. What needs their input (HITL items — unresolved tensions, unexplored areas, L4/L5 desires to validate)
 4. Recommended order (dependency-aware — forces before tensions before patterns before specs)
+5. **A proposed span** — the contiguous flow-through phases you recommend running unattended (e.g., "forces through derive"), with the HITL gates inside it called out (resolve confirmation, any expected ★★ events)
 
-Ask: "Shall I dispatch the AFK queue, or do you want to review/adjust first?"
-
-**STOP HERE.** Do not proceed to the next pipeline phase until explicitly told which phase to run. "Proceed" means "I've reviewed, dispatch what you proposed" — it does NOT mean "run the entire pipeline to completion."
+**STOP HERE** — survey always ends with this gate. If the human accepts the proposed span, run it under ADR 0007 flow-through rules: auto-advance only while `archwright-validate.py` passes each phase's artifacts, write a digest entry per phase, hard-stop at resolve / ★★ events / fog, and present the full digest at span end. If no span is accepted, run one phase per "proceed."
 
 ---
 
