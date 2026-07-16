@@ -1,0 +1,55 @@
+# Web Domain Predicates
+# Web app / service backend design predicates. General predicates
+# (../general/predicates.yaml) also apply — these are additive.
+# Referenced by archwright patterns in their Evidence/Verification sections.
+#
+# Growth rule (OQ#9): pipeline runs MAY append predicates discovered during
+# resolution. When this file exceeds ~25 entries, run a curation pass: dedupe,
+# merge near-synonyms, and promote cross-domain entries to general/.
+# Predicates are ADVISORY — formalizing them is open question #6/#9.
+
+predicates:
+  # --- Data & Caching ---
+  - id: cache-with-owner
+    statement: "Every cache has a named owner responsible for its invalidation strategy; a cache without one is future staleness"
+    applicable_when: "response caching, CDN layers, denormalized reads, memoization"
+    prior_art: "CDN cache-control ownership, Facebook TAO leader-based invalidation"
+    anti_pattern: "Ad-hoc caches added under load → stale data bugs no one can trace"
+
+  - id: read-write-asymmetry
+    statement: "Read and write paths may scale and model data differently; forcing one shape on both serves neither"
+    applicable_when: "high read/write ratio, reporting vs transactions, search over relational data"
+    prior_art: "CQRS (Young/Fowler), DynamoDB single-table read projections, read replicas"
+    anti_pattern: "One normalized model strained by both paths → N+1 reads or hot writes"
+
+  # --- Sessions & Trust ---
+  - id: server-authoritative-state
+    statement: "The client proposes, the server decides; client-held state is a hint, never the source of truth"
+    applicable_when: "auth/session state, pricing, inventory, permissions, multiplayer position"
+    prior_art: "Never-trust-the-client (OWASP), authoritative game servers, server-side price recomputation"
+    anti_pattern: "Client-supplied totals or roles honored server-side → tampering, privilege escalation"
+
+  - id: optimistic-ui-with-reconciliation
+    statement: "The UI may show intended state immediately IF a reconciliation path handles server rejection"
+    applicable_when: "form submissions, toggles, likes/votes, collaborative editing"
+    prior_art: "React Query optimistic updates + rollback, Figma/Linear sync engines"
+    anti_pattern: "Optimism without rollback → UI lies when the server says no"
+
+  # --- Load & Failure ---
+  - id: backpressure-over-buffering
+    statement: "When a consumer falls behind, push the signal upstream (reject/shed/slow) rather than buffering unboundedly"
+    applicable_when: "queues, websocket fan-out, ingestion pipelines, rate limiting"
+    prior_art: "Reactive Streams spec, TCP flow control, AWS SQS + load shedding at the edge"
+    anti_pattern: "Unbounded queues absorb spikes → OOM or hours-stale processing instead of a clean 429"
+
+  - id: timeout-retry-budget
+    statement: "Every remote call has a timeout, and retries draw from a budget with jittered backoff — never bare infinite retry"
+    applicable_when: "service-to-service calls, third-party APIs, database connections"
+    prior_art: "AWS Architecture blog (exponential backoff + jitter), circuit breakers (Nygard, Release It!)"
+    anti_pattern: "Retry storms amplify partial outages into total ones"
+
+  - id: graceful-degradation-tiers
+    statement: "Features declare their tier: core paths keep working when enhancement-tier dependencies fail"
+    applicable_when: "third-party widgets, recommendations, analytics, search"
+    prior_art: "Progressive enhancement, Netflix fallback ladders (personalized → popular → static)"
+    anti_pattern: "Checkout blocked because the recommendations service is down"

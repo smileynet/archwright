@@ -1,0 +1,28 @@
+# Game Domain Scales
+# Domain-native labels for the four canonical scale levels.
+# The `id` values are canonical and fixed (pattern-schema.yaml enum) — patterns
+# store the id; skills speak the label. (B1, ADR-backed: D1 canonical-IDs decision.)
+
+domain: game
+
+scales:
+  - id: premise
+    label: "Premise"
+    applies_to: "genre, fantasy, whole experience, foundational commitments"
+    examples: ["roguelike structure", "coach-authored practices", "from-scratch engine policy"]
+    alexander: "region / town"
+  - id: loops-systems
+    label: "Loops & Systems"
+    applies_to: "core loop, meta loop, session shape, economies, orchestration"
+    examples: ["run-death-upgrade loop", "practice execution lifecycle", "resource economy"]
+    alexander: "buildings / neighborhoods"
+  - id: verbs-interactions
+    label: "Verbs & Interactions"
+    applies_to: "moment-to-moment actions and feedback, single operations, state transitions"
+    examples: ["throw/catch possession transfer", "dash with cooldown", "dialogue bark trigger"]
+    alexander: "rooms"
+  - id: feel-finish
+    label: "Feel & Finish"
+    applies_to: "juice, affordances, microcopy, player expression, accessibility"
+    examples: ["hit-stop on impact", "controller rumble language", "colorblind-safe team palettes"]
+    alexander: "construction detail & ornament"

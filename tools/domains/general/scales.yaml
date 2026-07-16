@@ -1,0 +1,27 @@
+# General Domain Scales
+# Fallback overlay for projects that are neither game nor web (CLI tools,
+# libraries, pipelines, infra). Ids are canonical (pattern-schema.yaml enum).
+
+domain: general
+
+scales:
+  - id: premise
+    label: "Purpose & Commitments"
+    applies_to: "what the tool/system is for, foundational policies (data authority, platform, from-scratch vs adopt)"
+    examples: ["local-first, no server", "single binary distribution", "config-as-data policy"]
+    alexander: "region / town"
+  - id: loops-systems
+    label: "Components & Flow"
+    applies_to: "component boundaries, data flow, lifecycle management, orchestration contracts"
+    examples: ["pipeline stage boundaries", "plugin loading lifecycle", "queue-worker topology"]
+    alexander: "buildings / neighborhoods"
+  - id: verbs-interactions
+    label: "Operations & Transitions"
+    applies_to: "single operations, state transitions, user-facing actions, input/output"
+    examples: ["idempotent sync command", "watch-mode file trigger", "atomic write-then-rename"]
+    alexander: "rooms"
+  - id: feel-finish
+    label: "Ergonomics & Polish"
+    applies_to: "CLI/API ergonomics, error messages, accessibility, output conventions"
+    examples: ["actionable error messages", "structured JSON output flag", "progress reporting"]
+    alexander: "construction detail & ornament"

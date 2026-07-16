@@ -20,6 +20,7 @@ Extract and name the desires and constraints acting on a project area. Scan sour
 The orchestrator or user provides:
 - An area name (e.g., "play-data-pipeline", "editor-authoring")
 - Source files to read (grill Q-files, ADRs, spec requirements)
+- The project domain (game / web / general — from the survey intake outline). Load `tools/domains/<domain>/scales.yaml` (archwright repo) so force statements and scale references use the domain's native vocabulary.
 
 ### 2. Read sources — PRODUCT LEVEL FIRST
 

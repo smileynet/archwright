@@ -23,14 +23,16 @@ Write a pattern from a resolved tension. The pattern captures the forces, names 
 
 ### 2. Determine scale
 
-Where does this pattern sit in the design hierarchy?
+Where does this pattern sit in the design hierarchy? Load the domain overlay's `tools/domains/<domain>/scales.yaml` (domain comes from the survey's intake outline; fallback `general`) and use its labels/examples when discussing scale with the human. The `scale:` frontmatter field always stores the **canonical id** — the enum in `tools/pattern-schema.yaml` is domain-invariant:
 
-| Scale | Applies to |
-|-------|-----------|
-| `premise` | Foundational commitments that constrain everything below (coordinate systems, data authority, from-scratch policy) |
-| `loops-systems` | Component boundaries, data flow, lifecycle management, orchestration contracts |
-| `verbs-interactions` | Single operations, state transitions, user-facing actions, input/output |
-| `feel-finish` | Sensory qualities, accessibility, visual language, rendering conventions |
+| Canonical id (stored) | Level | Domain overlay provides |
+|-----------------------|-------|-------------------------|
+| `premise` | Foundational commitments that constrain everything below | native label + examples (game: "Premise", web: "Product Vision", general: "Purpose & Commitments") |
+| `loops-systems` | Component boundaries, data flow, lifecycle, orchestration | native label + examples |
+| `verbs-interactions` | Single operations, state transitions, user-facing actions | native label + examples |
+| `feel-finish` | Sensory/ergonomic qualities, accessibility, polish | native label + examples |
+
+Also load `tools/domains/<domain>/predicates.yaml` (plus `general/predicates.yaml` for non-general domains) — predicates are named prior art for the Evidence section.
 
 ### 3. Write the pattern
 

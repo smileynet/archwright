@@ -71,7 +71,7 @@ Game design patterns use domain-specific predicates that recur across projects (
 - How does the predicate library grow? (Add from each pipeline run? Curate quarterly?)
 - Relationship to the 12 counterexample classification predicates (#6): are game predicates a superset, subset, or orthogonal?
 
-Current state: `tools/domains/game/predicates.yaml` has 13 entries from the Catalyst MLP pipeline run, covering pacing, progression, agency, UI, and world design.
+Current state: `tools/domains/{game,web,general}/predicates.yaml` exist (game: 13 entries from the Catalyst MLP run; web: 7; general: 7). B1 (2026-07-16) settled the overlay STRUCTURE — parallel `scales.yaml` + `predicates.yaml` per domain, advisory shape (statement/applicable_when/prior_art/anti_pattern), growth rule in each file header (append from runs; curate at ~25 entries; promote cross-domain entries to general/). Still open here: checkable formalization, composition, empirical validation, and the relationship to the #6 counterexample predicates.
 
 
 ### 10. Audit Findings as Force Input ← NEW (from Catalyst pipeline run)
