@@ -113,10 +113,12 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 | Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>]` |
 | Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` |
 | Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
+| Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `bash tools/deploy-skills.sh [--project <path>]` |
+| Run fixture tests | `tools/run-fixture-tests.sh` — BROKEN, see `.memory/audit/tools.md` F1 (repair = audit-plan.md B7) |
 
-Note: `archwright-check.py` has no `--structural` flag — the flag is `--static`.
+Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
 ## Workflows
 
@@ -124,6 +126,7 @@ Note: `archwright-check.py` has no `--structural` flag — the flag is `--static
 2. **Explore an open question** — pick from docs/open-questions.md, research, produce ADR
 3. **Build tooling** — scripts in `tools/` for validation, compilation, checking
 4. **Tracer bullet** — encode lacrosse-bosse decisions as patterns + specs, verify
+5. **Pipeline on new project** — run full pipeline (survey→check) on a target project, producing patterns + models + specs in `design/`
 
 ## Key Constraints
 
