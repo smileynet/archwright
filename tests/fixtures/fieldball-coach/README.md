@@ -19,6 +19,12 @@ client/src/
     play_resolver.gd              # Resolution logic (NOT in execution/)
     resolved_play_view.gd         # Pre-computed view stub
 design/
+  forces/
+    ball-always-somewhere.md      # Desire: possession never ambiguous
+    single-holder.md              # Constraint (hard): one holder — physics
+    any-fielder-receives.md       # Desire: open play
+    predictable-practice-runs.md  # Desire: deterministic replay
+    testable-in-isolation.md      # Desire: headless testing
   patterns/
     ball-possession.md            # Pattern: single-holder + request/validate
     execution-purity.md           # Pattern: executor does only execution
@@ -50,4 +56,4 @@ design/
 ./tools/run-fixture-tests.sh
 ```
 
-Expected: **16 passed, 0 failed, 1 skipped** (behavior spec skips without `.references/alloy6.jar` — `.references/` is gitignored).
+Expected: **21 passed, 0 failed, 1 skipped** (behavior spec skips without `.references/alloy6.jar` — `.references/` is gitignored).

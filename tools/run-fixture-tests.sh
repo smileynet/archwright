@@ -25,18 +25,19 @@ report() {
   fi
 }
 
-# Schema Validation (patterns + specs) — `|| true` guards set -e when dirs are absent
+# Schema Validation (forces + patterns + specs) — `|| true` guards set -e when dirs are absent
+forces=$(find "$FIXTURE/design/forces" -name "*.md" 2>/dev/null | sort || true)
 patterns=$(find "$FIXTURE/design/patterns" -name "*.md" 2>/dev/null | sort || true)
 specs=$(find "$FIXTURE/design/specs" \( -name "*.md" -o -name "*.yaml" \) 2>/dev/null | sort || true)
 
-if [ -z "$patterns" ] && [ -z "$specs" ]; then
-  echo "=== Fixture is empty — no patterns or specs to validate ==="
+if [ -z "$forces" ] && [ -z "$patterns" ] && [ -z "$specs" ]; then
+  echo "=== Fixture is empty — no forces, patterns, or specs to validate ==="
   echo "=== Results: 0 passed, 0 failed (clean slate) ==="
   exit 0
 fi
 
 echo "=== Schema Validation ==="
-for f in $patterns $specs; do
+for f in $forces $patterns $specs; do
   if python3 "$VALIDATE" "$f" > /dev/null 2>&1; then
     report PASS "$(basename "$f")"
   else
