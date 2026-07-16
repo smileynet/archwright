@@ -93,10 +93,16 @@ Research + design-theory project transitioning to implementation. Primary output
 
 | Task | Command |
 |------|---------|
-| Validate pattern | `archwright-validate <pattern.yaml>` |
-| Validate spec | `archwright-validate <spec.yaml>` |
-| Check spec (Alloy) | `archwright-check <spec.yaml>` |
+| Validate pattern | `archwright-validate.py <pattern.md>` |
+| Validate spec | `archwright-validate.py <spec.yaml>` |
+| Validate links | `archwright-validate.py --links design/` |
+| Check spec (static) | `archwright-check.py --static design/specs/ --project <path>` |
+| Check spec (structural) | `archwright-check.py --structural design/` |
+| Check spec (Alloy) | `archwright-check.py --deep <spec.yaml>` |
+| Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` |
+| Deploy skills | `tools/deploy-skills.sh` |
+| Run fixture tests | `tools/run-fixture-tests.sh` |
 
 ## Workflows
 
@@ -104,6 +110,7 @@ Research + design-theory project transitioning to implementation. Primary output
 2. **Explore an open question** — pick from docs/open-questions.md, research, produce ADR
 3. **Build tooling** — scripts in `tools/` for validation, compilation, checking
 4. **Tracer bullet** — encode lacrosse-bosse decisions as patterns + specs, verify
+5. **Pipeline on new project** — run full pipeline (survey→check) on a target project, producing patterns + models + specs in `design/`
 
 ## Key Constraints
 

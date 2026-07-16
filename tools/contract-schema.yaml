@@ -1,0 +1,151 @@
+# Spec Schema: Contract v0.1
+# Validates YAML contract specs (state schemas, event payloads, persistence).
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "archwright/spec/contract/v0.1"
+title: "Archwright Contract Spec"
+type: object
+required: [kind, id, from_patterns]
+
+properties:
+  kind:
+    type: string
+    const: contract
+
+  id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]+$"
+
+  from_patterns:
+    type: array
+    items:
+      type: string
+      pattern: "^pattern:.+$"
+
+  confidence:
+    type: string
+    enum: ["★★", "★", "—"]
+
+  protects_experience:
+    type: string
+    description: "Which user experience this contract protects."
+
+  user_story:
+    type: string
+    description: "One sentence from user's perspective."
+
+  fields:
+    type: object
+    description: "Top-level typed fields owned by the actor."
+    additionalProperties:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [string, int, float, bool, enum, reference, list, map, vector3]
+        required:
+          type: boolean
+        nullable:
+          type: boolean
+        initial: {}
+        min: {}
+        max: {}
+        values:
+          type: array
+        element_type:
+          type: string
+        key_type:
+          type: string
+        value_type:
+          type: string
+        description:
+          type: string
+        from_force:
+          type: string
+
+  sub_schemas:
+    type: object
+    description: "Named sub-types (value objects, nested structures)."
+    additionalProperties:
+      type: object
+      properties:
+        fields:
+          type: object
+          additionalProperties:
+            type: object
+            required: [type]
+
+  events:
+    type: object
+    description: "Event payload contracts for cross-boundary communication."
+    additionalProperties:
+      type: object
+      required: [producer, consumers, stability, payload]
+      properties:
+        producer:
+          type: string
+        consumers:
+          type: array
+          items:
+            type: string
+        stability:
+          type: string
+          enum: [public, internal]
+        payload:
+          type: object
+          additionalProperties:
+            type: object
+            required: [type]
+
+  lifecycle:
+    type: array
+    items:
+      type: object
+      required: [state, invariant]
+      properties:
+        state:
+          type: string
+        by:
+          type: string
+        invariant:
+          type: string
+
+  persistence:
+    type: object
+    properties:
+      persisted:
+        type: array
+        items:
+          type: string
+      excluded:
+        oneOf:
+          - type: array
+            items:
+              type: string
+          - type: object
+      rationale:
+        type: string
+      versioning:
+        type: object
+        properties:
+          strategy:
+            type: string
+            enum: [additive, migration, envelope]
+          current_version:
+            type: integer
+          note:
+            type: string
+
+  links:
+    type: array
+    items:
+      type: object
+      required: [target, type]
+      properties:
+        target:
+          type: string
+          pattern: "^(behavior|contract|constraint|dependency|pattern):.+$"
+        type:
+          type: string
+          enum: [produced-by, consumed-by, constrained-by, enforces, depends-on]

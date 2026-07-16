@@ -1,0 +1,48 @@
+kind: contract
+id: ball-possession-events
+from_patterns:
+  - "pattern:ball-possession"
+confidence: "★★"
+
+protects_experience: "ball-always-somewhere"
+user_story: "When a fielder requests the ball, the transfer events carry enough typed data for any consumer to track possession changes."
+
+events:
+  possession_changed:
+    producer: ball-state-service
+    consumers: [fielder-ai-controller, runtime-ui-layer]
+    stability: public
+    payload:
+      new_holder:
+        type: reference
+        required: true
+        nullable: false
+        description: "The fielder now holding the ball"
+
+  transfer_rejected:
+    producer: ball-state-service
+    consumers: [fielder-ai-controller]
+    stability: public
+    payload:
+      requester:
+        type: reference
+        required: true
+        nullable: false
+        description: "The fielder whose request was denied"
+
+  request_transfer:
+    producer: fielder-ai-controller
+    consumers: [ball-state-service]
+    stability: public
+    payload:
+      requester:
+        type: reference
+        required: true
+        nullable: false
+        description: "The fielder requesting possession"
+
+links:
+  - target: "behavior:ball-state-lifecycle"
+    type: consumed-by
+  - target: "constraint:single-ball-writer"
+    type: enforces
