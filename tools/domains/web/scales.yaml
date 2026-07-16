@@ -1,0 +1,28 @@
+# Web Domain Scales
+# Domain-native labels for web apps and service backends.
+# Ids are canonical (pattern-schema.yaml enum) — patterns store the id;
+# skills speak the label.
+
+domain: web
+
+scales:
+  - id: premise
+    label: "Product Vision"
+    applies_to: "market position, tenancy model, platform commitments, trust boundaries"
+    examples: ["multi-tenant SaaS", "offline-first PWA", "API-as-product", "single-region by design"]
+    alexander: "region / town"
+  - id: loops-systems
+    label: "Services & Flows"
+    applies_to: "service boundaries, data flow, session/auth lifecycle, background jobs"
+    examples: ["read/write path split", "session lifecycle", "event-driven order flow"]
+    alexander: "buildings / neighborhoods"
+  - id: verbs-interactions
+    label: "Endpoints & Interactions"
+    applies_to: "single operations, API contracts, page transitions, form submissions"
+    examples: ["idempotent PUT", "optimistic todo toggle", "paginated list endpoint"]
+    alexander: "rooms"
+  - id: feel-finish
+    label: "Polish & Accessibility"
+    applies_to: "latency budgets, a11y, microcopy, loading/error states"
+    examples: ["skeleton screens under 200ms", "WCAG AA contrast", "actionable 4xx messages"]
+    alexander: "construction detail & ornament"

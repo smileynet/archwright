@@ -51,8 +51,11 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   │   ├── spec-contract.yaml    # Contract spec template
 │   │   ├── spec-constraint.md    # Constraint spec template
 │   │   └── spec-dependency.md    # Dependency spec template
-│   └── domains/                   # Domain-specific overlays
-│       └── game/                  # Game design predicates (scales + general/ planned — audit-plan.md B1)
+│   └── domains/                   # Domain overlays: scales + predicates per domain
+│       ├── detect.yaml            # Manifest → domain rules (survey applies; override wins)
+│       ├── game/                  # Game scales + 13 predicates + research sources
+│       ├── web/                   # Web scales + predicates
+│       └── general/               # Fallback scales + cross-cutting predicates
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
 │   ├── PLAN.md                    # COMPLETE — historical (live checking for LBP)

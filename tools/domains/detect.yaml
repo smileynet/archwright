@@ -1,0 +1,38 @@
+# Domain Detection Rules
+# Applied by the archwright-survey skill in step 1 (agent pattern-match — no
+# script). First matching rule wins; explicit override always beats detection.
+#
+# Override: a `domain: <game|web|general>` key in the target project's
+# `design/domain.yaml`, or the human stating the domain, wins over any rule.
+#
+# NOTE: detection reads the ARCHITECTURE, not the theme. A game-themed project
+# with an express backend is `web` (e.g., a DynamoDB game-backend demo) — its
+# patterns live at web scales even though its vocabulary mentions players.
+
+rules:
+  - domain: game
+    any_of:
+      - "project.godot present (any depth — even a test-harness copy signals game-engine domain)"
+      - "*.gd | *.gdshader | *.tscn source files present (Godot asset/library projects)"
+      - "*.uproject present"
+      - "Assets/ + ProjectSettings/ (Unity)"
+      - "package.json depends on phaser | pixi.js | babylonjs | excalibur"
+
+  - domain: web
+    any_of:
+      - "package.json depends on react | next | vue | svelte | angular"
+      - "package.json depends on express | fastify | koa | hono | nestjs"
+      - "manage.py present (Django) or pyproject depends on django | flask | fastapi"
+      - "go.mod imports net/http-based framework (gin | echo | chi | fiber)"
+      - "Rails Gemfile / phoenix mix.exs"
+      - "CDK/terraform app whose deployed artifact is a service or site"
+
+  - domain: general
+    any_of:
+      - "no rule above matched (fallback)"
+    note: "CLI tools, libraries, pipelines, agents, infra modules, docs systems"
+
+ambiguity: >
+  If multiple rules match (e.g., a Godot game with an express matchmaking
+  server in one repo), pick the domain of the AREA under survey, note the
+  split in the intake outline, and confirm with the human at the survey gate.

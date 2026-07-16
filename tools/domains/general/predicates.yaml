@@ -1,0 +1,56 @@
+# General Domain Predicates
+# Cross-cutting software design predicates — apply to any project; domain
+# overlays (game/, web/) add domain-specific ones on top.
+# Referenced by archwright patterns in their Evidence/Verification sections.
+#
+# Growth rule (OQ#9): pipeline runs MAY append predicates discovered during
+# resolution. When this file exceeds ~25 entries, run a curation pass: dedupe,
+# merge near-synonyms, and promote recurring cross-domain entries here from
+# domain files. Predicates are ADVISORY (no checkable structure) — formalizing
+# them is open question #6/#9, not settled here.
+
+predicates:
+  # --- State & Ownership ---
+  - id: single-writer
+    statement: "Each piece of mutable state has exactly one writer; everyone else requests changes via events"
+    applicable_when: "shared state, concurrent access, cross-component data"
+    prior_art: "DDD aggregates (one consistency boundary), actor model (Hewitt), Redux single store"
+    anti_pattern: "Multiple components mutating one field → race conditions, unauditable state changes"
+
+  - id: explicit-dependencies
+    statement: "Components receive their dependencies explicitly; hidden global access makes composition and testing impossible"
+    applicable_when: "component wiring, testability requirements, plugin systems"
+    prior_art: "Dependency injection (Fowler), Godot scene-local nodes over autoloads, Go's explicit context passing"
+    anti_pattern: "Global singletons/autoloads → components untestable in isolation, invisible coupling"
+
+  - id: idempotent-operations
+    statement: "Operations that may be retried must produce the same result when applied twice"
+    applicable_when: "network calls, queue consumers, sync commands, migration scripts"
+    prior_art: "HTTP PUT semantics, Stripe idempotency keys, at-least-once delivery consumers"
+    anti_pattern: "Retry of a non-idempotent op → duplicate records, double charges"
+
+  # --- Boundaries & Errors ---
+  - id: validate-at-boundaries
+    statement: "Validate input where it enters the system; trust internal calls guarded by types"
+    applicable_when: "API surfaces, file parsing, deserialization, user input"
+    prior_art: "Parse-don't-validate (Alexis King), trust-boundary threat modeling"
+    anti_pattern: "Defensive checks on every internal call → noise that hides the real boundary"
+
+  - id: fail-loud-at-source
+    statement: "Errors surface where they occur with enough context to act; silent fallbacks defer the failure to a worse place"
+    applicable_when: "error handling, default values, partial failures"
+    prior_art: "Crash-only software (Candea & Fox), Erlang let-it-crash, fail-fast principle"
+    anti_pattern: "Catch-log-continue → corrupted state discovered far from its cause"
+
+  # --- Evolution & Compatibility ---
+  - id: additive-evolution
+    statement: "Prefer adding fields/versions over mutating existing contracts; removal requires a deprecation window"
+    applicable_when: "schema changes, API versioning, persisted data, config formats"
+    prior_art: "Protobuf field-number discipline, Stripe API versioning, expand-migrate-contract"
+    anti_pattern: "In-place breaking changes → consumers break silently on deploy"
+
+  - id: reconstructible-vs-authoritative
+    statement: "Persist only authoritative state that cannot be recomputed; derive the rest on demand"
+    applicable_when: "persistence schemas, caches, save systems, snapshots"
+    prior_art: "Event sourcing (events authoritative, projections derived), game save-state research"
+    anti_pattern: "Persisting derived values → drift between source and copy, migration burden"

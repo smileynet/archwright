@@ -1,6 +1,12 @@
 # Game Domain Predicates
-# Reusable design predicates for game projects.
+# Reusable design predicates for game projects. General predicates
+# (../general/predicates.yaml) also apply — these are additive.
 # Referenced by archwright patterns in their Evidence/Verification sections.
+#
+# Growth rule (OQ#9): pipeline runs MAY append predicates discovered during
+# resolution. When this file exceeds ~25 entries, run a curation pass: dedupe,
+# merge near-synonyms, and promote cross-domain entries to general/.
+# Predicates are ADVISORY — formalizing them is open question #6/#9.
 
 predicates:
   # --- Pacing & Frequency ---

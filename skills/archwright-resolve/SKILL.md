@@ -67,6 +67,7 @@ Then [observable outcome that satisfies the desire]
 (Standard path when architecture isn't yet decided but the tension is clear. Fully-resolved tensions take the confirmation pass in step 1 — never this path.)
 
 - Domain conventions (how does the sport/industry handle this?)
+- Domain predicates (`tools/domains/<domain>/predicates.yaml` + `general/predicates.yaml` in the archwright repo — named, prior-art-backed design rules; cite matching predicates by id)
 - Software patterns (what do similar systems do?)
 - Formal methods (can this be modeled? What does the model say?)
 - Prior decisions in this project (have we solved something similar?)

@@ -17,7 +17,7 @@ Cluster extracted forces into named tensions. A tension is the explicit conflict
 
 ### 1. Receive input
 
-A force inventory (from `archwright-forces`) for one or more areas.
+A force inventory (from `archwright-forces`) for one or more areas, and the project domain (from the survey intake outline). Load `tools/domains/<domain>/scales.yaml` (archwright repo) — tension names and scale references use the domain's native labels.
 
 ### 2. Identify conflicts
 
