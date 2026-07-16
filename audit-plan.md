@@ -1,9 +1,12 @@
-# PLAN: Archwright Audit & Intent-Alignment Proposal
+# AUDIT PLAN: Archwright Functionality & Intent-Alignment
+
+**Scope:** Standalone audit plan — separate from mainline feature planning (`.memory/PLAN.md`, which remains the historical record of the lacrosse-bosse live-checking work).
 
 **Goal:** Deep-dive the current functionality, verify it against the original intent (docs/brief.md), close the gap between what the docs claim and what the tools do, and land the improvements identified in real-world pipeline runs.
 
 **Status:** Proposed — initial findings gathered 2026-07-16.
-**Prior plan:** [.memory/PLAN.md](.memory/PLAN.md) (live design checking for lacrosse-bosse-platform) — complete, with three loose ends inherited here (C4, C5).
+**Reconciliation note:** Written against a snapshot pre-dating 10 upstream commits (incl. `archwright-audit` skill extraction, doc-drift detection, `archwright-contract` phase). Tickets A2, A4, D1, and B-workstream must be re-baselined against origin/main before execution.
+**Prior plan:** [.memory/PLAN.md](.memory/PLAN.md) — complete, with three loose ends inherited here (C4, C5).
 
 ---
 
@@ -163,9 +166,9 @@ Workstream D: HYGIENE (independent — can run immediately)
 **Acceptance:** Every path in AGENTS.md layout exists; every skill/tool in the repo appears in the lists.
 **Effort:** 30m · **Priority:** P1
 
-### D2 — Archive prior plan, activate this one
-**Action:** Add a "COMPLETE — superseded by /plan.md" header to `.memory/PLAN.md`. This file (`/plan.md`) is the active plan.
-**Acceptance:** No ambiguity about which plan is live.
+### D2 — Mark prior plan complete, cross-link audit plan
+**Action:** Add a "COMPLETE" status header to `.memory/PLAN.md` noting its loose ends (T7, R18, S15) are tracked in `/audit-plan.md` (C4, C5). This file remains a standalone audit plan, not a replacement for mainline planning.
+**Acceptance:** Prior plan clearly marked complete; loose-end tracking is unambiguous.
 **Effort:** 10m · **Priority:** P1
 
 ### D3 — Promote session findings, clean .scratch
