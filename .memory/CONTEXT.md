@@ -91,3 +91,19 @@ Turning implicit into explicit — e.g., extended-state variable → discrete mo
 
 **CEGAR**:
 Counterexample-Guided Abstraction Refinement. The formal-methods loop that archwright generalizes to a design tower.
+
+**Force file**:
+The durable per-force artifact (`design/forces/<id>.md`, kind: force) — the root of provenance. `serves:` and `from_force:` resolve against these once at least one exists.
+_Avoid_: calling the working YAML inventory (`.memory/archwright-forces-*.yaml`) "the forces" — that's extraction scaffolding.
+
+**HITL-blocking gate**:
+A pipeline gate that always stops for the human: resolve, L4/L5 desire validation, ★★ events, fog, end-of-span digest. All other gates are **flow-through** (ADR 0007).
+
+**Span**:
+A human-pre-authorized run of contiguous flow-through phases ("forces through derive"). Auto-advance never crosses the span boundary; each phase writes a digest entry.
+
+**Protocol cluster (contract exception)**:
+Tightly-coupled messages from ONE producer that evolve in lockstep (e.g., request/accept/reject) — may share one contract spec, named for the protocol. The only sanctioned bend of one-spec-per-file (C7 R2, pending ratification).
+
+**Contract candidate**:
+Model-phase output naming an event's identity/direction/producer WITHOUT payload shape — the contract phase formalizes it (C7 R1, pending ratification).
