@@ -103,7 +103,7 @@ A pipeline gate that always stops for the human: resolve, L4/L5 desire validatio
 A human-pre-authorized run of contiguous flow-through phases ("forces through derive"). Auto-advance never crosses the span boundary; each phase writes a digest entry.
 
 **Protocol cluster (contract exception)**:
-Tightly-coupled messages from ONE producer that evolve in lockstep (e.g., request/accept/reject) — may share one contract spec, named for the protocol. The only sanctioned bend of one-spec-per-file (C7 R2, pending ratification).
+The tightly-coupled messages of ONE protocol, owned by one authority actor, that evolve in lockstep (e.g., request/accept/reject of a transfer — the counterparty's request leg belongs to the same protocol) — may share one contract spec, named for the protocol. The only sanctioned bend of one-spec-per-file (C7 R2, ratified 2026-07-16).
 
 **Contract candidate**:
-Model-phase output naming an event's identity/direction/producer WITHOUT payload shape — the contract phase formalizes it (C7 R1, pending ratification).
+Model-phase output naming an event's identity/direction/producer WITHOUT payload shape — the contract phase (sole owner of contract specs) formalizes it, carrying `from_model:` provenance (C7 R1, ratified 2026-07-16).

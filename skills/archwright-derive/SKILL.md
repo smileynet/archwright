@@ -1,6 +1,6 @@
 ---
 name: archwright-derive
-description: "Derive checkable specs from a pattern. Takes a formalized pattern and produces behavior, constraint, dependency, and contract specs as declared in its resolves_into. Use when a pattern exists but its specs haven't been written. Trigger: derive specs, write specs from pattern, what specs does this pattern need."
+description: "Derive checkable specs from a pattern. Takes a formalized pattern and produces behavior, constraint, and dependency specs as declared in its resolves_into (contract specs come from archwright-contract). Use when a pattern exists but its specs haven't been written. Trigger: derive specs, write specs from pattern, what specs does this pattern need."
 metadata:
   type: process
   invocation: both
@@ -22,10 +22,10 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 - Domain model (from `archwright-model`) with actor boundaries, invariants, and event flows
 
 **Also check:** existing contract specs from `archwright-contract` phase.
-- Do NOT re-derive contract specs that already exist (state schemas, event payloads, persistence schemas)
-- DO cross-reference: behavior specs should link to contract specs via `consumes` type
-- If a contract spec defines event payloads, behavior specs should reference those payload shapes in their transitions (not redefine the field list)
-- The derive phase produces BEHAVIOR specs (temporal/FSM) and CONSTRAINT specs (rules). Contract specs are produced by the contract phase — not duplicated here.
+- Contract specs are owned exclusively by the contract phase — this phase NEVER writes or re-derives them (state schemas, event payloads, persistence schemas)
+- DO cross-reference: behavior specs link to contract specs via `consumes` type
+- If a contract spec defines event payloads, behavior specs reference those payload shapes in their transitions — never restate the field list
+- The derive phase produces BEHAVIOR specs (temporal/FSM), CONSTRAINT specs (rules), and DEPENDENCY specs (relationships). If a needed contract spec doesn't exist, flag the gap back to `archwright-contract` rather than filling it here.
 
 **When both exist:** The domain model is authoritative for actor boundaries, state machines, and composition. Patterns provide provenance (which force demanded what). Use both together — the model's invariant summary is the spec dispatch list.
 
@@ -40,9 +40,9 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 **From the domain model** (`design/models/*-actors.yaml`), extract:
 - Actor state machines → behavior specs
 - Actor invariants → constraint specs
-- Actor event contracts (accepted/emitted events) → contract specs
 - Composition rules (lifecycle, spawn/invoke) → dependency specs
 - Key invariants summary → spec dispatch list (what to derive first)
+- (`contract_candidates` are consumed by `archwright-contract`, not here)
 
 ### 3. For each `resolves_into` entry (or model invariant), write the spec
 
@@ -57,9 +57,9 @@ When a domain model exists, derive specs from actor definitions:
 | `actor.state_machine` | behavior | States, transitions, guards match implementation |
 | `actor.invariants` | constraint | Rule holds in codebase (grep/ast-grep) |
 | `actor.owns` (single writer) | constraint | Only this actor writes the field |
-| `actor.accepts_events` + `emits_events` | contract | Event payload shapes match |
 | `composition.children` (lifecycle) | dependency | Child cannot exist without parent |
 | `boundary_entities` (injected policy) | constraint | Policy object is read-only to consumers |
+| `contract_candidates` | — | Handled by `archwright-contract`, not derived here |
 
 Priority: derive from the Key Invariants Summary first (these are the highest-value specs).
 
@@ -99,17 +99,6 @@ When the resolution commits to allowed/forbidden relationships:
 4. Add `check` block (grep/script that detects violations)
 
 Use template: `tools/templates/spec-dependency.md`
-
-#### Contract specs (YAML)
-
-When the resolution commits to a data shape:
-
-1. Define the fields (name, type, required/optional)
-2. Define lifecycle constraints (when fields are valid)
-3. Define producer/consumer roles
-4. Add validation rules
-
-Use template: `tools/templates/spec-contract.yaml`
 
 ### 4. Wire provenance and experience
 
@@ -182,7 +171,7 @@ Specs are written to the target project's `design/specs/` directory:
 - Behavior: `design/specs/<id>.yaml`
 - Constraint: `design/specs/<id>.md`
 - Dependency: `design/specs/<id>.md`
-- Contract: `design/specs/<id>.yaml`
+- Contract: written by `archwright-contract` (same directory) — never by this phase
 
 **One spec per file — no exceptions.** Each `resolves_into` target becomes its own file. Never group specs into shared files, even when they share a parent pattern. Reasons: addressability (`kind:id` references need unique files), independent lifecycle (specs evolve separately), clean git blame, and tooling compatibility (`archwright-check` targets individual files).
 
@@ -203,6 +192,7 @@ When writing the `check` block, prefer structural checks over text grep:
 ## Does NOT
 
 - Write patterns (receives them from `archwright-formalize`)
+- Write contract specs (that's `archwright-contract` — flag gaps back, never fill them here)
 - Resolve tensions (that's decided before derivation)
 - Implement code (specs declare WHAT, not HOW)
 - Run checks (hand off to `archwright-check` after writing)

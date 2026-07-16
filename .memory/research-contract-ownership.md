@@ -16,7 +16,7 @@ Cross-ecosystem consensus (protobuf 1-1-1 rule, AsyncAPI file-per-application, O
 ### F4 — Addressability decides whether one-per-file is *required*
 Where identity is language-level (Terraform addresses, Rego packages, K8s kind/name), communities group freely; where the file IS the addressing scheme (Helm templates), one-per-file is a hard rule. Archwright's `kind:id` gives language-level addressability — so one-per-file is not needed for *referencing* — but each spec's independent check/validate/confidence lifecycle makes specs Helm-like. The load-bearing requirement either way: a **deterministic `kind:id` → file-path mapping**. [spec-addressability]
 
-## Recommendation (updates C7)
+## Recommendation (updates C7) — RATIFIED 2026-07-16, edits landed
 
 **R1 — Contract phase solely owns contract specs.**
 - `archwright-model`: stop emitting contract specs (Step 10). Instead emit a **contract-candidates list** (event name, producer actor, consumers, direction) — identity and semantics only, no payloads.

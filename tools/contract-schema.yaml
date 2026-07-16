@@ -22,6 +22,11 @@ properties:
       type: string
       pattern: "^pattern:.+$"
 
+  from_model:
+    type: string
+    pattern: "^model:.+$"
+    description: "Provenance to the model entry (actor or contract candidate) this spec formalizes."
+
   confidence:
     type: string
     enum: ["★★", "★", "—"]

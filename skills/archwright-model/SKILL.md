@@ -197,6 +197,11 @@ event_flows:
     to: fielder-controller
     event: assign_chain
   ...
+contract_candidates:        # identity + direction only — see step 10
+  - event: assign_chain
+    producer: play-manager-3d
+    consumers: [fielder-controller]
+  ...
 ```
 
 **Human-readable (for review):** `design/models/<system>-actors.md`
@@ -213,7 +218,7 @@ Must contain:
 
 5. **Boundary Decision Table** — why each entity is a separate actor vs boundary entity vs observer, citing the heuristic that determined it.
 
-6. **Key Invariants Summary** — numbered list of cross-actor invariants that are candidates for spec derivation. Each names the actors involved and the pattern source. This list is the primary input to `archwright-contract` and `archwright-derive`. Include BOTH behavioral invariants (→ behavior/constraint specs) AND structural contracts (→ contract specs for state schemas, event payloads, persistence).
+6. **Key Invariants Summary** — numbered list of cross-actor invariants that are candidates for spec derivation. Each names the actors involved and the pattern source. This list is the primary input to `archwright-derive` (behavioral invariants → behavior/constraint specs). Structural contracts flow to `archwright-contract` via the `contract_candidates` list in the model YAML (step 10) — do not restate them here as spec-ready contracts.
 
 **Why both formats:**
 - YAML is for tools (derive reads it to produce specs)
@@ -221,13 +226,23 @@ Must contain:
 - They represent the same structural decisions — one phase, two projections
 - Mermaid is text-based, version-controlled, diffable, renders in GitHub/Marp
 
-### 10. Derive specs FROM the model
+### 10. Point downstream: spec projections and contract candidates
 
-Each actor's invariants become constraint or behavior specs:
+Each actor's invariants become constraint or behavior specs (written by `archwright-derive`):
 - Actor state machine → behavior spec (states, transitions, guards)
 - Actor ownership rules → constraint specs ("only X writes Y")
 - Actor composition rules → dependency specs ("X must not import Y")
-- Actor event contracts → contract specs (event payload shapes)
+
+Actor events do NOT become contract specs here. Emit a **contract-candidates list** in the model YAML — identity and direction only, never payload shapes:
+
+```yaml
+contract_candidates:
+  - event: possession_changed
+    producer: ball-state-service
+    consumers: [fielder-controller, runtime-ui-layer]
+```
+
+`archwright-contract` formalizes each candidate into a contract spec (typed payloads, stability, persistence), carrying `from_model:` provenance back to this entry. The `{ field }` shorthand in `emits_events` remains a sketch (see step 5) — the contract phase owns the authoritative shape.
 
 ## Rendering Guidance
 
@@ -317,6 +332,7 @@ How to decide what constitutes a separate domain (actor) vs a region within one 
 ## Does NOT
 
 - Write specs (that's `archwright-derive` — but now it READS the model)
+- Write contract specs or payload shapes (that's `archwright-contract` — the model emits contract *candidates* only: event identity, producer, consumers)
 - Write patterns (those already exist)
 - Implement code (models describe structure, not implementation)
 - Choose technology (the model is framework-agnostic; mapping to Godot nodes is implementation)
