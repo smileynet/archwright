@@ -48,7 +48,8 @@ When archwright operates on a target project, it produces:
 ```
 target-project/
   design/
-    patterns/          # Markdown+frontmatter (forces, tensions, resolutions)
+    forces/            # Markdown+frontmatter, one file per force (kind: force) — root of provenance
+    patterns/          # Markdown+frontmatter (tensions, resolutions; serves: links to forces)
     models/            # YAML (machine-readable) + MD (human-readable with Mermaid diagrams)
     specs/             # Behavior/contract: YAML. Constraint/dependency: Markdown+frontmatter.
 ```

@@ -17,10 +17,13 @@ SCHEMA_DIR = Path(__file__).parent
 PATTERN_SCHEMA = SCHEMA_DIR / "pattern-schema.yaml"
 SPEC_SCHEMA = SCHEMA_DIR / "spec-schema.yaml"
 
-VALID_KINDS = {"pattern", "behavior", "contract", "constraint", "dependency", "boundary", "protocol"}
+VALID_KINDS = {"pattern", "behavior", "contract", "constraint", "dependency", "boundary", "protocol", "force"}
 VALID_CONFIDENCES = {"★★", "★", "—"}
 VALID_SCALES = {"premise", "loops-systems", "verbs-interactions", "feel-finish"}
-LINK_REF_PATTERN = re.compile(r"^(behavior|contract|constraint|dependency|boundary|protocol|pattern):.+$")
+VALID_POLARITIES = {"desire", "constraint"}
+VALID_HARDNESS = {"hard", "soft"}
+VALID_EVIDENCE_LEVELS = {"L1", "L2", "L3", "L4", "L5"}
+LINK_REF_PATTERN = re.compile(r"^(behavior|contract|constraint|dependency|boundary|protocol|pattern|force):.+$")
 
 
 def extract_frontmatter(path):
@@ -60,6 +63,36 @@ def load_file(path):
         return data, data.get("kind"), errors
     else:
         return None, None, [f"Unknown file extension: {path.suffix}"]
+
+
+def validate_force(data, path):
+    """Validate a force file's frontmatter fields."""
+    errors = []
+    required = ["kind", "id", "polarity"]
+    for field in required:
+        if field not in data:
+            errors.append(f"required field '{field}' missing")
+
+    if data.get("kind") != "force":
+        errors.append(f"kind must be 'force', got '{data.get('kind')}'")
+    if data.get("polarity") and data["polarity"] not in VALID_POLARITIES:
+        errors.append(f"invalid polarity '{data['polarity']}' — must be one of: {VALID_POLARITIES}")
+    if data.get("hardness") and data["hardness"] not in VALID_HARDNESS:
+        errors.append(f"invalid hardness '{data['hardness']}' — must be one of: {VALID_HARDNESS}")
+    if data.get("evidence_level") and data["evidence_level"] not in VALID_EVIDENCE_LEVELS:
+        errors.append(f"invalid evidence_level '{data['evidence_level']}' — must be one of: {VALID_EVIDENCE_LEVELS}")
+    if data.get("id") and not re.match(r"^[a-z][a-z0-9-]+$", data["id"]):
+        errors.append(f"id '{data['id']}' must be lowercase slug (a-z, 0-9, hyphens)")
+    if data.get("polarity") == "constraint" and "hardness" not in data:
+        errors.append("constraint forces require 'hardness' (hard|soft)")
+    if data.get("polarity") == "desire" and data.get("serves"):
+        errors.append("desires do not 'serve' other forces — they ARE the product-level forces")
+
+    for ref in data.get("serves", []):
+        if ":" in ref:
+            errors.append(f"serves entry '{ref}' must be a bare force id (no 'kind:' prefix)")
+
+    return errors
 
 
 def validate_pattern(data, path):
@@ -150,6 +183,8 @@ def validate_file(path):
 
     if kind == "pattern":
         errors = validate_pattern(data, path)
+    elif kind == "force":
+        errors = validate_force(data, path)
     elif kind == "behavior":
         errors = validate_behavior(data, path)
     elif kind in ("constraint", "dependency"):
@@ -162,11 +197,25 @@ def validate_file(path):
     return ("pass" if not errors else "fail"), errors
 
 
+def _collect_from_force_refs(node, out):
+    """Recursively collect all 'from_force' values from nested spec structures."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "from_force" and isinstance(value, str):
+                out.append(value)
+            else:
+                _collect_from_force_refs(value, out)
+    elif isinstance(node, list):
+        for item in node:
+            _collect_from_force_refs(item, out)
+
+
 def collect_all_refs(directory):
     """Scan all pattern/spec files and build a reference index."""
     directory = Path(directory)
     index = {}  # kind:id → path
     all_outgoing = []  # (source_path, target_ref)
+    force_outgoing = []  # (source_path, force_ref) — validated only if a force inventory exists
 
     for path in directory.rglob("*"):
         if path.suffix not in (".yaml", ".yml", ".md"):
@@ -189,17 +238,35 @@ def collect_all_refs(directory):
             if "target" in link:
                 all_outgoing.append((path, link["target"]))
 
-    return index, all_outgoing
+        # Force references: serves (bare force ids) + nested from_force fields
+        for ref in data.get("serves", []):
+            if isinstance(ref, str) and ":" not in ref:
+                force_outgoing.append((path, f"force:{ref}"))
+        from_force_refs = []
+        _collect_from_force_refs(data, from_force_refs)
+        for ref in from_force_refs:
+            if ":" not in ref:
+                force_outgoing.append((path, f"force:{ref}"))
+
+    return index, all_outgoing, force_outgoing
 
 
 def validate_links(directory):
     """Validate all cross-references resolve."""
-    index, all_outgoing = collect_all_refs(directory)
+    index, all_outgoing, force_outgoing = collect_all_refs(directory)
     errors = []
 
     for source_path, target_ref in all_outgoing:
         if target_ref not in index:
             errors.append(f"{source_path}: link target '{target_ref}' does not resolve")
+
+    # Force refs are enforced only once a force inventory exists (backward compat:
+    # projects without design/forces/ pass; adding the first force file activates enforcement)
+    has_force_inventory = any(ref.startswith("force:") for ref in index)
+    if has_force_inventory:
+        for source_path, target_ref in force_outgoing:
+            if target_ref not in index:
+                errors.append(f"{source_path}: force ref '{target_ref}' does not resolve (serves/from_force)")
 
     return errors
 

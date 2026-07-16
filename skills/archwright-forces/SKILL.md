@@ -152,17 +152,17 @@ After validation, merge the full inventory:
 
 ### 8. Output the force inventory
 
+Two artifacts:
+
+**(a) Working inventory** (`.memory/archwright-forces-<area>.yaml`) — the full extraction with provenance quotes, used by the tensions phase:
+
 ```yaml
 area: <area-name>
 sources_read:
   - path: "README.md"
     type: product
-  - path: "GitHub issues (closed features)"
-    type: product
   - path: ".memory/grills/play-data-schema/Q01-spec-authority.md"
     type: grill
-  - path: ".memory/adr/0001-from-scratch.md"
-    type: adr
 
 product_forces:
   - id: <slug>
@@ -171,7 +171,7 @@ product_forces:
     who: coach | player | team-admin
     provenance:
       - source: "issue:#34"
-        quote: "I want to be able to run plays as a given fielder, being shown the play to run"
+        quote: "I want to be able to run plays as a given fielder"
     tags: [explicit]
 
 forces:
@@ -182,13 +182,24 @@ forces:
     provenance:
       - source: "grill:play-data-schema/Q01"
         quote: "<exact quote from source>"
-      - source: "adr:0001"
-        quote: "<exact quote>"
     tags: [explicit | implicit | inferred]
-
-  - id: <slug>
-    ...
 ```
+
+**(b) Durable per-force files** (`design/forces/<force-id>.md`, template `tools/templates/force.md`) — one file per validated force, markdown + frontmatter:
+
+```yaml
+---
+kind: force
+id: single-holder
+polarity: constraint        # desire | constraint
+hardness: hard              # constraints only: hard | soft
+evidence_level: L1          # L1 (human-stated) … L5 (agent-inferred)
+source: "physics of the sport"
+serves: [ball-always-somewhere]   # constraints only: bare ids of desires served
+---
+```
+
+These files are what `serves:` (patterns) and `from_force:` (specs) resolve against — `archwright-validate.py --links` enforces resolution once `design/forces/` contains at least one force. Write force files ONLY for forces that survive validation (L4/L5 desires require the HITL gate first); the working inventory may contain more candidates than get durable files.
 
 ## Quality Checks
 

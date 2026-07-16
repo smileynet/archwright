@@ -115,7 +115,7 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `tools/run-fixture-tests.sh` — 16 checks + 1 skip (Alloy jar) |
+| Run fixture tests | `tools/run-fixture-tests.sh` — 21 checks + 1 skip (Alloy jar) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
@@ -153,7 +153,8 @@ When archwright operates on a project, it produces:
 ```
 target-project/
   design/
-    patterns/          # Markdown+frontmatter (forces, tensions, resolutions)
+    forces/            # Markdown+frontmatter, one file per force (kind: force) — root of provenance
+    patterns/          # Markdown+frontmatter (tensions, resolutions; serves: links to forces)
     models/            # YAML (machine-readable) + MD (human-readable with Mermaid diagrams)
     specs/             # Behavior/contract: YAML. Constraint/dependency: Markdown+frontmatter.
 ```
