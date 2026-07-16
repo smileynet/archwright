@@ -1,6 +1,6 @@
 ---
 name: archwright-derive
-description: "Derive checkable specs from a pattern. Takes a formalized pattern and produces behavior, constraint, and dependency specs as declared in its resolves_into (contract specs come from archwright-contract). Use when a pattern exists but its specs haven't been written. Trigger: derive specs, write specs from pattern, what specs does this pattern need."
+description: "Derive checkable specs from a pattern. Takes a formalized pattern and produces behavior, constraint, dependency, and contract specs as declared in its resolves_into. Use when a pattern exists but its specs haven't been written. Trigger: derive specs, write specs from pattern, what specs does this pattern need."
 metadata:
   type: process
   invocation: both
@@ -22,25 +22,12 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 - Domain model (from `archwright-model`) with actor boundaries, invariants, and event flows
 
 **Also check:** existing contract specs from `archwright-contract` phase.
-- Contract specs are owned exclusively by the contract phase — this phase NEVER writes or re-derives them (state schemas, event payloads, persistence schemas)
-- DO cross-reference: behavior specs link to contract specs via `consumes` type
-- If a contract spec defines event payloads, behavior specs reference those payload shapes in their transitions — never restate the field list
-- The derive phase produces BEHAVIOR specs (temporal/FSM), CONSTRAINT specs (rules), and DEPENDENCY specs (relationships). If a needed contract spec doesn't exist, flag the gap back to `archwright-contract` rather than filling it here.
+- Do NOT re-derive contract specs that already exist (state schemas, event payloads, persistence schemas)
+- DO cross-reference: behavior specs should link to contract specs via `consumes` type
+- If a contract spec defines event payloads, behavior specs should reference those payload shapes in their transitions (not redefine the field list)
+- The derive phase produces BEHAVIOR specs (temporal/FSM) and CONSTRAINT specs (rules). Contract specs are produced by the contract phase — not duplicated here.
 
 **When both exist:** The domain model is authoritative for actor boundaries, state machines, and composition. Patterns provide provenance (which force demanded what). Use both together — the model's invariant summary is the spec dispatch list.
-
-### 1b. Read reflections (if they exist)
-
-Before generating specs, check for lessons from prior derivation failures:
-
-1. **Global reflections** — methodology-level lessons that apply to ALL projects. Located in the archwright repo at `.memory/reflections/` (deployed alongside skills). These capture tool behavior pitfalls, spec authoring patterns, and check method conventions.
-
-2. **Project reflections** — target-project-specific lessons. Located in the target project's `.memory/reflections/`. These capture lessons about this project's file structure, language idioms, and naming conventions.
-
-**Boundary rule:** If the lesson applies regardless of target project (e.g., "grep -E is required for alternation patterns") → global. If it depends on the target project (e.g., "step_preview_2d.gd is a read-only consumer, not a derivation source") → project.
-
-- Read both if they exist. Do NOT repeat a failure that has a recorded reflection in either set.
-- If no reflections exist, proceed normally.
 
 ### 2. Read the input
 
@@ -53,9 +40,9 @@ Before generating specs, check for lessons from prior derivation failures:
 **From the domain model** (`design/models/*-actors.yaml`), extract:
 - Actor state machines → behavior specs
 - Actor invariants → constraint specs
+- Actor event contracts (accepted/emitted events) → contract specs
 - Composition rules (lifecycle, spawn/invoke) → dependency specs
 - Key invariants summary → spec dispatch list (what to derive first)
-- (`contract_candidates` are consumed by `archwright-contract`, not here)
 
 ### 3. For each `resolves_into` entry (or model invariant), write the spec
 
@@ -70,9 +57,9 @@ When a domain model exists, derive specs from actor definitions:
 | `actor.state_machine` | behavior | States, transitions, guards match implementation |
 | `actor.invariants` | constraint | Rule holds in codebase (grep/ast-grep) |
 | `actor.owns` (single writer) | constraint | Only this actor writes the field |
+| `actor.accepts_events` + `emits_events` | contract | Event payload shapes match |
 | `composition.children` (lifecycle) | dependency | Child cannot exist without parent |
 | `boundary_entities` (injected policy) | constraint | Policy object is read-only to consumers |
-| `contract_candidates` | — | Handled by `archwright-contract`, not derived here |
 
 Priority: derive from the Key Invariants Summary first (these are the highest-value specs).
 
@@ -82,16 +69,12 @@ When the resolution commits to states, transitions, or lifecycle:
 
 1. Identify the states (modes the system can be in)
 2. Identify the transitions (events that move between states)
-3. Identify guards (constraints that gate transitions)
-4. Identify invariants (properties that must always hold). For ★★ invariants, add an `alloy:` field — the Alloy 6 rendering of the predicate over the generated model. Reference `M.current`, PascalCase state sigs, and `M.<camelCaseVar>` context vars. Guards and `assign:` var updates in the translatable subset compile into the model (guards: enum `==`/`!=`, int comparisons, var-to-var, `&&` conjunctions; assigns: literals, var copy, `var + N`/`var - N`); anything outside it stays a comment and invariants touching the affected vars/states SKIP with reason. Without an `alloy:` field, the Alloy check SKIPs: prose predicates are not mechanically translatable.
-
-   **Authoring `alloy:` expressions** (field-proven disciplines, DemoAR + TileRush):
-   - **Liveness is unprovable** — generated models permit stuttering, so `leads-to` properties can't be checked. Render the checkable SAFETY SKELETON instead (successor restrictions: `always (M.current = Filled implies M.current' = Filled)` — "no exit exists"), and assign the liveness/payload halves to the trace check with a YAML comment naming the split.
-   - **Every unrendered invariant documents WHY** (bool var / payload property / cross-machine / needs clock) so SKIPs are self-explaining.
-   - **Probe non-vacuity after authoring:** run `python3 <archwright-repo>/tools/archwright-check.py --probe <spec.yaml>` — it injects a deliberately-false invariant and requires a counterexample (exit 0). Exit 1 = the model is vacuous (unreachable states); do not trust any PASS from it. Five PASSes mean nothing from a checker that cannot fail.
-5. Add `check.trace` block (events, state_vars, invariants for trace validation). **Always write this block explicitly** — when it's absent the validator defaults to checking ALL invariants against the trace, silently widening scope beyond what the trace's events can meaningfully exercise (field find: area-1 TileRush specs shipped without it). For trace EMISSION, consult the stack registry first: a ★/★★ `trace_emitter` adapter exists for some stacks (TypeScript: `tools/stacks/typescript/trace_emitter/` — copy the recorder into the target's test helpers, record after each successful real operation, never record rejected ops; see its README). No adapter for the stack → Extension Protocol gap, record pending-with-reason.
-6. Add `check.model` block (backend, scope, steps for Alloy)
-7. Add `abstraction_notes` (what's included/excluded/why)
+3. Identify effects (context assignments caused by each transition; unspecified variables remain unchanged)
+4. Identify guards (constraints that gate transitions)
+5. Identify invariants (properties that must always hold)
+6. Add `check.trace` block (events, state_vars, invariants for trace validation)
+7. Add `check.model` block (backend, scope, steps for Alloy)
+8. Add `abstraction_notes` (what's included/excluded/why)
 
 Use template: `tools/templates/spec-behavior.yaml`
 
@@ -104,8 +87,6 @@ When the resolution commits to a rule the code must never violate:
 3. Give a violation example (code that would break it)
 4. Give a correct example (code that respects it)
 5. Add `check` block (method: grep/ast-grep/script, target, pattern, expect)
-6. Scope the check with `include:` globs (e.g., `include: ["*.cs"]`) whenever the target tree mixes source with docs/assets/configs — an unscoped repo-wide grep produces hundreds of noise matches (SVGs, .gitattributes, prose) that bury real violations. Bare globs match file names; globs with `/` match project-relative paths. `include:` applies only to declarative target+pattern checks, not `command:` checks.
-7. **Calibrate before commit.** Run the check's pattern against the real target in BOTH directions before committing the spec: an `expect: present` pattern must actually match, and an `expect: absent` pattern must be absent for the RIGHT reason (the mechanism exists under a different token ≠ the mechanism is missing). Treat "token not found" as wrong-token-until-proven-violation — grill/ADR vocabulary drifts from code vocabulary (field evidence: `CORP#` vs `GUILD#`, `FunctionCatalog` vs `FunctionCall`, a generator that moved files). For `command:` checks, prefer TIGHT context windows and anchored tokens: a wide `grep -B10` bleeds adjacent code into the match window and produces false FAILs (observed: an adjacent same-transaction item matched a forbidden-op pattern). Calibrate the `target:` path too — it does double duty: beyond scoping the grep, it drives `--changed-only` selection (CK-19), so a wrong or stale target doesn't just noise the check, it silently exempts the spec from changed-only CI runs (the code changes, the spec is never selected, no signal fires).
 
 Use template: `tools/templates/spec-constraint.md`
 
@@ -119,6 +100,17 @@ When the resolution commits to allowed/forbidden relationships:
 4. Add `check` block (grep/script that detects violations)
 
 Use template: `tools/templates/spec-dependency.md`
+
+#### Contract specs (YAML)
+
+When the resolution commits to a data shape:
+
+1. Define the fields (name, type, required/optional)
+2. Define lifecycle constraints (when fields are valid)
+3. Define producer/consumer roles
+4. Add validation rules
+
+Use template: `tools/templates/spec-contract.yaml`
 
 ### 4. Wire provenance and experience
 
@@ -137,11 +129,7 @@ scenarios:
     verifies: [invariant-1, invariant-2]
 ```
 
-**protects_experience** accepts either reference kind:
-- A modeled-experience ID from the model's experience layer (**preferred** — the model names what users feel)
-- A product-force ID (**acceptable** when the experience lives at product-force level and no experience layer entry exists — don't invent a hollow experience just to fill the field)
-
-If you can't name which experience OR product desire a spec protects, the spec may be an implementation detail, not a design guarantee. `archwright-validate.py` warns (never fails) when the field is absent.
+**protects_experience** links to the model's experience layer. If you can't name which experience a spec protects, the spec may be an implementation detail, not a design guarantee.
 
 **user_story** tells the story from the user's (coach or player) perspective. Not "the system does X" but "the user sees/feels/experiences X."
 
@@ -195,16 +183,11 @@ Specs are written to the target project's `design/specs/` directory:
 - Behavior: `design/specs/<id>.yaml`
 - Constraint: `design/specs/<id>.md`
 - Dependency: `design/specs/<id>.md`
-- Contract: written by `archwright-contract` (same directory) — never by this phase
+- Contract: `design/specs/<id>.yaml`
 
 **One spec per file — no exceptions.** Each `resolves_into` target becomes its own file. Never group specs into shared files, even when they share a parent pattern. Reasons: addressability (`kind:id` references need unique files), independent lifecycle (specs evolve separately), clean git blame, and tooling compatibility (`archwright-check` targets individual files).
 
 ## Check Method Guidance (for constraint specs)
-
-**Consult the stack registry first** (`../archwright-survey/references/stacks/REGISTRY.yaml`, or `tools/stacks/REGISTRY.yaml` in the archwright repo; the survey intake outline records the detected stack). The registry tells you which check machinery actually exists for this stack:
-- `ast_grammar` ★/★★ → prefer structural `ast-grep` checks per the table below
-- `ast_grammar` pending → fall back to grep with comment-exclusion patterns; note the fallback in the spec (`# ast-grep pending for <stack> — grep fallback`)
-- No registry entry for the stack → Extension Protocol gap: record it pending-with-reason (what adapter, what it unblocks) per `steering/archwright-conventions.md` § Extension Protocol; do NOT invent an unverified check method
 
 When writing the `check` block, prefer structural checks over text grep:
 
@@ -216,25 +199,11 @@ When writing the `check` block, prefer structural checks over text grep:
 | Config files (turbo.json, tsconfig) | `node -e` script (parse + assert) | Handles nested structure |
 | Shell scripts | `grep` (acceptable — less structured) | Comments are rare enough |
 
-**When using grep:** scope with `include:` (glob or list, e.g. `include: "*.cs"`) so patterns don't match unrelated file types — a field run matched 897 lines repo-wide without it. Multiple roots go in a YAML list (`target: [src/, config/]`); matches are unioned, and any missing entry is a loud tool error. Comment lines are stripped by default (opt back in with `include_comments: true`) — **but string literals and docstrings are NOT stripped**: prose inside a module docstring that names the forbidden pattern (or the spec id containing it) WILL match. Keep check-pattern words out of docstrings in checked code — including fixture/example code documenting its own deliberate violations (field basis: the Snackbox lifecycle examples needed two rewording rounds, 2026-07-19). Note that `import type` in TypeScript is compile-time-only and should NOT be flagged as a runtime import.
-
-**Compiling check blocks from intent (optional shortcut):** For the six recurring intent shapes, `node <archwright-repo>/tools/archwright-check-compile.mjs <intent.yaml> --project-root <path>` generates the check block mechanically:
-
-| Intent pattern | Rule it expresses |
-|----------------|-------------------|
-| `single_writer` | Only X writes field Y |
-| `no_import` | A must not import from B |
-| `no_mutation` | A must not call mutation methods |
-| `no_reference` | A must not reference B |
-| `must_use` | A must contain concept X |
-| `no_literal` | No plaintext X anywhere in scope |
-
-Output is a YAML `check:` block to paste into the spec — it is a starting point, not a verdict: still apply the Pre-Commit Verification steps below (target exists, polarity rule, known-bad test), then `archwright-validate.py` + `archwright-check.py --static`. Intents outside these six: write the check block by hand per the table above.
+**When using grep:** exclude comment lines with patterns like `^[^/]*<target>` (no leading `//`). Note that `import type` in TypeScript is compile-time-only and should NOT be flagged as a runtime import.
 
 ## Does NOT
 
 - Write patterns (receives them from `archwright-formalize`)
-- Write contract specs (that's `archwright-contract` — flag gaps back, never fill them here)
 - Resolve tensions (that's decided before derivation)
 - Implement code (specs declare WHAT, not HOW)
 - Run checks (hand off to `archwright-check` after writing)
@@ -244,10 +213,9 @@ Output is a YAML `check:` block to paste into the spec — it is a starting poin
 
 Before committing constraint specs, verify check targets against the actual codebase:
 1. Run `find` or `ls` to confirm the `check.target` path exists — **if it doesn't, either fix the path or mark the spec as `check.target_status: pending` (target not yet implemented)**
-2. **Polarity rule (ticket 012):** positive conditions ("X must exist") are ALWAYS `expect: present` on the artifact — never `expect: absent` on the negation. Reserve `absent` for forbidden-pattern greps ("X must never appear"). Field evidence: two same-day specs expressed the same positive condition with inverted polarities; the wrong guess produces a check that silently passes forever. The tool guards the vacuous case (absence claim over 0 scanned files = SKIP, not PASS) but cannot detect inverted intent.
-3. If using `expect: absent`, verify the grep pattern would match violations (test against a known-bad example if possible)
-4. If using `expect: present`, verify the pattern matches something that currently exists — if nothing matches because the system isn't built yet, set `check.target_status: pending`
-5. Run `python3 <archwright-repo>/tools/archwright-check.py --static` against the batch before committing — fix target paths before the pre-commit hook rejects (note: the flag is `--static`; there is no `--structural` flag)
+2. If using `expect: absent`, verify the grep pattern would match violations (test against a known-bad example if possible)
+3. If using `expect: present`, verify the pattern matches something that currently exists — if nothing matches because the system isn't built yet, set `check.target_status: pending`
+4. Run `archwright-check --structural` against the batch before committing — fix target paths before the pre-commit hook rejects
 
 **Target status field:** When a spec's check target doesn't yet exist in the codebase (system not implemented), add:
 ```yaml
@@ -259,7 +227,7 @@ check:
   expect: present
 ```
 
-This makes it explicit which specs are checkable NOW vs which activate later — preventing false "N/A" results that hide real issues. The check tool reports these as `coverage.pending` (CK-06): a disjoint bucket, neither pass nor fail nor skipped, labeled `○ PENDING` in human output with the reason in `skips[]`. Related guard (ticket 012): declarative absence checks that scan 0 files (empty dir, include glob matching nothing) SKIP-with-reason rather than vacuously pass — `target_status: pending` covers not-yet-existing targets, the vacuous guard covers exists-but-empty; between them, an absence check that proved nothing can no longer read as green.
+This makes it explicit which specs are checkable NOW vs which activate later — preventing false "N/A" results that hide real issues.
 
 **Common pitfall:** File/directory names in the target project may differ from spec names (e.g., `practice_setup/` vs `setup/`). Always verify.
 

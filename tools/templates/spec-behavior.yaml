@@ -26,6 +26,8 @@ states:
     "on":
       EVENT_NAME:
         target: second-state
+        effects:
+          example_var: state_b
         guard:
           predicate: "example_var == 'state_a'"
           from_force: constraint-id

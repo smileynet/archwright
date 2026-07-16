@@ -60,6 +60,7 @@ properties:
           enum: [atomic, compound, parallel, final]
         on:
           type: object
+          description: "Event transitions. Each transition declares target, optional guard, and effects assigning next context values; unspecified variables are framed unchanged."
         states:
           type: object
         invariant:

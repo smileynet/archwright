@@ -1,77 +1,6 @@
 # Archwright
 
-Capture design decisions as forces and patterns, derive machine-checkable specs from them, and catch code that drifts from its own design.
-
-## What It Does
-
-Archwright is a design methodology embodied as agent skills. You express design intent in conversation — what the thing wants to be, what bounds it, where those conflict — and the agent resolves that intent into patterns, domain models, and machine-checkable specs. Checks verify the implementation against the stated design; when code violates its own design, the violation routes back to the level that owns it, carrying provenance and a fix direction.
-
-| When I'm... | I want to... | So I can... |
-|-------------|-------------|--------------|
-| Starting design work on a project | map what forces and decisions already exist | build on intent instead of re-deriving it |
-| Sketching screens or a game concept | capture each choice as it's made, with my reasoning verbatim | feed the session into the pipeline as resolved intent, not lore |
-| Facing a design decision | see the tension named, with researched options | decide with evidence, not vibes |
-| Done deciding | capture the resolution as a pattern | keep the "why" attached to the architecture |
-| Changing code | check it against the design's invariants | catch drift before it ships |
-| Looking at a check failure | know whether it's a code bug or a design flaw | fix it at the level that owns it |
-
-## Quick Start
-
-```bash
-# Bootstrap the toolchain (mise: https://mise.run)
-mise trust && mise install
-mise run setup                 # python deps
-mise run rehydrate-alloy       # Alloy jar (enables behavior model checks)
-mise run test
-# === Results: … passed, 0 failed, 0 skipped ===
-
-# Deploy the skills + steering to your agent tool
-mise run deploy-skills                          # kiro (default)
-bash tools/deploy-skills.sh --tool claude       # or claude | codex | agy
-# ✓ skill (symlink): archwright-survey … Done.
-```
-
-Then, in any project, ask your agent to **"survey this project"**. The pipeline runs from there:
-
-```
-survey → forces → tensions → resolve → formalize → model → contract → derive → check
-```
-
-Discovery work — UI wireframing sessions (`archwright-discover-ui`), wizard_of_oz game-design session imports (`archwright-woz-import`), design interrogations — runs as its own human-dense track alongside the pipeline. Sessions capture decisions in append-only ledgers with origin and verbatim rationale; approved decisions enter the pipeline at `resolve` as pre-resolved tensions, carrying their evidence with them. A conservation check verifies the seam mechanically: nothing invented (every output cites a decision), nothing lost (every decision is consumed or explicitly deferred).
-
-Design artifacts land in the target project under `design/` (forces, patterns, models, specs) — live documents on your current branch, each carrying provenance back to the forces that demanded it.
-
-**Want to see the output before running it?** Browse [`examples/`](examples/README.md) — one toy product (a vending kiosk) expressed at three lifecycle states: design-only, mid-implementation with real check failures and baselined debt, and quiescence with an accumulating evidence ledger. The diff between the states is the methodology in motion.
-
-## What a Catch Looks Like
-
-Checks verify the implementation against the stated design. When code (or an execution trace) violates a design invariant, the violation arrives with everything needed to route it — trimmed real output:
-
-```bash
-python3 tools/archwright-check.py --trace game.spec.yaml game.trace.json --json
-```
-
-```json
-{
-  "status": "fail",
-  "violations": [{
-    "invariant": "count-within-max",
-    "confidence": "★★",
-    "severity": "error",
-    "escalate": true,
-    "message": "Invariant 'count-within-max' violated after event 'TICK' at position 1",
-    "from_pattern": "pattern:bounded-capacity",
-    "from_force": "players-never-stranded",
-    "suggested_route": "fix-implementation",
-    "contrast_pair": {
-      "expected": "Count never exceeds max (always (count <= max))",
-      "actual": "event 'TICK' at trace position 1 with state {\"count\": 3, \"max\": 2}"
-    }
-  }]
-}
-```
-
-The provenance chain (`invariant → from_pattern → from_force`) is what lets the `archwright-passup` skill route the failure to the level that owns it: most violations are implementation drift; a violation that traces all the way to a force means the design itself needs re-resolution.
+A force-resolution design language that resolves into verified architecture.
 
 ## The Thesis
 
@@ -82,30 +11,47 @@ Two vocabularies, one pipeline:
 1. **Design domain** — a vocabulary for thinking at the level of intent: what the thing wants to be, what bounds it, and how those are reconciled.
 2. **Architecture domain** — the formal target: behavior models, data contracts, service boundaries, dependency rules, and invariants — verified against the stated forces.
 
-The model in one line:
+These are not two systems but one resolution, running in both directions.
+
+## The Model in One Line
 
 > Forces in tension → resolved Pattern → takes form as architecture (State · Data · Interface · Invariant) → verified against forces → violations surface as contrast pairs → route back to responsible force → re-resolve → … → quiescence.
 
-**Core commitment:** forces stay first-class, and product-level desires (what humans need) are the primary forces. Architectural constraints exist to serve those desires via explicit traceability. The reusable IP is not a catalogue of patterns; it is the method of naming and resolving tensions that trace back to human purpose. The moment patterns become fixed templates disconnected from the desires that generated them, the system dies.
+## Core Commitment
 
-## What's in the Box
+Keep *forces* first-class — and product-level desires (what humans need) are the primary forces. Architectural constraints exist to serve those desires via explicit traceability. The reusable IP is not a catalogue of patterns; it is the method of naming and resolving tensions that trace back to human purpose. The moment patterns become fixed templates disconnected from the desires that generated them, the system dies.
 
-- **Skills** (`skills/`, deployed to your agent tool) — the design methodology: force identification, resolution, verification, correction — plus discovery sessions (UI wireframing, WoZ session import) that capture design decisions at the source
-- **Tools** (`tools/`, invoked via interpreter or `mise run`) — mechanical operations: schema validation, spec → Alloy compilation, checking, trace validation
+## What Archwright Is
+
+Archwright is a **methodology embodied as agent skills**, with supporting tools for mechanical tasks. The AI agent IS the system — it holds the design methodology. Humans express intent through conversation; the agent resolves it into checkable specifications.
+
+- **Skills** (global, `~/.kiro/skills/`) — the design methodology: force identification, resolution, verification, correction
+- **Tools** (on PATH, `tools/`) — mechanical operations: schema validation, spec → Alloy compilation, checking, parsing
 - **Patterns** (in target project, `design/patterns/`) — captured design intent
 - **Models** (in target project, `design/models/`) — domain actors, state machines, event flows, composition
 - **Specs** (in target project, `design/specs/`) — verified architectural commitments (behavior, constraint, contract, dependency)
+
+## Verification tools
+
+Install the pinned, SHA-256-verified Alloy runtime once, then run a behavior check:
+
+```bash
+python tools/install-alloy.py
+python tools/archwright-check.py design/specs/example-behavior.yaml
+```
+
+Behavior checks compile typed context, transitions, guards, effects, and invariants to Alloy 6. Unsupported predicates fail compilation instead of producing vacuous assertions. A passing result provides bounded assurance at the spec's declared scope and step count.
 
 ## Documentation
 
 | Document | Contents |
 |----------|----------|
 | [Lineage](docs/lineage.md) | Where this comes from — Alexander, and what we're keeping vs. what software dropped |
-| [Findings](docs/findings.md) | The load-bearing theoretical insights (stable core) |
+| [Findings](docs/findings.md) | The 9 load-bearing theoretical insights (stable core) |
 | [Glossary](docs/glossary.md) | All concepts and terminology |
-| [Pattern Schema](docs/pattern-schema.md) | The machine-readable schema for patterns |
+| [Pattern Schema](docs/pattern-schema.md) | The proposed machine-readable schema for patterns |
 | [Worked Examples](docs/worked-examples.md) | Alexander patterns mapped to games/apps |
-| [Prior Art](docs/prior-art.md) | The traditions we draw from, with full references |
+| [Prior Art](docs/prior-art.md) | The 5 traditions we draw from, with full references |
 | [Open Questions](docs/open-questions.md) | Prioritized research backlog |
 
 ## Figures
@@ -116,14 +62,15 @@ The model in one line:
 | [invariant_boundary.svg](figures/invariant_boundary.svg) | Invariant-as-no-go-region + pass-up hop |
 | [pass_up_tower.svg](figures/pass_up_tower.svg) | Pass-up as level-terminating climb |
 
-## Development
+## Project Status
 
-Commands, layout, constraints, and current work status live in [AGENTS.md](AGENTS.md) — the agent-facing guide is also the contributor guide. Validate with `mise run validate`, check specs with `mise run check-static`, run the fixture suite with `mise run test`.
+Research + design phase. Shipped tools include schema/link validation, trace replay, grep conformance checks, and bounded Alloy checking with counterexample capture. Structural AST routing, contrast-pair rendering, and unbounded proof remain planned.
+
+**Next:** Tracer bullet against lacrosse-bosse — encode existing design decisions as patterns + specs, verify invariants, demonstrate violation detection.
 
 ## Lineage
 
 Archwright evolves from:
-
 1. **spec-driven-development** — structured planning (PLAN.md, spec files, validation criteria)
 2. **project-overseer** — drift detection between spec and implementation (terraform model)
 3. **archwright** — formal verification of design intent (forces → checkable invariants → verified architecture)
