@@ -209,7 +209,22 @@ Workstream D: HYGIENE (independent — can run immediately)
 | D2 | Archive prior plan | P1 | 10m | — |
 | D3 | Clean .scratch findings | P3 | 10m | B1–B4 started |
 
-**Total:** ~38h. **Recommended first batch (one session):** D1 + D2 + A1 + A2 + A4 (~7h) — establishes ground truth and fixes drift before any behavior changes. A4 doubles as the first dogfood run of the new audit skill.
+**Total:** ~38h base + ~7h discovered (B5–B7, C7). **First batch executed 2026-07-16** — see Progress below.
+
+### Discovered during execution (sources: A1/A2/A4 reports in `.memory/audit/`)
+
+| ID | Title | Priority | Effort | Source |
+|----|-------|:--------:|:------:|--------|
+| B5 | Skill cleanup batch (numbering, headers, enum counts, temp paths, diagram contradictions) | P2 | 2h | A2 items 15,17,19–23 |
+| B6 | Unify confidence vocabulary across skills (glossary as anchor; map L1–L5, error/warn/info, HIGH/MED/LOW to ★★/★/—) | P2 | 1.5h | A2 item 14 |
+| B7 | Restore fixture `design/` artifacts + repair `run-fixture-tests.sh` + resolve trace-validate fork (delete or fix `.sh`/`.mjs`) | P1 | 3h | A1 F1/F2, A4 DL1 — **blocks A3** |
+| C7 | Contract/derive/model spec-ownership decision (who emits contract specs; does one-per-file bend for event groups?) | P2 | 2h | A2 items 8–10 (HITL) |
+
+## Progress
+
+**Batch 1 (2026-07-16):** D2 ✅ · A1 ✅ (`.memory/audit/tools.md`) · D1 ✅ · A2 ✅ (`.memory/audit/skills.md`, fix-now edits landed) · A4 ✅ (`.memory/audit/claims.md`, dogfood of archwright-audit).
+Key outcomes: 5 dead-flag/broken-tool references fixed in skills/steering; survey routing completed to 12 skills; `subagent-reliability.md` source-of-truth restored; AGENTS.md/README now match verified reality; claims matrix: 6 shipped, 3 spike-only, 4 aspirational.
+**Next:** B7 (unblocks A3) → A3 + A5, then B-workstream.
 
 ---
 
