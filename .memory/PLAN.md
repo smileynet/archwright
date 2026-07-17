@@ -1,7 +1,7 @@
 # PLAN: Live Design Checking for Lacrosse-Bosse-Platform
 
-> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) added same day and ACTIVE.**
-> Loose ends tracked in [/audit-plan.md](../audit-plan.md): T7 trace emitter → ticket C4; R18 growth rules validation + S15 selective re-checking → ticket C5. Phase 5 reconciled with the audit plan 2026-07-16: it absorbs audit tickets B4/C1/C2 (deltas folded into the spec — see its "Audit reconciliation" section).
+> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) ACTIVE — executor assigned (grill Q1, 2026-07-17): the audit-plan line of work, DoD-5 chain first (CK-03→04→05→09→10).**
+> Loose ends: T7 trace emitter → converted to an Extension Protocol pending-registry row `gdscript.trace_emitter` (grill Q5, audit ticket C11 — the "~20 lines" claim becomes measured data on first real build); R18/S15 → C5, folded into C10's DynamoRush reconciliation pass (grill Q7). Phase 5 reconciled with the audit plan 2026-07-16 (absorbs B4/C1/C2) and re-reconciled 2026-07-17 (grill: CK-01/02 descoped to validate.py, CK-21 added, passup skill consumes CK-03 output — see the spec's "Grill reconciliation" section).
 
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
 

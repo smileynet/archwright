@@ -190,8 +190,8 @@ A4/L3 confirmed the gap with evidence (constraint FAIL shows invariant+★★ on
 | C1 | Contrast pairs in check output | — | — | ABSORBED → Phase 5 (CK-10) |
 | C2 | Correction routing first-class | — | — | ABSORBED → Phase 5 (CK-03/09) |
 | C3 | Confidence lifecycle tooling | P2 | 4h | — |
-| C4 | Trace emitter close-out/descope | P2 | 2h | A3 |
-| C5 | Growth rules validation | P3 | 2h | A3 |
+| C4 | Trace emitter close-out/descope | — | — | RESOLVED by grill Q5 → C11 (Extension Protocol; T7 = pending registry row) |
+| C5 | Growth rules validation | — | — | FOLDED into C10 (grill Q7) |
 | C6 | Phase gates: block only on HITL need | P1 | 3h | A3 |
 | D1 | Fix AGENTS.md/README residual drift | P1 | 45m | — |
 | D2 | Archive prior plan | P1 | 10m | — |
