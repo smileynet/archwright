@@ -17,7 +17,7 @@ The archwright pipeline (`survey → forces → tensions → resolve → formali
 2. **HITL-blocking gates** — always stop and wait for the human:
    - `resolve` (decisions; pre-resolved tensions = ONE batched confirmation, still presented)
    - Inferred product-desire validation (L4/L5) inside `forces`
-   - Any ★★ event: violation found, ★★ assigned beyond what resolve ratified, or demotion proposed
+   - Any ★★ event that survives the research gate (ADR 0010): before escalating a ★★ violation, research it (prior art, related decision records, contrast pair) — check defects/spec noise get proposed fixes, known-and-accepted items get logged with the reference, and only genuine new decisions (tradeoffs, novel security judgment) block, arriving WITH research + recommended disposition. Hard floor always blocks: irreversible, security-material-and-novel, or contradicting a ratified resolution. ★★ assignment beyond what resolve ratified and demotion proposals still block unconditionally
    - Fog: unknown forces / unresolved tension encountered mid-span
    - End of span: present the full digest for acceptance
 3. **Flow-through gates** — auto-advance WITHOUT stopping, but only when ALL hold:
