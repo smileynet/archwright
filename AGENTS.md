@@ -27,6 +27,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-check/          # Verify specs against implementation
 │   ├── archwright-review/         # Review code for design alignment
 │   ├── archwright-audit/          # Audit docs for truth (surface contradictions)
+│   ├── archwright-passup/         # Lift check violations to owning level, route per confidence
 │   └── archwright-diagram/        # Render models/patterns as Mermaid diagrams
 ├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
 │   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
@@ -93,7 +94,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-review` — review code for design alignment (structural + behavioral + semantic)
 - `archwright-audit` — audit docs for truth (surface contradictions between docs and code)
 - `archwright-diagram` — render models/patterns as Mermaid diagrams
-- `archwright-passup` — (planned — audit-plan C12) consume check violations, lift to the owning level, route per confidence
+- `archwright-passup` — consume check violations, lift to the owning level, route per confidence (★★→HITL, ★→propose, —→auto-adjust)
 
 **Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates

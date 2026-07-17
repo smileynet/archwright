@@ -31,7 +31,7 @@ Verify specs against their stated invariants. Report violations with provenance.
    - `error` → fix the check itself, not the spec
    - `skip` → adapter/backend unavailable (pending registry row, missing Alloy jar). Report the declared reason. A skip is a coverage statement, not a pass — it counts as no evidence in either direction.
 
-4. **Route violations** — read `from_pattern` + `from_force` from violated invariant. Severity from confidence (★★=error, ★=warning, —=info). Present contrast pair if available. See `archwright-resolve` skill [references/pass-up.md](../archwright-resolve/references/pass-up.md).
+4. **Hand off violations** — run with `--json` and hand the structured violations (provenance, severity, escalate flags, contrast pairs) to `archwright-passup`, which lifts each to its owning level and routes per confidence. This skill verifies; it does not route.
 
 ## Assurance Levels
 
@@ -61,14 +61,18 @@ Beyond individual specs, validate the graph:
 ## Commands
 
 ```bash
-archwright-validate <file>           # Schema validation
-archwright-validate --links design/  # Link graph check
-archwright-check <spec>              # Full verification
-archwright-check --all design/specs/ # Check everything
+python3 tools/archwright-validate.py [--json] <file>     # Schema validation
+python3 tools/archwright-validate.py [--json] --links design/  # Link graph check
+python3 tools/archwright-check.py <spec>... [--json]     # Full verification
+python3 tools/archwright-check.py --all design/specs/    # Check everything
+python3 tools/archwright-check.py --static design/specs/ [--target <root>]  # Constraint/dependency only
 ```
 
-## Does NOT Cover
+Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output contract (status, scope, violations w/ provenance + contrast pairs, coverage, remaining_delta) — the payload `archwright-passup` consumes.
 
-- Writing patterns or specs (use `archwright-formalize` / `archwright-derive`)
+## Does NOT
+
+- Write patterns or specs (use `archwright-formalize` / `archwright-derive`)
+- Route or fix violations (use `archwright-passup` — this skill produces the payload, passup consumes it)
 - Implementation testing (use your project's test framework)
 - Code review (this checks architectural properties, not style)
