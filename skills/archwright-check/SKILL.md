@@ -30,6 +30,7 @@ Verify specs against their stated invariants. Report violations with provenance.
    - `fail` → route violation via provenance (step 4)
    - `error` → fix the check itself, not the spec
    - `skip` → adapter/backend unavailable (pending registry row, missing Alloy jar). Report the declared reason. A skip is a coverage statement, not a pass — it counts as no evidence in either direction.
+   - **Changed verdicts are unverified until independently reproduced.** A verdict that flips after a tooling or spec change (fail→pass especially), or a fix whose first verification is the tool that was just fixed, must be confirmed by an independent method (a different grep, manual inspection, a second tool) before being recorded. Field basis: a comment-stripping bug once flipped a check to a false PASS over 2 real violations — caught only by an independent grep; the rule has since caught wrong-token spec noise three times in one field run.
 
 4. **Hand off violations** — run with `--json` and hand the structured violations (provenance, severity, escalate flags, contrast pairs) to `archwright-passup`, which lifts each to its owning level and routes per confidence. This skill verifies; it does not route.
 

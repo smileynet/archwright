@@ -71,6 +71,11 @@ When the resolution commits to states, transitions, or lifecycle:
 2. Identify the transitions (events that move between states)
 3. Identify guards (constraints that gate transitions)
 4. Identify invariants (properties that must always hold). For ★★ invariants, add an `alloy:` field — the Alloy 6 rendering of the predicate over the generated model. Reference `M.current`, PascalCase state sigs, and `M.<camelCaseVar>` context vars. Guards and `assign:` var updates in the translatable subset compile into the model (guards: enum `==`/`!=`, int comparisons, var-to-var, `&&` conjunctions; assigns: literals, var copy, `var + N`/`var - N`); anything outside it stays a comment and invariants touching the affected vars/states SKIP with reason. Without an `alloy:` field, the Alloy check SKIPs: prose predicates are not mechanically translatable.
+
+   **Authoring `alloy:` expressions** (field-proven disciplines, ExposeAR + DynamoRush):
+   - **Liveness is unprovable** — generated models permit stuttering, so `leads-to` properties can't be checked. Render the checkable SAFETY SKELETON instead (successor restrictions: `always (M.current = Filled implies M.current' = Filled)` — "no exit exists"), and assign the liveness/payload halves to the trace check with a YAML comment naming the split.
+   - **Every unrendered invariant documents WHY** (bool var / payload property / cross-machine / needs clock) so SKIPs are self-explaining.
+   - **Probe non-vacuity after authoring:** run `python3 <archwright-repo>/tools/archwright-check.py --probe <spec.yaml>` — it injects a deliberately-false invariant and requires a counterexample (exit 0). Exit 1 = the model is vacuous (unreachable states); do not trust any PASS from it. Five PASSes mean nothing from a checker that cannot fail.
 5. Add `check.trace` block (events, state_vars, invariants for trace validation)
 6. Add `check.model` block (backend, scope, steps for Alloy)
 7. Add `abstraction_notes` (what's included/excluded/why)
@@ -87,6 +92,7 @@ When the resolution commits to a rule the code must never violate:
 4. Give a correct example (code that respects it)
 5. Add `check` block (method: grep/ast-grep/script, target, pattern, expect)
 6. Scope the check with `include:` globs (e.g., `include: ["*.cs"]`) whenever the target tree mixes source with docs/assets/configs — an unscoped repo-wide grep produces hundreds of noise matches (SVGs, .gitattributes, prose) that bury real violations. Bare globs match file names; globs with `/` match project-relative paths. `include:` applies only to declarative target+pattern checks, not `command:` checks.
+7. **Calibrate before commit.** Run the check's pattern against the real target in BOTH directions before committing the spec: an `expect: present` pattern must actually match, and an `expect: absent` pattern must be absent for the RIGHT reason (the mechanism exists under a different token ≠ the mechanism is missing). Treat "token not found" as wrong-token-until-proven-violation — grill/ADR vocabulary drifts from code vocabulary (field evidence: `CORP#` vs `GUILD#`, `FunctionCatalog` vs `FunctionCall`, a generator that moved files). For `command:` checks, prefer TIGHT context windows and anchored tokens: a wide `grep -B10` bleeds adjacent code into the match window and produces false FAILs (observed: an adjacent same-transaction item matched a forbidden-op pattern).
 
 Use template: `tools/templates/spec-constraint.md`
 

@@ -1,12 +1,25 @@
 ---
 id: 009
 title: "Explore: alloy-authoring guidance in derive skill (safety skeletons + non-vacuity probe)"
-status: open
+status: done
+closed: 2026-07-17
 blocked_by: []
 created: 2026-07-17
 ---
 
 # Explore: alloy-authoring guidance for behavior invariants
+
+## Resolution (2026-07-17)
+
+Both halves shipped — rule-of-two satisfied by the DynamoRush C10 run (second
+field project needing both disciplines):
+1. **Guidance:** `archwright-derive` step 4 gains an "Authoring alloy: expressions"
+   subsection (safety skeletons for unprovable liveness; document-why on every
+   unrendered invariant; probe after authoring).
+2. **Tooling:** `archwright-check.py --probe <spec>` auto-injects the false
+   invariant (exit 0 = counterexample/good, 1 = vacuous, 2 = not probeable).
+   Conformance corpus in the suite: live model → exit 0; unsatisfiable-guard
+   machine → vacuity exit 1 (also exercises ticket 008's guard compilation).
 
 Feature suggestion from the ExposeAR field run (2026-07-17, digest "Behavior model
 checks ACTIVE") — process non-disruptively; no urgency, no current breakage.

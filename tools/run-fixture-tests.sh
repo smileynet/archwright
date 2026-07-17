@@ -147,6 +147,97 @@ else
 fi
 
 echo ""
+echo "=== Tool Conformance: forces-gen + probe ==="
+# forces-gen: inventory → force files (conformance at birth, rule 4: incl. failing case)
+FG_DIR=$(mktemp -d)
+cat > "$FG_DIR/inv.yaml" <<'EOF'
+product_forces:
+  - id: probe-desire
+    polarity: desire
+    statement: "Someone wants a thing."
+    who: user
+    evidence_level: L1
+    provenance: [{source: "test", quote: "quote"}]
+forces:
+  - id: probe-constraint
+    polarity: constraint-hard
+    statement: "A bound is given."
+    serves: probe-desire
+    evidence_level: L1
+    provenance: [{source: "test", quote: "quote"}]
+EOF
+if python3 "$TOOLS/archwright-forces-gen.py" "$FG_DIR/inv.yaml" -o "$FG_DIR/out" >/dev/null 2>&1 \
+   && [ "$(ls "$FG_DIR/out" | wc -l)" = "2" ] \
+   && python3 "$VALIDATE" "$FG_DIR/out"/*.md >/dev/null 2>&1; then
+  report PASS "forces-gen: inventory → 2 valid force files"
+else
+  report FAIL "forces-gen: inventory → 2 valid force files"
+fi
+cat > "$FG_DIR/bad.yaml" <<'EOF'
+forces:
+  - id: bad-force
+    polarity: not-a-polarity
+    statement: "s"
+    provenance: [{source: "t", quote: "q"}]
+EOF
+if python3 "$TOOLS/archwright-forces-gen.py" "$FG_DIR/bad.yaml" -o "$FG_DIR/out2" >/dev/null 2>&1; then
+  report FAIL "forces-gen: invalid polarity = tool error (exit 2)"
+else
+  report PASS "forces-gen: invalid polarity = tool error (exit 2)"
+fi
+rm -rf "$FG_DIR"
+
+# --probe: non-vacuity probing (jar-gated like behavior checks)
+PROBE_JAR="${ARCHWRIGHT_ALLOY_JAR:-$TOOLS/../.references/alloy6.jar}"
+if [ ! -f "$PROBE_JAR" ] || ! command -v java >/dev/null 2>&1; then
+  report SKIP "probe conformance (alloy jar or java unavailable)"
+else
+  rc=0; python3 "$CHECK" --probe "$FIXTURE/design/specs/ball-state-lifecycle.yaml" >/dev/null 2>&1 || rc=$?
+  if [ $rc -eq 0 ]; then
+    report PASS "probe: live model → false invariant FAILs (exit 0)"
+  else
+    report FAIL "probe: live model → false invariant FAILs (exit 0)" "exit=$rc"
+  fi
+  # Vacuous case: a transition guarded by an unsatisfiable condition — the
+  # target state is syntactically present but semantically unreachable, so
+  # the false invariant PASSES and probe must report vacuity (exit 1).
+  PR_DIR=$(mktemp -d)
+  cat > "$PR_DIR/vacuous.yaml" <<'EOF'
+kind: behavior
+id: vacuous-machine
+from_patterns: ["pattern:zone-progress"]
+protects_experience: "test"
+user_story: "test"
+context:
+  variables:
+    n:
+      type: int
+      initial: 0
+initial: idle
+states:
+  idle:
+    type: atomic
+    "on":
+      GO:
+        target: done
+        guard:
+          predicate: "n == 5"
+          confidence: "★★"
+  done:
+    type: atomic
+    "on": {}
+invariants: []
+EOF
+  rc=0; python3 "$CHECK" --probe "$PR_DIR/vacuous.yaml" >/dev/null 2>&1 || rc=$?
+  if [ $rc -eq 1 ]; then
+    report PASS "probe: unreachable target → vacuity reported (exit 1)"
+  else
+    report FAIL "probe: unreachable target → vacuity reported (exit 1)" "exit=$rc"
+  fi
+  rm -rf "$PR_DIR"
+fi
+
+echo ""
 echo "=== Check-Tool Feature Tests ==="
 # Golden assertions for check-backend features (tickets 005/006) — temp specs
 # run against the fixture tree, cleaned up unconditionally.

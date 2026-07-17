@@ -244,6 +244,8 @@ contract_candidates:
 
 `archwright-contract` formalizes each candidate into a contract spec (typed payloads, stability, persistence), carrying `from_model:` provenance back to this entry. The `{ field }` shorthand in `emits_events` remains a sketch (see step 4) — the contract phase owns the authoritative shape.
 
+**Name candidates per event leg — never per cluster.** A protocol cluster (e.g., createSurface/updateComponents/updateDataModel) lists ONE candidate per message leg; the C7 cluster exception merges the SPECS (one contract spec may cover all legs), never the candidate identities. Coverage validation joins on event names — a cluster-named candidate matches nothing and reports as uncovered (field-verified).
+
 ## Rendering Guidance
 
 ### Label length

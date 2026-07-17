@@ -1,12 +1,22 @@
 ---
 id: 010
 title: "Explore: independent-verification rule in check skill (changed verdicts)"
-status: open
+status: done
+closed: 2026-07-17
 blocked_by: []
 created: 2026-07-17
 ---
 
 # Explore: independent-verification rule for changed check verdicts
+
+## Resolution (2026-07-17)
+
+Skill-text half shipped — rule-of-two satisfied (applied 3× in the DynamoRush
+C10 run: ledger grep-window fix, corp-token fix, generator-path fix — each
+verdict flip independently confirmed before recording). `archwright-check`
+"Interpret results" gains: "Changed verdicts are unverified until independently
+reproduced." The tool-side verdict-flip flag stays with CK-07 baseline work
+(needs a baseline to diff against), as the ticket anticipated.
 
 Feature suggestion from the ExposeAR field run (2026-07-17) — process
 non-disruptively; the underlying bug is already fixed, this is about the practice
