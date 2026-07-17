@@ -1,0 +1,47 @@
+# mise.toml — archwright tool management
+# Bootstrap on a fresh machine: install mise (winget install jdx.mise | brew install mise),
+# then: mise install && mise run setup && mise run rehydrate-alloy
+# See AGENTS.md "Dependency Rehydration".
+
+[tools]
+python = "3.12"
+java = "temurin-21"
+node = "22"
+"npm:state-machine-cat" = "latest"  # smcat — FSM rendering (PNG additionally needs Graphviz `dot`)
+# merman-cli intentionally NOT managed here: cargo backend would pull a full Rust
+# toolchain for an optional renderer. Manual: `cargo install merman-cli`.
+
+[env]
+# ★/— glyphs break on cp1252 consoles without this (lessons.md #5)
+PYTHONIOENCODING = "utf-8"
+# archwright-check.py honors this override (upstream 410623c); keeps behavior
+# checks working regardless of checkout path.
+ARCHWRIGHT_ALLOY_JAR = "{{config_root}}/.references/alloy6.jar"
+
+[tasks.setup]
+description = "One-time: python libs the tools need"
+run = "python -m pip install pyyaml"
+
+[tasks.rehydrate-alloy]
+description = "Fetch Alloy 6.2.0 dist jar into .references/ (exec CLI needs >= 6.2.0)"
+run = "curl -L --create-dirs -o {{config_root}}/.references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar"
+
+[tasks.validate]
+description = "Schema-validate patterns/specs: mise run validate -- <files...>"
+run = "python tools/archwright-validate.py"
+
+[tasks.validate-links]
+description = "Link-graph validation: mise run validate-links -- <design-dir>"
+run = "python tools/archwright-validate.py --links"
+
+[tasks.check-static]
+description = "Batch static check: mise run check-static -- <specs-dir> [--target <root>]"
+run = "python tools/archwright-check.py --static"
+
+[tasks.test]
+description = "Fixture suite (lacrosse-bosse) — the repo's regression net"
+run = "bash tools/run-fixture-tests.sh"
+
+[tasks.deploy-skills]
+description = "Sync skills + steering + overlays to ~/.kiro (run after any skill edit)"
+run = "bash tools/deploy-skills.sh"
