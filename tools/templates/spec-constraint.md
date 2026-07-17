@@ -8,9 +8,11 @@ protects_experience: "experience-id"  # modeled experience (preferred) or produc
 user_story: "One sentence describing what the user experiences when this rule holds."
 check:
   method: grep  # grep | semgrep | script | alloy
-  target: "path/to/check"
+  target: "path/to/check"     # or a YAML list of roots — matches are unioned
   pattern: "regex or semgrep pattern"
-  expect: absent  # absent | present
+  expect: absent  # absent | present | only-in (only-in also requires only_in: <substring>)
+  # include: "*.cs"           # optional glob (or list) scoping matched file NAMES
+  # include_comments: true    # optional: match inside comments too (stripped by default)
 links:
   - target: "behavior:affected-component"
     type: constrains
