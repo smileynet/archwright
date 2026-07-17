@@ -98,7 +98,7 @@ The durable per-force artifact (`design/forces/<id>.md`, kind: force) — the ro
 _Avoid_: calling the working YAML inventory (`.memory/archwright-forces-*.yaml`) "the forces" — that's extraction scaffolding.
 
 **HITL-blocking gate**:
-A pipeline gate that always stops for the human: resolve, L4/L5 desire validation, ★★ events, fog, end-of-span digest. All other gates are **flow-through** (ADR 0007).
+A pipeline gate that always stops for the human: resolve, L4/L5 desire validation, ★★ events that survive the research gate (ADR 0010 — noise/known dispositions are proposed/logged instead; hard floor always blocks), fog, end-of-span digest. All other gates are **flow-through** (ADR 0007).
 
 **Span**:
 A human-pre-authorized run of contiguous flow-through phases ("forces through derive"). Auto-advance never crosses the span boundary; each phase writes a digest entry.

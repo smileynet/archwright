@@ -67,9 +67,19 @@ Most violations terminate at Implementation. A signal reaching Force level means
 
 Confidence of the violated invariant gates what happens next (the stopping rule — high confidence escalates MORE, not less):
 
+**★★ events first pass through a research gate (ADR 0010) — escalate only what truly needs a human.** Before presenting any ★★ event, research it: prior art, best practices, related specs/patterns/decision records, and the contrast pair itself. Classify:
+
+| Classification | Evidence required | Disposition |
+|----------------|-------------------|-------------|
+| Check defect / spec noise | Demonstrable defect (e.g., pattern matches an asset filename, wrong target) | Propose the spec/check fix (★-style propose); note in span digest. No HITL stop |
+| Known + owner-accepted | A matching decision record, baseline entry, or work-queue item — cite it | Log with the reference in the span digest. No HITL stop |
+| Genuine new decision | Neither of the above — a tradeoff, scope change, or novel security judgment | **Escalate (HITL)** — WITH the research summary and a recommended disposition. Never a bare violation |
+
+Classification requires POSITIVE evidence — ambiguity defaults to escalate. **Hard floor (always blocks, research or not):** irreversible actions, security-material-and-novel findings, or anything contradicting a ratified resolution. Every classified-away ★★ goes in the span digest for end-of-span human review.
+
 | Confidence | Route | What you do |
 |:----------:|-------|-------------|
-| ★★ | **Escalate to human — HITL, always stop** | Present the lifted signal + contrast pair + owning level. The human adjudicates: fix implementation, demote the invariant, or re-open the tension. Never auto-fix a ★★ violation, even an "obvious" one — a broken true-invariant is either a real defect or evidence the ★★ was wrongly assigned; both are human calls (ADR 0007) |
+| ★★ | **Research gate above, then escalate genuine decisions — HITL** | Present the lifted signal + contrast pair + owning level + research + recommendation. The human adjudicates: fix implementation, demote the invariant, or re-open the tension. Never auto-FIX a ★★ violation, even an "obvious" one — noise/known dispositions PROPOSE or LOG, they don't silently change design artifacts (ADR 0007 + 0010) |
 | ★ | **Propose fix** | Draft the fix at the owning level (code patch, spec correction, pattern amendment). Present for approval; apply on acceptance |
 | — | **Auto-adjust or log** | Fix locally and note it in the span digest. Advisory resolutions absorb signals |
 
@@ -98,6 +108,7 @@ The **contrast pair** is the primary artifact at every hop — the violation bes
 
 - Run checks (that's `archwright-check` — this skill consumes its output)
 - Decide re-opened tensions (that's `archwright-resolve` — this skill routes to it)
-- Auto-fix ★★ violations (HITL gate, ADR 0007 — no exceptions)
+- Auto-FIX ★★ violations (ADR 0007/0010 — research may classify them as noise/known and propose or log, but never silently change design artifacts)
+- Escalate a bare ★★ violation without the research pass + recommended disposition (ADR 0010)
 - Lift past the owning level (level-terminating — a code bug never reaches the force layer)
 - Modify confidence ratings unilaterally (demotion is proposed to the human, a ★★ event)

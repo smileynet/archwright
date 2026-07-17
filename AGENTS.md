@@ -70,6 +70,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── specs/                     # Specs for plan deliverables (incl. Phase 5)
 │   ├── audit/                     # Audit reports (tools, skills, claims)
 │   ├── grill/                     # Grill session decision records (INDEX.md + Q-files per topic)
+│   ├── lessons/                   # One durable lesson per file + README index/session log
 │   ├── research-*.md              # Research plans & syntheses
 │   └── adr/                       # Architecture decision records
 ├── audit-plan.md                  # Active standalone audit plan (tickets A/B/C/D)
@@ -194,7 +195,7 @@ Notes:
 
 The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`) is a sequence of discrete phases. **Gates block only where human input is needed** (ADR 0007, `.memory/adr/0007-hitl-only-gates.md`):
 
-- **HITL-blocking (always stop):** resolve (decisions; pre-resolved = one batched confirmation), L4/L5 desire validation in forces, any ★★ event (violation / unratified assignment / demotion), fog (unknown forces mid-span), end-of-span digest acceptance.
+- **HITL-blocking (always stop):** resolve (decisions; pre-resolved = one batched confirmation), L4/L5 desire validation in forces, ★★ events surviving the ADR-0010 research gate (genuine new decisions arrive w/ research + recommendation; noise/known are proposed/logged; unratified assignment & demotion always block), fog (unknown forces mid-span), end-of-span digest acceptance.
 - **Flow-through (auto-advance):** all other phase transitions — only within a human-pre-authorized span, only when the phase's artifacts pass `archwright-validate.py`, and only with a digest entry written. No span authorized → stop after each phase.
 
 Constants: survey never writes patterns/specs or resolves tensions; a skill's "Does NOT" section is a hard boundary; "proceed" authorizes the next phase or an explicitly accepted span — never a silent run to completion.
