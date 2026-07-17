@@ -114,7 +114,7 @@ Research + design-theory project transitioning to implementation. Primary output
 
 ## Commands
 
-Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
+Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydration). Tasks: `validate`, `validate-links`, `check-static`, `test`, `deploy-skills`, `setup`, `rehydrate-alloy`. Without mise, tools are not on PATH — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
 
 | Task | Command |
 |------|---------|
@@ -126,10 +126,43 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 | Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
-| Deploy skills | `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `tools/run-fixture-tests.sh` — 22 checks incl. Alloy behavior check (SKIPs with reason if alloy6.jar or java absent) |
+| Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 22 checks incl. Alloy behavior check (SKIPs with reason if alloy6.jar or java absent; green = 22/0/0) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
+
+## Dependency Rehydration
+
+`.references/` is gitignored — external binaries must be re-fetched on a fresh clone or new machine.
+
+**Primary path — mise** (`mise.toml` at repo root manages tools, env, and tasks):
+
+```bash
+# Bootstrap mise once: winget install jdx.mise | brew install mise | https://mise.run
+mise trust && mise install     # python 3.12, temurin-21, node 22, smcat
+mise run setup                 # pyyaml
+mise run rehydrate-alloy       # Alloy 6.2.0 dist jar → .references/alloy6.jar
+mise run test                  # verify: 22 passed, 0 failed, 0 skipped
+```
+
+`mise.toml` also sets `PYTHONIOENCODING=utf-8` and `ARCHWRIGHT_ALLOY_JAR` automatically inside the repo. Prefer `mise run <task>` (see Commands) — tasks run with the managed toolchain on PATH.
+
+**Fallback — manual installs** (machines without mise):
+
+| Dependency | Needed for | Rehydrate |
+|------------|-----------|-----------|
+| `alloy6.jar` (Alloy ≥ 6.2.0 — the `exec` CLI was added in 6.2.0) | behavior checks | `curl -L -o .references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar` |
+| Java (JVM, `java` on PATH) | running the Alloy jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
+| Python 3 + PyYAML | all tools | `pip install pyyaml` |
+| `smcat` (state-machine-cat) | model/diagram FSM rendering (optional) | `npm i -g state-machine-cat` — PNG output also needs Graphviz `dot` |
+| `merman-cli` | model/diagram Mermaid rendering (optional) | `cargo install merman-cli` (not in mise.toml — avoids pulling a Rust toolchain for an optional renderer) |
+| `semgrep` | review AST checks (optional) | `pipx install semgrep` |
+
+Notes:
+- `archwright-check.py` locates the jar via `ARCHWRIGHT_ALLOY_JAR`, then script-relative `.references/alloy6.jar`, then the legacy `~/code/archwright/` path. Behavior checks report SKIP (exit 0) when it's absent — a coverage gap, not a pass.
+- Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
+- Windows: bare `python3` resolves to a broken MS Store stub, and mise's python ships only `python.exe` — use `mise exec -- python` or `mise run` tasks (`run-fixture-tests.sh` has its own python3→python guard). Without mise, real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` and `PYTHONIOENCODING=utf-8` must be set manually (★ output vs cp1252 console).
+- After rehydrating the jar, run `mise run test` — the ball-state-lifecycle skip becomes an active behavior check (green = 22/0/0).
 
 ## Workflows
 

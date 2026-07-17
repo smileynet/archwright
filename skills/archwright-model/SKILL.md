@@ -273,7 +273,7 @@ Render all diagrams to PNG before presenting. Fix any parse errors or label trun
 merman-cli -i model.md -o model.png -t dark -b transparent
 smcat -T png actor.smcat
 ```
-**If `merman-cli`/`smcat` are not installed** (they are external tools, not part of archwright — check with `which`): skip PNG rendering, present the Mermaid/smcat source directly, and note that diagrams are unverified. Do not block the phase on missing renderers.
+**If `merman-cli`/`smcat` are not installed** (they are external tools, not part of archwright — check with `which`): skip PNG rendering, present the Mermaid/smcat source directly, and note that diagrams are unverified. Do not block the phase on missing renderers. To rehydrate: in the archwright repo `mise install` provides `smcat`; elsewhere `npm i -g state-machine-cat` (PNG output also needs Graphviz `dot`). `merman-cli` is always manual: `cargo install merman-cli`.
 
 ## Quality Checks
 
