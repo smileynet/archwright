@@ -19,8 +19,10 @@ forbidden:
     type: writes
 check:
   method: grep
-  command: "grep -rn 'ball_holder\\s*=' client/src --include='*.gd' | grep -v ball_state_service.gd | grep -v '=='"
-  expect: absent
+  target: "client/src"
+  pattern: "ball_holder\\s*=(?!=)"
+  expect: only-in
+  only_in: "ball_state_service.gd"
 links:
   - target: "constraint:single-ball-writer"
     type: enforces

@@ -117,9 +117,9 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 
 | Task | Command |
 |------|---------|
-| Validate pattern/spec | `python3 tools/archwright-validate.py <file>...` — validates all kinds incl. contract; emits non-fatal `WARN:` lines (e.g., missing `protects_experience`) |
-| Validate links | `python3 tools/archwright-validate.py --links <dir>` |
-| Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` |
+| Validate pattern/spec | `python3 tools/archwright-validate.py [--json] <file>...` — validates all kinds incl. contract; emits non-fatal `WARN:` lines (e.g., missing `protects_experience`); `--json` emits the CK-03 document shape |
+| Validate links | `python3 tools/archwright-validate.py [--json] --links <dir>` |
+| Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` — exit 0 pass / 1 violations / 2 tool error; `--json` emits status/scope/violations (w/ provenance, severity, escalate, contrast_pair)/coverage/remaining_delta |
 | Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>]` |
 | Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` |
 | Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
