@@ -1,7 +1,7 @@
 ---
 id: 004
 title: Docs + skills reference mise as primary rehydration path
-status: open
+status: done
 blocked_by: [003]
 created: 2026-07-17
 ---
