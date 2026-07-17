@@ -259,11 +259,14 @@ _LINE_COMMENT = {
 }
 
 
-def _python_grep(target_path, pattern, project_root=None, strip_comments=True):
+def _python_grep(target_path, pattern, project_root=None, strip_comments=True, include=None):
     """Portable grep replacement: regex search over text files. Returns 'path:line:text' lines.
     Paths are emitted project-relative with forward slashes so only-in filters match portably.
     By default the comment portion of each line is stripped before matching (per-extension
-    line-comment tokens) so commented-out code never triggers a constraint."""
+    line-comment tokens) so commented-out code never triggers a constraint.
+    `include` (list of globs, e.g. ["*.cs"]) restricts matching to files whose NAME matches
+    any glob — field-driven scoping (ticket 005)."""
+    import fnmatch
     rx = re.compile(pattern)
     out = []
     paths = [target_path] if target_path.is_file() else None
@@ -272,6 +275,8 @@ def _python_grep(target_path, pattern, project_root=None, strip_comments=True):
         for p in target_path.rglob("*"):
             if p.is_file() and not (set(p.parts) & _SKIP_DIRS):
                 paths.append(p)
+    if include:
+        paths = [p for p in paths if any(fnmatch.fnmatch(p.name, g) for g in include)]
     for p in paths:
         try:
             if p.stat().st_size > 5_000_000:
@@ -334,13 +339,32 @@ def _check_grep(check, spec_id, confidence, project_root):
         except Exception as e:
             return [{"invariant": spec_id, "status": "error", "message": str(e)}]
     else:
-        target_path = project_root / target
-        if not target_path.exists():
-            return [{"invariant": spec_id, "status": "error",
-                     "message": f"Target path not found: {target_path}"}]
+        # include: glob(s) restricting matched file names (ticket 005)
+        include = check.get("include")
+        if isinstance(include, str):
+            include = [include]
+
+        # target: single path or list of paths (ticket 006) — matches are unioned
+        targets = target if isinstance(target, list) else [target]
+        target_paths = []
+        for t in targets:
+            tp = project_root / t
+            if not tp.exists():
+                hint = " (multiple roots? use a YAML list for target:)" \
+                    if isinstance(target, str) and " " in target else ""
+                return [{"invariant": spec_id, "status": "error",
+                         "message": f"Target path not found: {tp}{hint}"}]
+            target_paths.append(tp)
+
         try:
-            matches = _python_grep(target_path, pattern, project_root,
-                                   strip_comments=not check.get("include_comments", False))
+            all_matches = []
+            for tp in target_paths:
+                m = _python_grep(tp, pattern, project_root,
+                                 strip_comments=not check.get("include_comments", False),
+                                 include=include)
+                if m:
+                    all_matches.append(m)
+            matches = "\n".join(all_matches)
         except re.error as e:
             return [{"invariant": spec_id, "status": "error",
                      "message": f"invalid pattern: {e}"}]
