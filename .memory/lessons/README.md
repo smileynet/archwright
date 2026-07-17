@@ -25,6 +25,8 @@ files.
 | [alloy-context-vars-frozen](alloy-context-vars-frozen.md) | `alloy:` expressions must reference M.current only — context vars are frozen |
 | [skills-no-repo-relative-paths](skills-no-repo-relative-paths.md) | Deployed skills run from target projects — `<archwright-repo>/` placeholders |
 | [comment-filtering-positional](comment-filtering-positional.md) | Never truncate the haystack — `http://` contains `//` |
+| [powershell-bash-script-files](powershell-bash-script-files.md) | Inline `bash -c` from PowerShell corrupts `$`-expressions; use script files; `/tmp` invisible to Windows python |
+| [alloy-safety-skeletons](alloy-safety-skeletons.md) | Render leads-to as safety skeletons; probe non-vacuity before trusting PASS |
 
 ## Session log
 
@@ -34,3 +36,4 @@ files.
 | 2026-07-17 | mise adoption | mise.toml owns tools/env/tasks; baseline 22/0/0 at adoption. (Was "#1–4") |
 | 2026-07-17 | Alloy wiring + DoD-5 chain | First jar execution exposed two dormant compiler bugs; CK-03/04/05/09/10 + CK-21 landed. |
 | 2026-07-17 | include: globs + comment false-pass (ExposeAR lane) | Concurrent implementation reconciled; positional comment matching; ExposeAR tls-only 897 noise → 2 honest violations. Baseline 31/0/0. |
+| 2026-07-17 | ExposeAR close-out + AwsArchVR handoff (ExposeAR lane) | Check phase CLOSED (1/6/26/0 — 6 FAILs = intentional work queue); first field alloy authoring (5 invariants bounded-checked, non-vacuity verified); project continues as AwsArchVR (`~/code/AwsArchVR/HANDOFF.md`); tickets 007–010 queued; crew-research tickets 12/13 (push pending Code Defender approval). |
