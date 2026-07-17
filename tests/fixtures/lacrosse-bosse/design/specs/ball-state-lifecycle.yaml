@@ -19,7 +19,7 @@ initial: held
 states:
   held:
     type: atomic
-    on:
+    "on":
       REQUEST_TRANSFER:
         target: in_flight
         from_force: any-fielder-receives
@@ -32,7 +32,7 @@ states:
 
   in_flight:
     type: atomic
-    on:
+    "on":
       VALIDATE_ACCEPT:
         target: held
         from_force: any-fielder-receives

@@ -15,7 +15,7 @@ The pipeline's upward arc. Check verifies and emits structured violations; this 
 
 ## Input
 
-Structured violations from `python3 tools/archwright-check.py <specs>... --json` (or `archwright-validate.py --json`). Each violation carries:
+Structured violations from `python3 <archwright-repo>/tools/archwright-check.py <specs>... --json` (or `archwright-validate.py --json`). Each violation carries:
 
 ```json
 {
@@ -28,7 +28,7 @@ Structured violations from `python3 tools/archwright-check.py <specs>... --json`
 }
 ```
 
-If handed prose instead of JSON, re-run the check with `--json` — this skill consumes the contract, not transcripts.
+Authoritative schema: `<archwright-repo>/tools/check-output-schema.yaml`. If handed prose instead of JSON, re-run the check with `--json` — this skill consumes the contract, not transcripts.
 
 ## Process
 

@@ -4,6 +4,10 @@
 Usage:
   archwright-compile-alloy <behavior-spec.yaml> [-o output.als]
 
+LIMITATION: transition guards compile to comments only and context variables
+are frozen by frame conditions — `alloy:` expressions must reference M.current
+and state sigs, not context vars (the compiler warns if they do).
+
 Generates an Alloy 6 model with:
   - var fields for context variables
   - Transition predicates from state/event definitions
@@ -14,6 +18,9 @@ Generates an Alloy 6 model with:
 import sys
 import yaml
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from archwright_common import state_events
 
 
 def load_spec(path):
@@ -92,8 +99,7 @@ def generate_alloy(data):
     lines.append("-- Transitions")
     transition_preds = []
     for state_name, state_def in states.items():
-        # PyYAML (YAML 1.1) parses the key `on:` as boolean True — handle both.
-        events = state_def.get("on") or state_def.get(True) or {}
+        events = state_events(state_def)
         for event_name, trans in events.items():
             if isinstance(trans, dict):
                 target = trans.get("target", state_name)
@@ -139,6 +145,7 @@ def generate_alloy(data):
     invariants = data.get("invariants", [])
     checkable = []
     skipped = []
+    skipped_warnings = []
     lines.append("-- Invariants")
     for inv in invariants:
         inv_id = _to_field(inv.get("id", "unknown"))
@@ -148,6 +155,16 @@ def generate_alloy(data):
 
         if alloy_expr:
             checkable.append(inv_id)
+            # LIMITATION: guards compile to comments and context vars never update
+            # (frame conditions freeze them) — an expression over a context var is
+            # checked against a model where it cannot change. Warn loudly.
+            frozen_refs = [v for v in context if f"M.{_to_field(v)}" in alloy_expr]
+            if frozen_refs:
+                skipped_warnings.append(
+                    f"invariant '{inv.get('id', 'unknown')}' references context var(s) "
+                    f"{frozen_refs} — context vars are FROZEN in the generated model "
+                    f"(guards/actions not compiled); results may be spurious. "
+                    f"Reference M.current and state sigs instead.")
             lines.append(f"-- {description}")
             lines.append(f"-- Spec predicate: {predicate}")
             lines.append(f"assert {inv_id} {{")
@@ -169,7 +186,7 @@ def generate_alloy(data):
     for inv_id in checkable:
         lines.append(f"check {inv_id} for {scope} but {steps} steps")
 
-    return "\n".join(lines), skipped
+    return "\n".join(lines), skipped, skipped_warnings
 
 
 def _to_sig(name):
@@ -198,7 +215,7 @@ def main():
             output_path = sys.argv[idx + 1]
 
     data = load_spec(spec_path)
-    alloy_source, skipped = generate_alloy(data)
+    alloy_source, skipped, gen_warnings = generate_alloy(data)
 
     if output_path:
         Path(output_path).write_text(alloy_source, encoding="utf-8")
@@ -211,6 +228,8 @@ def main():
 
     for inv_id in skipped:
         print(f"WARN: invariant '{inv_id}' skipped — no `alloy:` expression (prose predicate not mechanically translatable)")
+    for w in gen_warnings:
+        print(f"WARN: {w}")
 
 
 if __name__ == "__main__":
