@@ -72,7 +72,7 @@ Behavior checks need the Alloy jar, which is NOT in the repo (`.references/` is 
 | Java (`java` on PATH) | running the jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
 | `semgrep` (optional) | `constraint` kind: `method: semgrep` specs | `pipx install semgrep` — NOTE: `archwright-check.py`'s semgrep runner is a stub today; `method: semgrep` specs SKIP with "not yet implemented" regardless of the binary. Prefer `method: grep` with `include:` scoping until a spec genuinely needs AST matching (rule-of-two) |
 
-The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 22/0/0, behavior fixture active).
+The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 31/0/0, behavior fixture active).
 
 ## Commands
 

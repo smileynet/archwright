@@ -130,7 +130,7 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 27 checks incl. Alloy behavior check + check-tool feature tests (SKIPs with reason if alloy6.jar or java absent; green = 27/0/0) |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 31 checks incl. Alloy behavior check + check-tool feature tests (SKIPs with reason if alloy6.jar or java absent; green = 31/0/0) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
@@ -145,7 +145,7 @@ Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`
 mise trust && mise install     # python 3.12, temurin-21, node 22, smcat
 mise run setup                 # pyyaml
 mise run rehydrate-alloy       # Alloy 6.2.0 dist jar → .references/alloy6.jar
-mise run test                  # verify: 27 passed, 0 failed, 0 skipped
+mise run test                  # verify: 31 passed, 0 failed, 0 skipped
 ```
 
 `mise.toml` also sets `PYTHONIOENCODING=utf-8` and `ARCHWRIGHT_ALLOY_JAR` automatically inside the repo. Prefer `mise run <task>` (see Commands) — tasks run with the managed toolchain on PATH.
@@ -166,7 +166,7 @@ Notes:
 - Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
 - Windows: bare `python3` resolves to a broken MS Store stub, and mise's python ships only `python.exe` — use `mise exec -- python` or `mise run` tasks (`run-fixture-tests.sh` has its own python3→python guard). Without mise, real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` and `PYTHONIOENCODING=utf-8` must be set manually (★ output vs cp1252 console).
 - After ANY merge from upstream: `mise run test` (suite green) + `mise run deploy-skills` (upstream may have edited skills — deployed copies go stale silently).
-- After rehydrating the jar, run `mise run test` — the ball-state-lifecycle skip becomes an active behavior check (green = 27/0/0).
+- After rehydrating the jar, run `mise run test` — the ball-state-lifecycle skip becomes an active behavior check (green = 31/0/0).
 
 ## Workflows
 

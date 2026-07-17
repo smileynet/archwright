@@ -29,3 +29,17 @@ check backend needs per-spec file scoping.
 
 Resolution (2026-07-17): implemented in `_python_grep`/`_check_grep`; suite section
 "Check-tool feature tests" asserts include-scoping; template + derive skill updated.
+
+Merged with the concurrent session's independent implementation (same day, same ticket id):
+
+- Path-glob form added: a glob containing `/` matches the project-relative POSIX path
+  (bare globs match the file name, as here).
+- Explicitly-named single-file targets are never filtered — avoids the GNU grep
+  `--include` gotcha that false-passed `no-isdk-references` in the field.
+- `include:` + `command:` is a loud tool error (declarative checks only).
+- BONUS FIX folded in: comment stripping used to truncate lines at the first comment
+  token, false-passing any pattern containing the token (`"http://` contains `//`) —
+  ExposeAR `tls-only` PASSed over two real plain-HTTP URLs. Replaced with positional
+  matching (match counts iff it starts before the token). Fixture canaries:
+  `no-shell-exec` (include filtering) + `endpoint-pinned` (positional comments).
+- Combined suite baseline: 31/0/0 (fixture additions + feature tests).

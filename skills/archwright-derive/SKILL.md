@@ -86,6 +86,7 @@ When the resolution commits to a rule the code must never violate:
 3. Give a violation example (code that would break it)
 4. Give a correct example (code that respects it)
 5. Add `check` block (method: grep/ast-grep/script, target, pattern, expect)
+6. Scope the check with `include:` globs (e.g., `include: ["*.cs"]`) whenever the target tree mixes source with docs/assets/configs — an unscoped repo-wide grep produces hundreds of noise matches (SVGs, .gitattributes, prose) that bury real violations. Bare globs match file names; globs with `/` match project-relative paths. `include:` applies only to declarative target+pattern checks, not `command:` checks.
 
 Use template: `tools/templates/spec-constraint.md`
 
