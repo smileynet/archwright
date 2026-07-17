@@ -197,7 +197,7 @@ When writing the `check` block, prefer structural checks over text grep:
 | Config files (turbo.json, tsconfig) | `node -e` script (parse + assert) | Handles nested structure |
 | Shell scripts | `grep` (acceptable — less structured) | Comments are rare enough |
 
-**When using grep:** exclude comment lines with patterns like `^[^/]*<target>` (no leading `//`). Note that `import type` in TypeScript is compile-time-only and should NOT be flagged as a runtime import.
+**When using grep:** scope with `include:` (glob or list, e.g. `include: "*.cs"`) so patterns don't match unrelated file types — a field run matched 897 lines repo-wide without it. Multiple roots go in a YAML list (`target: [src/, config/]`); matches are unioned, and any missing entry is a loud tool error. Comment lines are stripped by default (opt back in with `include_comments: true`). Note that `import type` in TypeScript is compile-time-only and should NOT be flagged as a runtime import.
 
 ## Does NOT
 
