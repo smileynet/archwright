@@ -85,7 +85,9 @@ else
     if echo "$result" | grep -q "PASS"; then
       report PASS "$(basename "$f" .yaml)"
     elif echo "$result" | grep -q "SKIP"; then
-      report SKIP "$(basename "$f" .yaml) (alloy jar unavailable)"
+      # Surface check.py's actual skip reason (jar missing / java missing / no alloy: expression)
+      reason=$(echo "$result" | sed -n '2p' | sed 's/^ *//' | cut -c1-60)
+      report SKIP "$(basename "$f" .yaml) (${reason:-skipped})"
     else
       report FAIL "$(basename "$f" .yaml)" "$result"
     fi

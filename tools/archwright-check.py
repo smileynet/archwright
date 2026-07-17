@@ -49,40 +49,134 @@ def load_spec(path):
     return None, None
 
 
+def _find_alloy_jar():
+    """Locate alloy6.jar: env override, then relative to this script, then legacy path."""
+    env = os.environ.get("ARCHWRIGHT_ALLOY_JAR")
+    if env and Path(env).exists():
+        return Path(env)
+    candidates = [
+        SCRIPT_DIR.parent / ".references" / "alloy6.jar",
+        Path.home() / "code" / "archwright" / ".references" / "alloy6.jar",
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    return None
+
+
 def check_behavior(data, spec_path):
-    """Check a behavior spec via Alloy (if available) or report invariants."""
+    """Check a behavior spec: compile to Alloy, run the model checker, parse verdicts."""
+    import shutil
+    import tempfile
+
     results = []
     invariants = data.get("invariants", [])
-    scope = 4
-    steps = max(10, len(data.get("states", {})) * 3)
 
-    # For now: report invariants as requiring Alloy check
-    # Full implementation would compile to .als and run
-    alloy_jar = Path.home() / "code" / "archwright" / ".references" / "alloy6.jar"
+    def skip_all(message, assurance="none"):
+        return [{
+            "invariant": inv.get("id", "unknown"),
+            "status": "skipped",
+            "message": message,
+            "confidence": inv.get("confidence", "—"),
+            "assurance": assurance,
+        } for inv in invariants]
 
-    if not alloy_jar.exists():
-        for inv in invariants:
-            results.append({
-                "invariant": inv.get("id", "unknown"),
-                "status": "skipped",
-                "message": "Alloy JAR not found — behavior check requires alloy6.jar",
-                "confidence": inv.get("confidence", "—"),
-                "assurance": "none",
-            })
-        return results
+    alloy_jar = _find_alloy_jar()
+    if alloy_jar is None:
+        return skip_all("Alloy JAR not found — set ARCHWRIGHT_ALLOY_JAR or place alloy6.jar in .references/")
 
-    # TODO: compile spec to .als and run
-    # For now, report that the tool exists but compilation isn't automated
-    for inv in invariants:
+    java = shutil.which("java")
+    if java is None:
+        return skip_all("java not on PATH — required to run alloy6.jar")
+
+    # Split invariants: mechanically checkable (have alloy:) vs prose-only
+    checkable = [inv for inv in invariants if inv.get("alloy")]
+    prose_only = [inv for inv in invariants if not inv.get("alloy")]
+
+    for inv in prose_only:
         results.append({
             "invariant": inv.get("id", "unknown"),
             "status": "skipped",
-            "message": f"Alloy compilation not yet automated — run manually (scope {scope}, {steps} steps)",
+            "message": "no `alloy:` expression — prose predicate not mechanically checkable; add one for ★★ verification",
             "confidence": inv.get("confidence", "—"),
-            "assurance": "bounded",
-            "scope_note": f"Would check at scope {scope}, {steps} steps",
+            "assurance": "none",
         })
+
+    if not checkable:
+        return results
+
+    # Compile spec → .als and execute in a temp dir (Alloy writes solution files to cwd)
+    compiler = SCRIPT_DIR / "archwright-compile-alloy.py"
+    with tempfile.TemporaryDirectory(prefix="archwright-alloy-") as tmp:
+        als_path = Path(tmp) / (Path(spec_path).stem + ".als")
+        comp = subprocess.run(
+            [sys.executable, str(compiler), str(spec_path), "-o", str(als_path)],
+            capture_output=True, text=True,
+        )
+        if comp.returncode != 0 or not als_path.exists():
+            return results + [{
+                "invariant": inv.get("id", "unknown"),
+                "status": "error",
+                "message": f"Alloy compilation failed: {(comp.stderr or comp.stdout)[:200]}",
+            } for inv in checkable]
+
+        try:
+            run = subprocess.run(
+                [java, "-Djava.awt.headless=true", "-jar", str(alloy_jar), "exec", str(als_path)],
+                capture_output=True, text=True, cwd=tmp, timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            return results + [{
+                "invariant": inv.get("id", "unknown"),
+                "status": "error",
+                "message": "Alloy solver timed out (120s)",
+            } for inv in checkable]
+
+        # Verdict lines (stderr): "NN. check <assertName>  ...  SAT|UNSAT"
+        # UNSAT = no counterexample within scope (pass, bounded). SAT = violation.
+        combined = (run.stderr or "") + "\n" + (run.stdout or "")
+        verdicts = {}
+        for m in re.finditer(r"check\s+(\w+)\b[^\n]*?\b(UNSAT|SAT)\b", combined):
+            verdicts[m.group(1)] = m.group(2)
+
+        if not verdicts:
+            return results + [{
+                "invariant": inv.get("id", "unknown"),
+                "status": "error",
+                "message": f"Alloy produced no verdict: {combined.strip()[:300]}",
+            } for inv in checkable]
+
+        for inv in checkable:
+            assert_name = _alloy_field_name(inv.get("id", "unknown"))
+            verdict = verdicts.get(assert_name)
+            entry = {
+                "invariant": inv.get("id", "unknown"),
+                "confidence": inv.get("confidence", "—"),
+                "assurance": "bounded",
+            }
+            if verdict == "UNSAT":
+                entry["status"] = "pass"
+                entry["message"] = "no counterexample within scope (bounded, not proof)"
+            elif verdict == "SAT":
+                entry["status"] = "fail"
+                entry["message"] = "counterexample found — invariant violated"
+                sol = Path(tmp) / (als_path.stem) / f"{assert_name}-solution-0.md"
+                if sol.exists():
+                    entry["violations"] = [l for l in sol.read_text(encoding="utf-8").splitlines()[:20] if l.strip()]
+                entry["from_pattern"] = inv.get("from_pattern")
+                entry["from_force"] = inv.get("from_force")
+            else:
+                entry["status"] = "error"
+                entry["message"] = f"no verdict for assertion '{assert_name}' (got: {verdicts})"
+            results.append(entry)
+
     return results
+
+
+def _alloy_field_name(name):
+    """Mirror archwright-compile-alloy's _to_field: slug → camelCase assert name."""
+    parts = name.replace("-", "_").split("_")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
 
 
 def check_conformance(data, spec_path):
@@ -336,27 +430,31 @@ def format_result(spec_path, kind, results):
     path = Path(spec_path)
     lines = []
 
-    all_pass = all(r["status"] == "pass" for r in results)
+    has_fail = any(r["status"] == "fail" for r in results)
+    has_error = any(r["status"] == "error" for r in results)
     all_skip = all(r["status"] == "skipped" for r in results)
+    skips = [r for r in results if r["status"] == "skipped"]
 
-    if all_pass:
-        lines.append(f"  ✓ PASS: {path.name} (kind: {kind})")
-    elif all_skip:
-        lines.append(f"  ○ SKIP: {path.name} (kind: {kind})")
-        for r in results:
-            lines.append(f"    {r.get('message', '')}")
-    else:
+    if has_fail or has_error:
         lines.append(f"  ✗ FAIL: {path.name} (kind: {kind})")
         for r in results:
-            if r["status"] == "fail":
+            if r["status"] in ("fail", "error"):
                 conf = r.get("confidence", "")
                 conf_str = f" ({conf})" if conf else ""
                 lines.append(f"    invariant: {r['invariant']}{conf_str}")
                 lines.append(f"    {r['message']}")
                 for v in r.get("violations", []):
                     lines.append(f"      {v}")
+    elif all_skip:
+        lines.append(f"  ○ SKIP: {path.name} (kind: {kind})")
+        for r in results:
+            lines.append(f"    {r.get('message', '')}")
+    else:
+        lines.append(f"  ✓ PASS: {path.name} (kind: {kind})")
+        for r in skips:
+            lines.append(f"    ○ {r['invariant']}: {r.get('message', '')}")
 
-    return "\n".join(lines), (0 if all_pass or all_skip else 1)
+    return "\n".join(lines), (1 if has_fail or has_error else 0)
 
 
 def check_file(spec_path):

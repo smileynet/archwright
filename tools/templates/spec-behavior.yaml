@@ -47,6 +47,11 @@ invariants:
   - id: invariant-name
     type: temporal  # state | transition | temporal
     predicate: "always (property)"
+    # Optional but required for ★★ mechanical checking: the Alloy 6 rendering of
+    # the predicate over the generated model (M.current, M.<contextVar>, state
+    # sigs in PascalCase). Without it, the Alloy check SKIPs with reason —
+    # prose predicates are not mechanically translatable.
+    alloy: "always M.current in StateA + StateB"
     confidence: "★★"
     from_force: force-id
     from_pattern: pattern-id

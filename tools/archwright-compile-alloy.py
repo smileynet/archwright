@@ -92,7 +92,8 @@ def generate_alloy(data):
     lines.append("-- Transitions")
     transition_preds = []
     for state_name, state_def in states.items():
-        events = state_def.get("on", {})
+        # PyYAML (YAML 1.1) parses the key `on:` as boolean True — handle both.
+        events = state_def.get("on") or state_def.get(True) or {}
         for event_name, trans in events.items():
             if isinstance(trans, dict):
                 target = trans.get("target", state_name)
@@ -131,38 +132,44 @@ def generate_alloy(data):
     lines.append("}")
     lines.append("")
 
-    # Generate assertions from invariants
+    # Generate assertions from invariants.
+    # An invariant is mechanically checkable only if it carries an explicit
+    # `alloy:` expression (prose predicates are not translatable — Extension
+    # Protocol rule 1: skip with reason, never emit broken placeholders).
     invariants = data.get("invariants", [])
+    checkable = []
+    skipped = []
     lines.append("-- Invariants")
     for inv in invariants:
         inv_id = _to_field(inv.get("id", "unknown"))
-        inv_type = inv.get("type", "temporal")
         predicate = inv.get("predicate", "true")
         description = inv.get("description", "")
+        alloy_expr = inv.get("alloy")
 
-        lines.append(f"-- {description}")
-        lines.append(f"-- Original: {predicate}")
-        lines.append(f"assert {inv_id} {{")
-        # Simplified: wrap in always for temporal invariants
-        if inv_type == "temporal":
-            lines.append(f"  always (M.current != M.current implies false) -- placeholder: manual review needed")
-        elif inv_type == "state":
-            lines.append(f"  always (true) -- placeholder: manual review needed")
+        if alloy_expr:
+            checkable.append(inv_id)
+            lines.append(f"-- {description}")
+            lines.append(f"-- Spec predicate: {predicate}")
+            lines.append(f"assert {inv_id} {{")
+            lines.append(f"  {alloy_expr}")
+            lines.append("}")
+            lines.append("")
         else:
-            lines.append(f"  always (true) -- placeholder: manual review needed")
-        lines.append("}")
-        lines.append("")
+            skipped.append(inv.get("id", "unknown"))
+            lines.append(f"-- SKIPPED {inv.get('id', 'unknown')}: prose predicate not mechanically")
+            lines.append(f"-- translatable — add an `alloy:` expression to the spec to check it.")
+            lines.append(f"-- Spec predicate: {predicate}")
+            lines.append("")
 
-    # Check commands
+    # Check commands (only for checkable invariants)
     lines.append("-- Check commands")
     num_states = len(state_names)
     scope = max(4, num_states)
     steps = max(6, num_states * 2)
-    for inv in invariants:
-        inv_id = _to_field(inv.get("id", "unknown"))
+    for inv_id in checkable:
         lines.append(f"check {inv_id} for {scope} but {steps} steps")
 
-    return "\n".join(lines)
+    return "\n".join(lines), skipped
 
 
 def _to_sig(name):
@@ -191,16 +198,19 @@ def main():
             output_path = sys.argv[idx + 1]
 
     data = load_spec(spec_path)
-    alloy_source = generate_alloy(data)
+    alloy_source, skipped = generate_alloy(data)
 
     if output_path:
-        Path(output_path).write_text(alloy_source)
+        Path(output_path).write_text(alloy_source, encoding="utf-8")
         print(f"Generated: {output_path}")
     else:
         # Default: same name as spec but .als extension
         default_output = Path(spec_path).with_suffix(".als")
-        default_output.write_text(alloy_source)
+        default_output.write_text(alloy_source, encoding="utf-8")
         print(f"Generated: {default_output}")
+
+    for inv_id in skipped:
+        print(f"WARN: invariant '{inv_id}' skipped — no `alloy:` expression (prose predicate not mechanically translatable)")
 
 
 if __name__ == "__main__":
