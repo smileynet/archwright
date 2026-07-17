@@ -117,16 +117,16 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 
 | Task | Command |
 |------|---------|
-| Validate pattern/spec | `python3 tools/archwright-validate.py <file>...` — validates all kinds incl. contract; emits non-fatal `WARN:` lines (e.g., missing `protects_experience`) |
-| Validate links | `python3 tools/archwright-validate.py --links <dir>` |
-| Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` |
+| Validate pattern/spec | `python3 tools/archwright-validate.py [--json] <file>...` — validates all kinds incl. contract; emits non-fatal `WARN:` lines (e.g., missing `protects_experience`); `--json` emits the CK-03 document shape |
+| Validate links | `python3 tools/archwright-validate.py [--json] --links <dir>` |
+| Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` — exit 0 pass / 1 violations / 2 tool error; `--json` emits status/scope/violations (w/ provenance, severity, escalate, contrast_pair)/coverage/remaining_delta |
 | Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>]` |
 | Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` |
 | Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `tools/run-fixture-tests.sh` — 21 checks + 1 skip (Alloy jar) |
+| Run fixture tests | `tools/run-fixture-tests.sh` — 22 checks incl. Alloy behavior check (SKIPs with reason if alloy6.jar or java absent) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
