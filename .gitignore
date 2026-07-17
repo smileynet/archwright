@@ -4,3 +4,4 @@
 # Reference repos (large, not project source)
 .references/
 __pycache__/
+.scratch/
