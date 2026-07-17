@@ -247,10 +247,23 @@ def _find_bash():
 
 _SKIP_DIRS = {".git", "Library", "Temp", "obj", "Build", ".vs", ".idea", "PackageCache", "node_modules"}
 
+# Line-comment tokens per extension — a constraint keyword appearing only in a
+# comment must not match (CK-05/B4). Heuristic truncation (not string-aware):
+# Tier-1 grep is ★-grade conformance, documented as such.
+_LINE_COMMENT = {
+    ".gd": "#", ".py": "#", ".sh": "#", ".bash": "#", ".yaml": "#", ".yml": "#",
+    ".toml": "#", ".rb": "#",
+    ".ts": "//", ".tsx": "//", ".js": "//", ".jsx": "//", ".mjs": "//",
+    ".cs": "//", ".c": "//", ".cpp": "//", ".h": "//", ".hpp": "//",
+    ".java": "//", ".kt": "//", ".rs": "//", ".go": "//", ".swift": "//",
+}
 
-def _python_grep(target_path, pattern, project_root=None):
+
+def _python_grep(target_path, pattern, project_root=None, strip_comments=True):
     """Portable grep replacement: regex search over text files. Returns 'path:line:text' lines.
-    Paths are emitted project-relative with forward slashes so only-in filters match portably."""
+    Paths are emitted project-relative with forward slashes so only-in filters match portably.
+    By default the comment portion of each line is stripped before matching (per-extension
+    line-comment tokens) so commented-out code never triggers a constraint."""
     rx = re.compile(pattern)
     out = []
     paths = [target_path] if target_path.is_file() else None
@@ -274,8 +287,10 @@ def _python_grep(target_path, pattern, project_root=None):
             shown = p.relative_to(project_root).as_posix() if project_root else p.as_posix()
         except ValueError:
             shown = p.as_posix()
+        comment_token = _LINE_COMMENT.get(p.suffix) if strip_comments else None
         for i, line in enumerate(text.splitlines(), 1):
-            if rx.search(line):
+            haystack = line.split(comment_token, 1)[0] if comment_token and comment_token in line else line
+            if rx.search(haystack):
                 out.append(f"{shown}:{i}:{line.strip()[:200]}")
     return "\n".join(out)
 
@@ -287,6 +302,14 @@ def _check_grep(check, spec_id, confidence, project_root):
     expect = check.get("expect", "absent")
     command = check.get("command")
     only_in = check.get("only_in")
+
+    # Unknown expect values are a TOOL ERROR, never a silent pass (CK-05/B4, A1/F3).
+    if expect not in ("absent", "present", "only-in"):
+        return [{"invariant": spec_id, "status": "error",
+                 "message": f"unknown expect value '{expect}' — must be absent|present|only-in"}]
+    if expect == "only-in" and not only_in:
+        return [{"invariant": spec_id, "status": "error",
+                 "message": "expect: only-in requires an only_in: key naming the allowed location"}]
 
     if command:
         # Custom command: prefer bash (grep/coreutils available), fall back to system shell.
@@ -316,7 +339,8 @@ def _check_grep(check, spec_id, confidence, project_root):
             return [{"invariant": spec_id, "status": "error",
                      "message": f"Target path not found: {target_path}"}]
         try:
-            matches = _python_grep(target_path, pattern, project_root)
+            matches = _python_grep(target_path, pattern, project_root,
+                                   strip_comments=not check.get("include_comments", False))
         except re.error as e:
             return [{"invariant": spec_id, "status": "error",
                      "message": f"invalid pattern: {e}"}]
@@ -348,7 +372,7 @@ def _check_grep(check, spec_id, confidence, project_root):
                 "message": "Expected match not found",
             }]
 
-    elif expect == "only-in" and only_in:
+    elif expect == "only-in":
         if not matches:
             return [{"invariant": spec_id, "status": "pass",
                      "message": "No matches found (vacuously satisfied)"}]
@@ -359,13 +383,16 @@ def _check_grep(check, spec_id, confidence, project_root):
                 "invariant": spec_id,
                 "status": "fail",
                 "confidence": confidence,
+                "assurance": "conformance",
                 "message": f"Found {len(violations)} match(es) outside {only_in}",
                 "violations": [v.strip() for v in violations[:5]],
             }]
         else:
-            return [{"invariant": spec_id, "status": "pass"}]
+            return [{"invariant": spec_id, "status": "pass", "assurance": "conformance"}]
 
-    return [{"invariant": spec_id, "status": "pass"}]
+    # Unreachable: expect validated above.
+    return [{"invariant": spec_id, "status": "error",
+             "message": f"unhandled expect value '{expect}'"}]
 
 
 def _check_script(check, spec_id, confidence, project_root):
@@ -425,8 +452,66 @@ def _first_pattern(check):
     return check.get("from_pattern", None)
 
 
+_SEVERITY = {"★★": "error", "★": "warning", "—": "info"}
+
+
+def _extract_section(md_path, header):
+    """Extract the body of a '## <header>' section from a markdown spec."""
+    try:
+        text = Path(md_path).read_text(encoding="utf-8")
+    except OSError:
+        return None
+    m = re.search(rf"^##\s+{re.escape(header)}\s*\n(.*?)(?=^##\s|\Z)", text, re.M | re.S)
+    return m.group(1).strip() if m else None
+
+
+def _expected_for(r, data, spec_path):
+    """The 'expected' side of a contrast pair: the rule as the design states it."""
+    if Path(spec_path).suffix == ".md":
+        rule = _extract_section(spec_path, "Rule")
+        if rule:
+            return rule
+    # Behavior specs: the violated invariant's own description + predicate
+    for inv in data.get("invariants", []):
+        if inv.get("id") == r.get("invariant"):
+            desc = inv.get("description", "")
+            pred = inv.get("predicate", "")
+            return f"{desc} ({pred})" if desc else pred
+    return data.get("user_story") or data.get("id", "")
+
+
+def enrich_results(results, data, spec_path):
+    """CK-09/CK-10: attach spec_id, severity, escalate, provenance,
+    suggested_route, and contrast_pair to results."""
+    from_patterns = data.get("from_patterns", [])
+    default_pattern = from_patterns[0] if from_patterns else None
+    default_force = data.get("from_force") or data.get("protects_experience")
+
+    for r in results:
+        r.setdefault("spec_id", data.get("id", "unknown"))
+        if r["status"] == "fail":
+            conf = r.get("confidence") or data.get("confidence", "—")
+            r["confidence"] = conf
+            r["severity"] = _SEVERITY.get(conf, "info")
+            if conf == "★★":
+                r["escalate"] = True  # ★★ violations always route to a human (C2)
+            if not r.get("from_pattern"):
+                r["from_pattern"] = default_pattern
+            if not r.get("from_force"):
+                r["from_force"] = default_force
+            # Heuristic (CK-09): failing check on existing code = implementation
+            # drifted (fix-implementation); a broken check itself is status=error.
+            r["suggested_route"] = "fix-implementation"
+            actual = (r.get("violations") or [r.get("message", "")])[0]
+            r["contrast_pair"] = {"expected": _expected_for(r, data, spec_path),
+                                  "actual": actual}
+        elif r["status"] == "error":
+            r["suggested_route"] = "fix-check"
+    return results
+
+
 def format_result(spec_path, kind, results):
-    """Format check results for output."""
+    """Format check results for human-readable output."""
     path = Path(spec_path)
     lines = []
 
@@ -441,8 +526,11 @@ def format_result(spec_path, kind, results):
             if r["status"] in ("fail", "error"):
                 conf = r.get("confidence", "")
                 conf_str = f" ({conf})" if conf else ""
-                lines.append(f"    invariant: {r['invariant']}{conf_str}")
+                esc = " [ESCALATE]" if r.get("escalate") else ""
+                lines.append(f"    invariant: {r['invariant']}{conf_str}{esc}")
                 lines.append(f"    {r['message']}")
+                if r.get("from_pattern") or r.get("from_force"):
+                    lines.append(f"    provenance: pattern={r.get('from_pattern')} force={r.get('from_force')} route={r.get('suggested_route')}")
                 for v in r.get("violations", []):
                     lines.append(f"      {v}")
     elif all_skip:
@@ -454,14 +542,17 @@ def format_result(spec_path, kind, results):
         for r in skips:
             lines.append(f"    ○ {r['invariant']}: {r.get('message', '')}")
 
-    return "\n".join(lines), (1 if has_fail or has_error else 0)
+    return "\n".join(lines)
 
 
 def check_file(spec_path):
-    """Check a single spec file."""
+    """Check a single spec file. Returns (kind, results) — structured results
+    enriched with provenance/contrast pairs (CK-09/CK-10)."""
     data, kind = load_spec(spec_path)
     if not data:
-        return f"  ✗ ERROR: {spec_path} — could not parse", 1
+        return None, [{"invariant": "?", "spec_id": str(spec_path), "status": "error",
+                       "message": f"could not parse {spec_path}",
+                       "suggested_route": "fix-check"}]
 
     if kind == "behavior":
         results = check_behavior(data, spec_path)
@@ -475,9 +566,9 @@ def check_file(spec_path):
                     "message": "patterns are not checked — check their resolved specs"}]
     else:
         results = [{"invariant": "?", "status": "error",
-                    "message": f"unknown kind: {kind}"}]
+                    "message": f"unknown kind: {kind}", "suggested_route": "fix-check"}]
 
-    return format_result(spec_path, kind, results)
+    return kind, enrich_results(results, data, spec_path)
 
 
 def _find_op(pred, op):
@@ -774,6 +865,75 @@ def check_trace(spec_path, trace_path):
     return 0
 
 
+def build_document(mode, target_root, per_file):
+    """Build the CK-03 output document from per-file results.
+
+    Schema: status, scope, violations[], coverage, remaining_delta.
+    Each violation carries spec_id, invariant, confidence, severity, escalate,
+    from_pattern, from_force, suggested_route, contrast_pair, evidence.
+    """
+    violations = []
+    errors = []
+    coverage = {"checked": 0, "passed": 0, "failed": 0, "skipped": 0, "errors": 0, "pending": 0}
+
+    for spec_path, kind, results in per_file:
+        coverage["checked"] += 1
+        statuses = {r["status"] for r in results}
+        if "fail" in statuses:
+            coverage["failed"] += 1
+        elif "error" in statuses:
+            coverage["errors"] += 1
+        elif statuses == {"skipped"}:
+            coverage["skipped"] += 1
+            if any("pending" in r.get("message", "") for r in results):
+                coverage["pending"] += 1
+        else:
+            coverage["passed"] += 1
+
+        for r in results:
+            if r["status"] == "fail":
+                violations.append({
+                    "spec_id": r.get("spec_id"),
+                    "spec_kind": kind,
+                    "spec_path": str(spec_path),
+                    "invariant": r.get("invariant"),
+                    "confidence": r.get("confidence", "—"),
+                    "severity": r.get("severity", "info"),
+                    "escalate": r.get("escalate", False),
+                    "message": r.get("message"),
+                    "evidence": r.get("violations", []),
+                    "from_pattern": r.get("from_pattern"),
+                    "from_force": r.get("from_force"),
+                    "suggested_route": r.get("suggested_route"),
+                    "contrast_pair": r.get("contrast_pair"),
+                })
+            elif r["status"] == "error":
+                errors.append({
+                    "spec_id": r.get("spec_id"),
+                    "spec_path": str(spec_path),
+                    "message": r.get("message"),
+                    "suggested_route": r.get("suggested_route", "fix-check"),
+                })
+
+    if errors:
+        status = "error"
+    elif violations:
+        status = "fail"
+    else:
+        status = "pass"
+
+    return {
+        "status": status,
+        "scope": {"mode": mode, "specs_checked": coverage["checked"],
+                  "target": str(target_root) if target_root else None},
+        "violations": violations,
+        "errors": errors,
+        "coverage": coverage,
+        # Baseline suppression arrives with CK-07; until then delta = all violations.
+        "remaining_delta": len(violations),
+    }
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace>")
@@ -790,12 +950,14 @@ def main():
     target_root = None
     static_only = False
     json_output = False
+    mode = "files"
 
     # Parse args
     args = sys.argv[1:]
     i = 0
     while i < len(args):
         if args[i] == "--all":
+            mode = "all"
             i += 1
             if i < len(args):
                 directory = Path(args[i])
@@ -804,6 +966,7 @@ def main():
                 )
         elif args[i] == "--static":
             static_only = True
+            mode = "static"
             i += 1
             if i < len(args):
                 directory = Path(args[i])
@@ -821,6 +984,8 @@ def main():
         i += 1
 
     if not files:
+        if json_output:
+            print(json.dumps(build_document(mode, target_root, []), indent=2, ensure_ascii=False))
         sys.exit(0)  # No specs = nothing to check = pass
 
     # If --static, filter to constraint/dependency only
@@ -832,23 +997,22 @@ def main():
                 filtered.append(f)
         files = filtered
 
-    exit_code = 0
-    results_list = []
+    if target_root:
+        os.environ["ARCHWRIGHT_PROJECT_ROOT"] = str(target_root)
 
+    per_file = []
     for f in files:
-        if target_root:
-            # Override project root detection
-            os.environ["ARCHWRIGHT_PROJECT_ROOT"] = str(target_root)
-        output, code = check_file(f)
-        print(output)
-        if code != 0:
-            exit_code = 1
+        kind, results = check_file(f)
+        per_file.append((f, kind, results))
+        if not json_output:
+            print(format_result(f, kind, results))
 
+    doc = build_document(mode, target_root, per_file)
     if json_output:
-        print(json.dumps({"status": "pass" if exit_code == 0 else "fail",
-                          "checked": len(files)}, indent=2))
+        print(json.dumps(doc, indent=2, ensure_ascii=False))
 
-    sys.exit(exit_code)
+    # Exit code contract (CK-04): 0 = pass, 1 = violations, 2 = tool error.
+    sys.exit({"pass": 0, "fail": 1, "error": 2}[doc["status"]])
 
 
 if __name__ == "__main__":

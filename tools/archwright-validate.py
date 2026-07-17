@@ -395,42 +395,94 @@ def validate_links(directory):
     return errors, warnings
 
 
+def _build_json_doc(mode, per_item):
+    """CK-21: structural results in the CK-03 document shape (status, scope,
+    violations[], coverage, remaining_delta) so agents consume validate and
+    check output uniformly. Structural errors are violations (severity: error);
+    non-fatal WARNs are warnings (severity: warning)."""
+    violations = []
+    warnings_out = []
+    coverage = {"checked": 0, "passed": 0, "failed": 0, "skipped": 0, "errors": 0, "pending": 0}
+
+    for item_id, kind, errors, warns in per_item:
+        coverage["checked"] += 1
+        if errors:
+            coverage["failed"] += 1
+        else:
+            coverage["passed"] += 1
+        for e in errors:
+            violations.append({
+                "spec_id": item_id, "spec_kind": kind, "invariant": "structural",
+                "severity": "error", "escalate": False, "message": e,
+                "suggested_route": "fix-spec",
+            })
+        for w in warns:
+            warnings_out.append({
+                "spec_id": item_id, "spec_kind": kind, "invariant": "structural",
+                "severity": "warning", "message": w,
+            })
+
+    return {
+        "status": "fail" if violations else "pass",
+        "scope": {"mode": mode, "specs_checked": coverage["checked"], "target": None},
+        "violations": violations,
+        "warnings": warnings_out,
+        "errors": [],
+        "coverage": coverage,
+        "remaining_delta": len(violations),
+    }
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: archwright-validate <file>... | --links <dir>")
+    args = [a for a in sys.argv[1:] if a != "--json"]
+    json_output = "--json" in sys.argv[1:]
+
+    if not args:
+        print("Usage: archwright-validate [--json] <file>... | --links <dir>")
         sys.exit(2)
 
-    if sys.argv[1] == "--links":
-        if len(sys.argv) < 3:
-            print("Usage: archwright-validate --links <directory>")
+    if args[0] == "--links":
+        if len(args) < 2:
+            print("Usage: archwright-validate [--json] --links <directory>")
             sys.exit(2)
-        errors, warnings = validate_links(sys.argv[2])
-        if errors:
-            print(f"FAIL: {len(errors)} broken link(s)")
-            for e in errors:
-                print(f"  - {e}")
+        errors, warnings = validate_links(args[1])
+        if json_output:
+            doc = _build_json_doc("links", [(args[1], "links", errors, warnings)])
+            print(json.dumps(doc, indent=2, ensure_ascii=False))
         else:
-            print("PASS: all links resolve")
-        for w in warnings:
-            print(f"  WARN: {w}")
+            if errors:
+                print(f"FAIL: {len(errors)} broken link(s)")
+                for e in errors:
+                    print(f"  - {e}")
+            else:
+                print("PASS: all links resolve")
+            for w in warnings:
+                print(f"  WARN: {w}")
         sys.exit(1 if errors else 0)
 
     exit_code = 0
-    for filepath in sys.argv[1:]:
+    per_item = []
+    for filepath in args:
         status, errors, warnings = validate_file(filepath)
         path = Path(filepath)
         data, kind, _ = load_file(path)
         kind_str = f" (kind: {kind})" if kind else ""
+        per_item.append((str(path), kind, errors, warnings))
 
-        if status == "pass":
-            print(f"PASS: {path}{kind_str}")
-        else:
-            print(f"FAIL: {path}{kind_str}")
-            for e in errors:
-                print(f"  - {e}")
+        if not json_output:
+            if status == "pass":
+                print(f"PASS: {path}{kind_str}")
+            else:
+                print(f"FAIL: {path}{kind_str}")
+                for e in errors:
+                    print(f"  - {e}")
+            for w in warnings:
+                print(f"  WARN: {w}")
+        if status != "pass":
             exit_code = 1
-        for w in warnings:
-            print(f"  WARN: {w}")
+
+    if json_output:
+        print(json.dumps(_build_json_doc("validate", per_item), indent=2, ensure_ascii=False))
 
     sys.exit(exit_code)
 
