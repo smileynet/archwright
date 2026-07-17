@@ -11,6 +11,17 @@ PASS=0
 FAIL=0
 SKIP=0
 
+# Windows: `python3` may be a broken MS Store stub, and mise-managed python ships
+# only `python.exe`. Prefer a python3 that actually runs; else delegate to `python`.
+if ! python3 -c 'pass' >/dev/null 2>&1; then
+  if python -c 'pass' >/dev/null 2>&1; then
+    python3() { python "$@"; }
+  else
+    echo "ERROR: no working python3/python on PATH (try: mise install)" >&2
+    exit 2
+  fi
+fi
+
 report() {
   if [ "$1" = "PASS" ]; then
     echo "  ✓ $2"
