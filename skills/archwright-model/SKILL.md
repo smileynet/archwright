@@ -59,7 +59,7 @@ This section goes at the TOP of the model YAML. It is the entry point for anyone
 
 ### 1. Establish domain vocabulary
 
-Name actors in the user's language, not the codebase's language. The model uses domain names; implementation names are a mapping field. Load `tools/domains/<domain>/scales.yaml` (domain from the survey intake outline; fallback `general`) for the project's native scale labels and examples.
+Name actors in the user's language, not the codebase's language. The model uses domain names; implementation names are a mapping field. Load `../archwright-survey/references/domains/<domain>/scales.yaml` (deployed; domain from the survey intake outline; fallback `general`) for the project's native scale labels and examples.
 
 ```yaml
 domain_vocabulary:

@@ -41,12 +41,14 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
 │   ├── run-fixture-tests.sh       # Full check suite vs tests/fixtures/lacrosse-bosse
-│   ├── deploy-skills.sh           # Sync skills + steering to ~/.kiro/ (or --project <path>)
+│   ├── deploy-skills.sh           # Sync skills + steering + domain overlays + glossary to ~/.kiro/ (or --project <path>)
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
+│   ├── contract-schema.yaml       # JSON Schema for contract specs (from_model, events)
 │   ├── trace-schema.ts            # Trace event type definitions
 │   ├── templates/                 # Document templates
 │   │   ├── pattern.md             # New pattern template
+│   │   ├── force.md               # Per-force file template (design/forces/)
 │   │   ├── spec-behavior.yaml    # Behavior spec template
 │   │   ├── spec-contract.yaml    # Contract spec template
 │   │   ├── spec-constraint.md    # Constraint spec template
@@ -58,9 +60,10 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │       └── general/               # Fallback scales + cross-cutting predicates
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
-│   ├── PLAN.md                    # COMPLETE — historical (live checking for LBP)
-│   ├── specs/                     # Specs for the prior plan's deliverables
+│   ├── PLAN.md                    # Phases 0–4 historical; Phase 5 ACTIVE (polyglot check tool — executor assigned, see specs/polyglot-check-tooling.md)
+│   ├── specs/                     # Specs for plan deliverables (incl. Phase 5)
 │   ├── audit/                     # Audit reports (tools, skills, claims)
+│   ├── grill/                     # Grill session decision records (INDEX.md + Q-files per topic)
 │   ├── research-*.md              # Research plans & syntheses
 │   └── adr/                       # Architecture decision records
 ├── audit-plan.md                  # Active standalone audit plan (tickets A/B/C/D)
@@ -86,6 +89,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-review` — review code for design alignment (structural + behavioral + semantic)
 - `archwright-audit` — audit docs for truth (surface contradictions between docs and code)
 - `archwright-diagram` — render models/patterns as Mermaid diagrams
+- `archwright-passup` — (planned — audit-plan C12) consume check violations, lift to the owning level, route per confidence
 
 **Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates
@@ -95,7 +99,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-validate.py` — schema + link validation; `archwright-check.py` — check dispatcher (static/trace/Alloy)
 - `archwright-compile-alloy.py` — behavior spec → Alloy 6 model; `archwright-check-compile.mjs` — intent → check blocks
 - Templates for patterns and each spec kind (`tools/templates/`)
-- `deploy-skills.sh` — sync skills + steering from repo to global `~/.kiro/` (or `--project <path>`)
+- `deploy-skills.sh` — sync skills + steering + domain overlays + glossary from repo to global `~/.kiro/` (or `--project <path>`)
 
 **Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills.sh` to push to global.
 
@@ -109,7 +113,7 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 
 | Task | Command |
 |------|---------|
-| Validate pattern/spec | `python3 tools/archwright-validate.py <file>...` |
+| Validate pattern/spec | `python3 tools/archwright-validate.py <file>...` — validates all kinds incl. contract; emits non-fatal `WARN:` lines (e.g., missing `protects_experience`) |
 | Validate links | `python3 tools/archwright-validate.py --links <dir>` |
 | Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` |
 | Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>]` |
@@ -138,6 +142,8 @@ Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`
 - Pass-up is level-terminating (signals stop at the level that owns the violated force)
 - Confidence (★★/★/—) gates AI autonomy, checking rigor, and escalation
 - Specs are flat, typed (kind field), linked via `kind:id` references
+- Contract phase solely owns contract specs (C7, ratified 2026-07-16) — model emits contract *candidates* (identity/direction, no payloads); one spec per event type, with a one-protocol/one-authority-actor cluster exception; `from_model:` provenance required
+- Design artifacts are live documents in the target project — committed to the current branch (no special design branches); large projects/monorepos get per-area pipeline runs + an all-up reconciliation pass (grill Q06)
 - The agent IS the system; tools are mechanical servants
 - Subagents extract (read files → structured output); main agent synthesizes (dedup, cluster, merge)
 

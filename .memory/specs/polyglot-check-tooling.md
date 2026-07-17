@@ -2,7 +2,12 @@
 
 **Covers:** Phase 5 (Polyglot + Agent-Native Check Tool)
 **Goal:** archwright-check.py becomes a real polyglot tool that any archwright-enabled project can use: executes checks from specs, produces structured JSON (MCP-compatible + SARIF), supports baseline ratchet, works across languages (GDScript, TypeScript, Rust, Python).
-**Status:** Design complete (.scratch/check-tool-design.md). Implementation not started.
+**Status:** Design complete (design notes were in `.scratch/check-tool-design.md`, since cleaned per scratch policy — this spec is now the authoritative design record). Implementation not started. **Executor (grill Q1, 2026-07-17): the audit-plan line of work; DoD-5 critical chain first: CK-03 → CK-04 → CK-05 → CK-09 → CK-10.**
+
+**Grill reconciliation (2026-07-17, `.memory/grill/audit-plan-closeout/`):**
+- **Q3 (tool topology):** `archwright-validate.py` owns structural validation (schema + links — it already does this, extended by C8/C9). **CK-01/CK-02 are DESCOPED** — replaced by CK-21 (validate.py `--json` conforming to CK-03's schema). Success criterion 1 amended accordingly. check.py never duplicates structural validation.
+- **Q2 (consumer):** violations produced by CK-03/09/10 are consumed by the new `archwright-passup` skill (audit-plan C12) — CK-17's skill-integration work covers check (verification) AND passup (routing) as separate skills.
+- **Q4 (evidence):** CK-07's baseline ledger gains a sibling: `design/.archwright-evidence.json` (confidence promotion/demotion events, ADR 0009) — shared fingerprint plumbing; implement together.
 
 **Audit reconciliation (2026-07-16, see `.memory/audit/tools.md` + `audit-plan.md`):**
 - This spec **absorbs** audit-plan.md **B4** (tiered check routing + grep hardening): CK-05 (ripgrep backend), CK-11–13 (ast-grep), CK-06 (`target_status: pending`). B4's remaining delta — comment false-positive hardening for Tier 1 and erroring on unknown `expect:` values (A1/F3 silent false-pass) — is folded into CK-05's acceptance below.
@@ -17,7 +22,7 @@
 
 ## Success Criteria
 
-1. `archwright-check --structural design/` validates all spec YAML + resolves all `kind:id` links — exit 0 if valid, exit 1 if broken
+1. Structural validation (spec YAML schema + `kind:id` link resolution) is owned by `archwright-validate.py` (exit 0 valid / 1 broken) and emits `--json` conforming to the CK-03 output schema (CK-21). ~~`archwright-check --structural`~~ — descoped per grill Q3; check.py does not duplicate structural validation.
 2. `archwright-check --static design/specs/ --project ~/code/catalyst-mono/game/` executes grep/ast-grep checks and reports pass/fail per spec with evidence
 3. Output conforms to structured JSON schema (violations carry `spec_id`, `from_pattern`, `from_force`, `suggested_route`, `contrast_pair`)
 4. `--baseline design/.archwright-baseline.json` suppresses known violations; only new violations fail
@@ -54,9 +59,11 @@
 
 | ID | Title | Description | Effort | Depends |
 |----|-------|-------------|--------|---------|
-| CK-01 | Spec YAML schema validation | archwright-check --structural validates all specs against spec-schema.yaml + contract template. Reports malformed specs with file+line+error. | Small | None |
-| CK-02 | Link resolution check | Walk all specs, extract `kind:id` references from `links:`, `from_patterns:`, `resolves_into:`. Verify each target exists as a file in design/. Report orphan references. | Small | CK-01 |
-| CK-03 | Structured JSON output contract | Define and implement the output JSON schema. All modes produce conforming output. Include `status`, `scope`, `violations[]`, `remaining_delta`, `coverage`. | Medium | CK-01 |
+| CK-01 | ~~Spec YAML schema validation~~ **DESCOPED (grill Q3)** — owned by `archwright-validate.py` (per-kind validators, C8/C9). See CK-21. | — | — |
+| CK-02 | ~~Link resolution check~~ **DESCOPED (grill Q3)** — owned by `archwright-validate.py --links` (force + model indexes, C8/C9). See CK-21. | — | — |
+| CK-21 | validate.py `--json` output conforming to the CK-03 schema — structural results consumable by agents alongside check results. | Small | CK-03 (schema) |
+| CK-20 | Fixture test hardening (from audit A5 + B1/B2 reviews) | `run-fixture-tests.sh` gains: (a) violation-overlay test (inject known violation, assert FAIL with file:line, revert); (b) bad-spec fixtures (malformed YAML, dangling refs → assert FAIL); (c) trace fixtures (valid + violating trace → assert `--trace` verdicts); (d) B2 warn-path assertion — spec missing `protects_experience` emits WARN and still exits 0; (e) domain-overlay structural check — every `tools/domains/*/scales.yaml` id list equals the pattern-schema enum in canonical order, predicates have no dup ids and all 4 required fields. | Medium (~2.5h) | None (independent of check.py rewrite) |
+| CK-03 | Structured JSON output contract | Define and implement the output JSON schema. All modes produce conforming output. Include `status`, `scope`, `violations[]`, `remaining_delta`, `coverage`. | Medium | None (chain start) |
 | CK-04 | Exit code contract | Exit 0 = pass, 1 = violations, 2 = tool error. Wire through all modes. | Trivial | CK-03 |
 
 ### Phase 5b: Static Checks + Baseline (core value)
@@ -100,7 +107,7 @@
 
 ```
 Phase 5a: Foundation
-CK-01 ── CK-02
+CK-01, CK-02: descoped (grill Q3) — validate.py owns structural; CK-21 (validate --json) depends on CK-03
   │
   └── CK-03 ── CK-04
         │
@@ -135,7 +142,7 @@ CK-17 ── CK-18
 
 ### Critical path:
 ```
-CK-01 → CK-03 → CK-05 → CK-07 → CK-17 → CK-19
+CK-03 → CK-05 → CK-07 → CK-17 → CK-19
 ```
 
 ---
