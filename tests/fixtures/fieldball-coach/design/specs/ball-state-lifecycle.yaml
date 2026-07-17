@@ -51,6 +51,10 @@ invariants:
   - id: at-most-one-holder
     type: temporal
     predicate: "always (holders <= 1)"
+    # Abstraction-level Alloy rendering: in this model `held` = exactly one
+    # holder and `in_flight` = zero holders (see abstraction_notes), so
+    # holders <= 1 reduces to "the machine only ever occupies declared states".
+    alloy: "always M.current in Held + InFlight"
     confidence: "★★"
     from_force: single-holder
     from_pattern: ball-possession
