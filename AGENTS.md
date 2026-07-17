@@ -130,6 +130,25 @@ Tools are not on PATH in this repo — invoke via interpreter (verified 2026-07-
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
+## Dependency Rehydration
+
+`.references/` is gitignored — external binaries must be re-fetched on a fresh clone or new machine:
+
+| Dependency | Needed for | Rehydrate |
+|------------|-----------|-----------|
+| `alloy6.jar` (Alloy ≥ 6.2.0 — the `exec` CLI was added in 6.2.0) | behavior checks; un-skips fixture #22 | `curl -L -o .references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar` |
+| Java (JVM, `java` on PATH) | running the Alloy jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
+| Python 3 + PyYAML | all tools | `pip install pyyaml` |
+| `smcat` (state-machine-cat) | model/diagram FSM rendering (optional) | `npm i -g state-machine-cat` — PNG output also needs Graphviz `dot` |
+| `merman-cli` | model/diagram Mermaid rendering (optional) | `cargo install merman-cli` |
+| `semgrep` | review AST checks (optional) | `pipx install semgrep` |
+
+Notes:
+- `archwright-check.py` looks for the jar only at the hardcoded path `~/code/archwright/.references/alloy6.jar` (no env/flag override). Behavior checks report SKIP (exit 0) when it's absent — a coverage gap, not a pass.
+- Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
+- Windows: real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` (PATH has only MS Store stubs, even inside Git bash); set `PYTHONIOENCODING=utf-8` before running tools (★ output vs cp1252 console); the fixture suite runs via Git bash with a `python3` shim prepended to PATH (see `.memory/lessons.md` #6).
+- After rehydrating the jar, run `tools/run-fixture-tests.sh` — the ball-state-lifecycle skip becomes an active behavior check.
+
 ## Workflows
 
 1. **Extend the design language** — add findings to docs/, terms to `.memory/CONTEXT.md`
