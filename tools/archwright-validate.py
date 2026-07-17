@@ -171,6 +171,55 @@ def validate_constraint_or_dependency(data, path):
     return errors
 
 
+def validate_contract(data, path):
+    """Validate a contract spec (mirrors tools/contract-schema.yaml)."""
+    errors = []
+    required = ["kind", "id", "from_patterns"]
+    for field in required:
+        if field not in data:
+            errors.append(f"required field '{field}' missing")
+
+    if data.get("id") and not re.match(r"^[a-z][a-z0-9-]+$", data["id"]):
+        errors.append(f"id '{data['id']}' must be lowercase slug (a-z, 0-9, hyphens)")
+    if data.get("confidence") and data["confidence"] not in VALID_CONFIDENCES:
+        errors.append(f"invalid confidence '{data['confidence']}'")
+
+    for ref in data.get("from_patterns", []):
+        if not ref.startswith("pattern:"):
+            errors.append(f"from_patterns ref '{ref}' must start with 'pattern:'")
+
+    from_model = data.get("from_model")
+    if from_model and not (isinstance(from_model, str) and from_model.startswith("model:") and len(from_model) > 6):
+        errors.append(f"from_model '{from_model}' must be 'model:<actor-or-candidate-id>'")
+
+    events = data.get("events") or {}
+    if not isinstance(events, dict):
+        errors.append("'events' must be a mapping of event name -> definition")
+    else:
+        for name, ev in events.items():
+            if not isinstance(ev, dict):
+                errors.append(f"event '{name}' must be a mapping")
+                continue
+            for key in ("producer", "consumers", "stability", "payload"):
+                if key not in ev:
+                    errors.append(f"event '{name}' missing required '{key}'")
+            if "stability" in ev and ev["stability"] not in ("public", "internal"):
+                errors.append(f"event '{name}' stability must be 'public' or 'internal'")
+            for fname, fdef in (ev.get("payload") or {}).items():
+                if not isinstance(fdef, dict) or "type" not in fdef:
+                    errors.append(f"event '{name}' payload field '{fname}' missing 'type'")
+
+    for fname, fdef in (data.get("fields") or {}).items():
+        if not isinstance(fdef, dict) or "type" not in fdef:
+            errors.append(f"field '{fname}' missing 'type'")
+
+    for link in data.get("links", []):
+        if "target" in link and not LINK_REF_PATTERN.match(link["target"]):
+            errors.append(f"link target '{link['target']}' must be 'kind:id' format")
+
+    return errors
+
+
 def validate_file(path):
     """Validate a single file. Returns (status, errors, warnings)."""
     path = Path(path)
@@ -189,7 +238,9 @@ def validate_file(path):
         errors = validate_behavior(data, path)
     elif kind in ("constraint", "dependency"):
         errors = validate_constraint_or_dependency(data, path)
-    elif kind in ("contract", "boundary", "protocol"):
+    elif kind == "contract":
+        errors = validate_contract(data, path)
+    elif kind in ("boundary", "protocol"):
         errors = []  # minimal validation for now
     else:
         errors = [f"unknown kind '{kind}'"]
@@ -217,12 +268,46 @@ def _collect_from_force_refs(node, out):
             _collect_from_force_refs(item, out)
 
 
+def collect_model_index(directory):
+    """Index actor ids + contract-candidate events from design/models/*.yaml.
+
+    Returns (model_ids, candidates, models_exist). Enforcement follows the
+    force-inventory pattern: no model files -> from_model refs are not checked.
+    """
+    directory = Path(directory)
+    model_ids = set()
+    candidates = []  # (path, event_name)
+    models_exist = False
+
+    for path in directory.rglob("*"):
+        if path.suffix not in (".yaml", ".yml") or "models" not in path.parts:
+            continue
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except yaml.YAMLError:
+            continue
+        if not isinstance(data, dict) or "actors" not in data:
+            continue
+        models_exist = True
+        for actor in data.get("actors") or []:
+            if isinstance(actor, dict) and actor.get("id"):
+                model_ids.add(actor["id"])
+        for cand in data.get("contract_candidates") or []:
+            if isinstance(cand, dict) and cand.get("event"):
+                model_ids.add(cand["event"])
+                candidates.append((path, cand["event"]))
+
+    return model_ids, candidates, models_exist
+
+
 def collect_all_refs(directory):
     """Scan all pattern/spec files and build a reference index."""
     directory = Path(directory)
     index = {}  # kind:id → path
     all_outgoing = []  # (source_path, target_ref)
     force_outgoing = []  # (source_path, force_ref) — validated only if a force inventory exists
+    model_outgoing = []  # (source_path, model_ref) — validated only if model files exist
+    event_coverage = {}  # event_name → [contract spec paths declaring it]
 
     for path in directory.rglob("*"):
         if path.suffix not in (".yaml", ".yml", ".md"):
@@ -245,6 +330,14 @@ def collect_all_refs(directory):
             if "target" in link:
                 all_outgoing.append((path, link["target"]))
 
+        # Model provenance + contract event coverage
+        from_model = data.get("from_model")
+        if isinstance(from_model, str) and from_model.startswith("model:"):
+            model_outgoing.append((path, from_model[len("model:"):]))
+        if kind == "contract" and isinstance(data.get("events"), dict):
+            for event_name in data["events"]:
+                event_coverage.setdefault(event_name, []).append(path)
+
         # Force references: serves (bare force ids) + nested from_force fields
         for ref in data.get("serves", []):
             if isinstance(ref, str) and ":" not in ref:
@@ -255,13 +348,15 @@ def collect_all_refs(directory):
             if ":" not in ref:
                 force_outgoing.append((path, f"force:{ref}"))
 
-    return index, all_outgoing, force_outgoing
+    return index, all_outgoing, force_outgoing, model_outgoing, event_coverage
 
 
 def validate_links(directory):
-    """Validate all cross-references resolve."""
-    index, all_outgoing, force_outgoing = collect_all_refs(directory)
+    """Validate all cross-references resolve. Returns (errors, warnings)."""
+    index, all_outgoing, force_outgoing, model_outgoing, event_coverage = collect_all_refs(directory)
+    model_ids, candidates, models_exist = collect_model_index(directory)
     errors = []
+    warnings = []
 
     for source_path, target_ref in all_outgoing:
         if target_ref not in index:
@@ -275,7 +370,29 @@ def validate_links(directory):
             if target_ref not in index:
                 errors.append(f"{source_path}: force ref '{target_ref}' does not resolve (serves/from_force)")
 
-    return errors
+    # Model refs + candidate coverage — enforced only once model files exist (same pattern)
+    if models_exist:
+        for source_path, model_ref in model_outgoing:
+            if model_ref not in model_ids:
+                errors.append(
+                    f"{source_path}: from_model ref 'model:{model_ref}' does not resolve "
+                    f"(no actor or contract candidate with that id in design/models/)"
+                )
+        for model_path, event_name in candidates:
+            covering = event_coverage.get(event_name, [])
+            if not covering:
+                warnings.append(
+                    f"{model_path}: contract candidate '{event_name}' has no contract spec "
+                    f"(run archwright-contract, or record an explicit skip note)"
+                )
+            elif len(covering) > 1:
+                names = ", ".join(str(p) for p in covering)
+                errors.append(
+                    f"contract candidate '{event_name}' is covered by {len(covering)} contract specs "
+                    f"({names}) — exactly one spec must own each candidate"
+                )
+
+    return errors, warnings
 
 
 def main():
@@ -287,15 +404,16 @@ def main():
         if len(sys.argv) < 3:
             print("Usage: archwright-validate --links <directory>")
             sys.exit(2)
-        errors = validate_links(sys.argv[2])
+        errors, warnings = validate_links(sys.argv[2])
         if errors:
             print(f"FAIL: {len(errors)} broken link(s)")
             for e in errors:
                 print(f"  - {e}")
-            sys.exit(1)
         else:
             print("PASS: all links resolve")
-            sys.exit(0)
+        for w in warnings:
+            print(f"  WARN: {w}")
+        sys.exit(1 if errors else 0)
 
     exit_code = 0
     for filepath in sys.argv[1:]:
