@@ -30,6 +30,8 @@ states:
           predicate: "example_var == 'state_a'"
           from_force: constraint-id
           confidence: "★"
+        assign:            # optional context-var updates applied on this transition
+          example_var: state_b   # enum literal | int literal | var copy | "var + N" / "var - N"
         from_force: desire-id
         from_pattern: pattern-id
     invariant:
@@ -48,9 +50,13 @@ invariants:
     type: temporal  # state | transition | temporal
     predicate: "always (property)"
     # Optional but required for ★★ mechanical checking: the Alloy 6 rendering of
-    # the predicate over the generated model. Reference M.current + PascalCase
-    # state sigs ONLY (context vars are frozen — compiler warns). Without it,
-    # the Alloy check SKIPs with reason —
+    # the predicate over the generated model. May reference M.current, PascalCase
+    # state sigs, and M.<camelCaseVar> context vars — guards and `assign:` updates
+    # in the translatable subset (enum ==/!=, int comparisons, var-to-var,
+    # && conjunctions; assigns: literals, var copy, `var + N`/`var - N`) COMPILE
+    # into the model. Guards/assigns outside that subset stay comments and any
+    # invariant touching the affected vars/states SKIPs with reason.
+    # Without an `alloy:` field the check SKIPs —
     # prose predicates are not mechanically translatable.
     alloy: "always M.current in StateA + StateB"
     confidence: "★★"

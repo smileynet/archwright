@@ -1,0 +1,89 @@
+# SKIP twin of zone-progress.yaml (Extension Protocol rule 1): the SOLVE
+# guard is prose outside the translatable subset, so the model would reach
+# Solved unconditionally and the invariant would SPURIOUSLY fail. Correct
+# behavior: the compiler taints Solved, skips the invariant with reason
+# (SKIP-INVARIANT), and check reports skipped — never a false FAIL.
+kind: behavior
+id: zone-progress-opaque-guard
+from_patterns:
+  - "pattern:zone-progress"
+
+protects_experience: "win-when-complete"
+user_story: "Opaque-guard twin: SOLVE's condition lives in the CV pipeline, not in modeled context vars."
+
+context:
+  variables:
+    zones_correct:
+      type: int
+      initial: 0
+      from_force: win-when-complete
+    zones_total:
+      type: int
+      initial: 3
+      from_force: win-when-complete
+
+initial: idle
+
+states:
+  idle:
+    type: atomic
+    "on":
+      PLACE:
+        target: placing
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+  placing:
+    type: atomic
+    "on":
+      ZONE_CORRECT:
+        target: placing
+        guard:
+          predicate: "zones_correct < zones_total"
+          from_force: win-when-complete
+          confidence: "★★"
+        assign:
+          zones_correct: "zones_correct + 1"
+        from_force: win-when-complete
+        from_pattern: zone-progress
+      SOLVE:
+        target: solved
+        guard:
+          predicate: "cv_pipeline.validates(all_zones)"
+          from_force: win-when-complete
+          confidence: "★"
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+  solved:
+    type: atomic
+    "on":
+      PROGRESS_RESET:
+        target: placing
+        assign:
+          zones_correct: 0
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+invariants:
+  - id: solved-iff-win-condition
+    type: temporal
+    predicate: "always (state == solved implies zones_correct == zones_total)"
+    # References Solved, whose real guard is untranslatable — the compiler
+    # must SKIP this (spurious counterexamples otherwise), not check it.
+    alloy: "always (M.current = Solved implies M.zonesCorrect = M.zonesTotal)"
+    confidence: "★★"
+    from_force: win-when-complete
+    from_pattern: zone-progress
+    description: "MUST SKIP here: Solved reachable without its (opaque) guard"
+
+links: []
+
+abstraction_notes:
+  included: [zone counting — SOLVE guard is opaque prose]
+  excluded: [CV validation mechanics]
+  justification: "Negative conformance case for taint handling — proves untranslatable guards produce SKIP-with-reason instead of spurious FAILs."
+  scope_limit: "No check runs for the tainted invariant."

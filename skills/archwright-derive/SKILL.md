@@ -70,7 +70,7 @@ When the resolution commits to states, transitions, or lifecycle:
 1. Identify the states (modes the system can be in)
 2. Identify the transitions (events that move between states)
 3. Identify guards (constraints that gate transitions)
-4. Identify invariants (properties that must always hold). For ★★ invariants, add an `alloy:` field — the Alloy 6 rendering of the predicate over the generated model. Reference `M.current` and PascalCase state sigs ONLY — context variables are frozen in the generated model (guards/actions don't compile yet; the compiler warns). Without an `alloy:` field, the Alloy check SKIPs: prose predicates are not mechanically translatable.
+4. Identify invariants (properties that must always hold). For ★★ invariants, add an `alloy:` field — the Alloy 6 rendering of the predicate over the generated model. Reference `M.current`, PascalCase state sigs, and `M.<camelCaseVar>` context vars. Guards and `assign:` var updates in the translatable subset compile into the model (guards: enum `==`/`!=`, int comparisons, var-to-var, `&&` conjunctions; assigns: literals, var copy, `var + N`/`var - N`); anything outside it stays a comment and invariants touching the affected vars/states SKIP with reason. Without an `alloy:` field, the Alloy check SKIPs: prose predicates are not mechanically translatable.
 5. Add `check.trace` block (events, state_vars, invariants for trace validation)
 6. Add `check.model` block (backend, scope, steps for Alloy)
 7. Add `abstraction_notes` (what's included/excluded/why)
