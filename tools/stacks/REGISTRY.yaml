@@ -1,0 +1,59 @@
+# Stack Adapter Registry
+#
+# Per-language/engine mechanical components (Extension Protocol, ADR 0008).
+# Orthogonal to domain overlays (tools/domains/) — stack = language/engine,
+# domain = vocabulary. A TypeScript game backend is web domain + typescript stack.
+#
+# Adapter kinds (the only three axes — rule-of-two before adding a fourth):
+#   trace_emitter   — instruments the target so behavior specs can be trace-checked
+#   ast_grammar     — ast-grep grammar availability for structural constraint checks
+#   check_patterns  — reusable check-pattern library for the stack's idioms
+#
+# Status tiers (guarantee-based, reusing confidence vocabulary — COMPUTED, not declared):
+#   pending — registered with reason, unproven. Checks needing it SKIP with reason.
+#   "★"     — conformance corpus passes (tools/stacks/<stack>/conformance/)
+#   "★★"    — corpus wired into run-fixture-tests.sh + measured cost recorded
+# Demotion is stepwise (★★→★→pending); `since` history is retained per status change.
+#
+# Row contract: every adapter carries status, since (history list, newest first),
+# and either `evidence` (★/★★: corpus path + measured cost) or `reason` (pending:
+# what's missing, what it unblocks).
+
+stacks:
+  gdscript:
+    detect: ["project.godot", "*.gd"]
+    adapters:
+      trace_emitter:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-17, note: "T7 converted (grill Q05) — target project absent from this machine; '~20 lines' claim becomes measured data on first build"}
+        reason: "No GDScript target project available. Unblocks: trace validation of behavior specs in Godot projects."
+      ast_grammar:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-17, note: "birth entry"}
+        reason: "ast-grep GDScript support unverified. Unblocks: structural constraint checks (grep fallback available meanwhile)."
+      check_patterns:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-17, note: "birth entry"}
+        reason: "No pattern library yet. Unblocks: reusable constraint checks for Godot idioms (signals, autoloads, scene tree)."
+
+  typescript:
+    detect: ["tsconfig.json", "*.ts"]
+    adapters:
+      trace_emitter:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-17, note: "birth entry — C10 (DynamoRush run) builds this as the first Extension Protocol adapter with measured cost"}
+        reason: "Scheduled: C10 builds it against dynamodb-game-demo. Unblocks: trace validation of behavior specs in TS projects."
+      ast_grammar:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-17, note: "birth entry"}
+        reason: "ast-grep ships TS support upstream; conformance corpus not yet written. Unblocks: ★ structural constraint checks."
+      check_patterns:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-17, note: "birth entry"}
+        reason: "No pattern library yet. Unblocks: reusable constraint checks for TS idioms (import boundaries, type-only imports)."

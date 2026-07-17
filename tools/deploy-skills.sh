@@ -64,6 +64,17 @@ if [ -d "$DOMAINS_SRC" ] && [ -d "$SKILLS_DST/archwright-survey" ]; then
   echo "  ✓ domains: $(ls "$DOMAINS_SRC" | tr '\n' ' ')"
 fi
 
+# Deploy the stack adapter registry (source of truth: tools/stacks/REGISTRY.yaml)
+# the same way — skills reference it as references/stacks/REGISTRY.yaml (survey)
+# or ../archwright-survey/references/stacks/REGISTRY.yaml (other skills).
+# Registry only — adapter implementations and conformance corpora stay in-repo.
+STACKS_SRC="$REPO_DIR/tools/stacks/REGISTRY.yaml"
+if [ -f "$STACKS_SRC" ] && [ -d "$SKILLS_DST/archwright-survey" ]; then
+  mkdir -p "$SKILLS_DST/archwright-survey/references/stacks"
+  cp "$STACKS_SRC" "$SKILLS_DST/archwright-survey/references/stacks/REGISTRY.yaml"
+  echo "  ✓ stacks: references/stacks/REGISTRY.yaml"
+fi
+
 # Deploy the glossary (confidence vocabulary anchor) the same way — skills
 # reference it as ../archwright-survey/references/glossary.md off-repo.
 GLOSSARY_SRC="$REPO_DIR/docs/glossary.md"

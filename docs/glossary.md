@@ -16,13 +16,15 @@ Concepts and terminology for the force-resolution design language and its archit
 
 ### Confidence vocabulary map (anchor: ★★ / ★ / —)
 
-Two vocabularies are direct 1:1 derivations of confidence:
+Three vocabularies are direct derivations of confidence:
 
-| Confidence | AI autonomy on violation (survey/resolve) | Check severity (check/review output) |
-|:----------:|-------------------------------------------|--------------------------------------|
-| ★★ | Escalate to human | `error` |
-| ★ | Propose fix | `warning` |
-| — | Auto-adjust or log | `info` |
+| Confidence | AI autonomy on violation (survey/resolve) | Check severity (check/review output) | Adapter registry tier (`tools/stacks/REGISTRY.yaml`) |
+|:----------:|-------------------------------------------|--------------------------------------|------------------------------------------------------|
+| ★★ | Escalate to human | `error` | conformance corpus in fixture suite + measured cost |
+| ★ | Propose fix | `warning` | conformance corpus passes |
+| — | Auto-adjust or log | `info` | *(n/a — registry uses `pending` instead: registered, unproven, checks SKIP with reason. An unproven adapter is inactive, not advisory.)* |
+
+Registry tiers are guarantee levels COMPUTED by the fixture suite, never hand-declared (Extension Protocol rule 5, ADR 0008).
 
 Two other scales are **different axes** — related to confidence, not aliases of it:
 
@@ -63,6 +65,9 @@ The four scale IDs are canonical and domain-invariant (they're levels of Alexand
 - **Promotion** — turning implicit into explicit: an extended-state variable into a discrete mode (to resolve a spurious counterexample), or an unwritten Desire into an explicit invariant (in response to play evidence).
 - **Assume-guarantee / compositional CEGAR** — a sub-pattern completes a parent under an assumed contract (the parent's guarantee); pass-up is *local* along that contract, not global. This is Alexander's up-link made dynamic.
 - **Quiescence** — the practical "done" state: the tower is stable under its own pass-up; only low-confidence, low-severity signals still circulate, each resolved or consciously accepted as a zero-star known tension. Convergence, not perfection.
+- **Extension Protocol** — how archwright extends itself when its material doesn't cover a situation (ADR 0008): gaps surface as pending-with-reason → research (2+ sources or a spike) → generate a new INSTANCE from the axis's existing template → conformance-test at birth (golden corpus in the fixture suite) → register with tiered status (pending → ★ → ★★, computed not declared) → activation-gated enforcement. New KINDS/axes/format changes bypass the protocol and require ADR + HITL. A coverage gap is CEGAR applied to the methodology itself.
+- **Stack adapter** — per-language/engine mechanical component (`tools/stacks/<stack>/`): trace emitter, ast-grep grammar, check-pattern library. Orthogonal to domain overlays (stack = language/engine; domain = vocabulary). Tracked in `tools/stacks/REGISTRY.yaml` with guarantee-tiered status; built on first encounter per the Extension Protocol.
+- **Reconciliation pass** — for large projects/monorepos only: after per-area pipeline runs, an all-up synthesis that dedupes forces across areas, surfaces cross-area tensions, and unifies models. Normal projects run full-project in one pipeline; area partitioning is the exception for scale (grill Q06).
 
 ## Visualization Primitives
 

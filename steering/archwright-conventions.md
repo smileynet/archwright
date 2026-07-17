@@ -56,6 +56,29 @@ target-project/
 
 These directories are the archwright output. The `.memory/` directory in the target project contains the project's own internal knowledge (grills, ADRs, specs-as-requirements) — archwright reads from `.memory/` and writes to `design/`.
 
+## Run Scoping and Artifact Placement
+
+Operator policy (grill Q06, 2026-07-17), applies to ALL pipeline runs:
+
+1. **Scope by size.** Default: full project / all areas in one run. **Large projects and monorepos** (workspace layouts, multiple apps/packages, or a source corpus far beyond survey sizing guidance) are the exception: break into AREAS, run the full pipeline per area, then an **all-up reconciliation pass** — dedupe forces across areas, surface cross-area tensions, unify models. Area partitioning is for scale, never the norm.
+2. **Artifacts are live documents in the primary repo/branch space.** Commit `design/` output branch-agnostically to the CURRENT project branch unless the user specifies otherwise. No special design branches by default.
+
+## Extension Protocol
+
+How archwright extends itself when it encounters a situation its material doesn't cover — a stack without an adapter, a domain without an overlay, a check kind without a method (ADR 0008, grill Q05). A coverage gap is a counterexample against archwright's own abstractions, handled by archwright's own loop: detect → research → generate from existing pattern → verify → register.
+
+Six rules:
+
+1. **Gaps are pending-with-reason, never silent.** The gap artifact names the missing adapter (stack, kind, what it unblocks) — a `pending` registry row, a `target_status: pending` on a spec, or a SKIP-with-reason in check output. Checks that can't run because an adapter is missing SKIP with the declared reason; they never fail and never silently pass.
+2. **Two-tier governance.** New INSTANCES of existing kinds (a new stack adapter, a new domain overlay, a new predicate) flow through this protocol. New KINDS, new axes, or format/schema changes bypass it and require an ADR + HITL.
+3. **Research before generating.** 2+ independent sources or a spike before writing the new instance. Spike output IS the conformance scenario.
+4. **Conformance at birth.** Every new instance ships with a golden corpus (scenario source + expected output) wired into `tools/run-fixture-tests.sh`. No corpus → the instance stays `pending`.
+5. **Tiered status by guarantee**, reusing the confidence vocabulary: `pending` (registered, unproven) → ★ (conformance corpus passes) → ★★ (corpus in the fixture suite + measured cost recorded). Status is COMPUTED by the suite, not hand-declared. Demotion is stepwise (★★→★→pending, never cliff-edge) and `since:` history is retained in the registry row.
+6. **Activation-gated enforcement + rule-of-two.** An adapter's checks run only where its stack/domain is detected (survey records detection; downstream phases consult it). Build no axis scaffolding (schemas, harnesses, plugin machinery) until ≥2 concrete entries need it.
+
+Registries: `tools/stacks/REGISTRY.yaml` (per-language/engine adapters: trace emitters, ast-grep grammars, check-pattern libraries) and `tools/domains/detect.yaml` (per-domain vocabulary overlays). Stacks and domains are orthogonal axes — a TypeScript game backend is `web` domain + `typescript` stack.
+
+
 ## Pattern Quality Gates
 
 Before committing a pattern:
