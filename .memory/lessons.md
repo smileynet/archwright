@@ -19,7 +19,7 @@ One-line: mise.toml now owns tools/env/tasks; one gotcha — mise's Windows pyth
 
 1. **`mise install && mise run setup && mise run rehydrate-alloy` is the full rehydration path** (AGENTS.md "Dependency Rehydration"). `[env]` sets `PYTHONIOENCODING=utf-8` + `ARCHWRIGHT_ALLOY_JAR` automatically in-repo — the manual env dance and `/tmp/pyshim` hack are obsolete.
 2. **mise's Windows python ships only `python.exe`** — no `python3` binary or shim, so bare `python3` still hits the MS Store stub even under `mise run`. `run-fixture-tests.sh` defines a `python3()` → `python` fallback function; scripts calling `python3` need the same guard or must use `python`.
-3. **`mise run test` green baseline is now 27/0/0 (feature tests added same day; was 22/0/0 at mise adoption)** (behavior check active — jar + temurin-21 both mise-provisioned; verified 2026-07-17).
+3. **`mise run test` green baseline** (behavior check active — jar + temurin-21 both mise-provisioned; verified 2026-07-17): 22/0/0 at mise adoption → 31/0/0 same day after both sessions' additions (include-glob + comment-positional conformance fixtures, check-tool feature tests). Trust the docs (AGENTS.md/fixture README) for the current number.
 4. `cargo:`-backend tools deliberately excluded from mise.toml (rust toolchain too heavy for optional merman-cli renderer).
 
 ## 2026-07-17 — Alloy wiring + DoD-5 chain session
@@ -31,3 +31,11 @@ One-line: first jar execution exposed two dormant compiler bugs; negative tests 
 3. **Reporters must surface the source's reason, not re-derive it.** `run-fixture-tests.sh` hardcoded "(alloy jar unavailable)" as the skip label; when the real reason changed (compilation not automated), the label lied. Fixed: the suite prints check.py's own skip message.
 4. **Context vars are frozen in generated Alloy models** (guards/actions don't compile) — `alloy:` expressions must reference `M.current` + state sigs only; the compiler now warns on context-var references.
 5. **Deployed skills can't use repo-relative tool paths** — they run from target projects where `tools/` doesn't exist. Skills now say `<archwright-repo>/tools/...` with a locator note in archwright-check.
+
+## 2026-07-17 — include: globs + comment-stripping false-pass
+
+One-line: comment *truncation* silently broke any pattern containing the comment token itself.
+
+1. **`check.include:` globs landed** (ticket 005): bare glob matches file name, glob with `/` matches project-relative path; declarative target+pattern checks only (loud error with `command:`); explicitly-named single-file targets are never filtered (the GNU grep `--include` gotcha, avoided by design). ExposeAR `tls-only` went from 897 noise matches to 2 honest violations.
+2. **Truncating lines at the first comment token false-passed TLS checks:** `http://` contains `//`, so in C-family files the pattern could never survive truncation — ExposeAR `tls-only` PASSed while two plain-HTTP URLs sat in .cs files. Fixed positionally: a match counts iff it starts before the comment token. Rule: when filtering by comment token, never mutate the haystack a pattern must match against.
+3. Both behaviors have fixture canaries now: `no-shell-exec` (include filtering) and `endpoint-pinned` (`expect: present` with `//` inside the pattern + trailing comment on the matching line). Verify a checker's fix with an independent tool before trusting its verdict — the false-pass was caught by cross-checking with a second grep.

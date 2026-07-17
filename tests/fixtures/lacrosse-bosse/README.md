@@ -56,4 +56,4 @@ design/
 ./tools/run-fixture-tests.sh
 ```
 
-Expected: **21 passed, 0 failed, 1 skipped** (behavior spec skips without `.references/alloy6.jar` — `.references/` is gitignored).
+Expected: **31 passed, 0 failed, 0 skipped** with `.references/alloy6.jar` present (`mise run rehydrate-alloy`); without the jar the behavior spec SKIPs → 30 passed, 0 failed, 1 skipped. The count includes 5 check-tool feature tests (include globs, multi-target, exit contract). Two fixture specs are regression canaries: `no-shell-exec` is the conformance corpus for `check.include:` glob filtering (`client/docs/porting-notes.md` deliberately contains its pattern in prose — a filtering regression flips it red), and `endpoint-pinned` guards positional comment handling (its pattern contains `//` inside `https://` — a regression to line-truncation flips it red).
