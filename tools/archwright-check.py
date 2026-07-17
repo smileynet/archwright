@@ -23,6 +23,9 @@ import subprocess
 import json
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from archwright_common import state_events
+
 SCRIPT_DIR = Path(__file__).parent
 
 
@@ -815,8 +818,7 @@ def check_trace(spec_path, trace_path):
         
         # Find valid transition from current state
         current_state_def = states.get(current_state, {})
-        # YAML parses 'on:' as True (boolean) — handle both
-        transitions = current_state_def.get("on") or current_state_def.get(True, {})
+        transitions = state_events(current_state_def)
         
         if event not in transitions:
             valid_events = list(transitions.keys())

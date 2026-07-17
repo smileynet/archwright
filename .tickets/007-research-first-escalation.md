@@ -1,12 +1,18 @@
 ---
 id: 007
 title: Research-first gate before HITL escalation in passup
-status: open
+status: done
 blocked_by: []
 created: 2026-07-17
 ---
 
 # Research-first gate before HITL escalation
+
+Resolution (2026-07-17): ADR 0010 accepted (refines 0007, does not repeal it).
+`archwright-passup` step 3 gains the research gate + classification table
+(positive evidence required; ambiguity defaults to escalate); conventions ★★
+rule, AGENTS.md mirror, and CONTEXT.md glossary amended; hard floor +
+digest-review of classified-away events preserved. Deployed.
 
 ## Why (operator directive, 2026-07-17)
 

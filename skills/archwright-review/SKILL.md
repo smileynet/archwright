@@ -66,7 +66,7 @@ If the project has instrumented tests that emit traces:
 npm test  # traces land in design/specs/traces/
 
 # Validate each trace against its behavior spec
-python3 tools/archwright-check.py --trace design/specs/<behavior-spec>.yaml design/specs/traces/<trace>.json
+python3 <archwright-repo>/tools/archwright-check.py --trace design/specs/<behavior-spec>.yaml design/specs/traces/<trace>.json
 ```
 
 **Output:** Pass/fail per trace. Violations show which event violated which transition.

@@ -1,0 +1,70 @@
+# Check Output Schema (CK-03 contract)
+#
+# The document shape emitted by `archwright-check.py --json` and
+# `archwright-validate.py --json` (CK-21). Authoritative definition —
+# consumers: archwright-passup skill (routing), CK-14 SARIF mapping (future).
+# Producers MUST NOT add fields without updating this file.
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: Archwright check output document
+type: object
+required: [status, scope, violations, coverage, remaining_delta]
+properties:
+  status:
+    enum: [pass, fail, error]   # error (tool fault) takes precedence over fail
+  scope:
+    type: object
+    required: [mode, specs_checked]
+    properties:
+      mode: {enum: [files, all, static, trace, validate, links]}
+      specs_checked: {type: integer}
+      target: {type: [string, "null"]}   # --target root, if given
+  violations:
+    type: array
+    items:
+      type: object
+      required: [spec_id, invariant, confidence, severity, escalate, message, suggested_route]
+      properties:
+        spec_id: {type: string}
+        spec_kind: {type: [string, "null"]}   # behavior | constraint | dependency | contract
+        spec_path: {type: string}
+        invariant: {type: string}
+        confidence: {enum: ["★★", "★", "—"]}
+        severity: {enum: [error, warning, info]}   # 1:1 derivation of confidence
+        escalate: {type: boolean}                  # true iff ★★ (C2) — HITL required
+        message: {type: string}
+        evidence:
+          type: array                              # "path:line:text" lines (project-relative POSIX)
+          items: {type: string}
+        from_pattern: {type: [string, "null"]}     # provenance (CK-09)
+        from_force: {type: [string, "null"]}
+        suggested_route: {enum: [fix-implementation, fix-check, fix-spec]}
+        contrast_pair:                             # CK-10 — the primary pass-up payload
+          type: object
+          properties:
+            expected: {type: string}               # the rule as the design states it
+            actual: {type: string}                 # the finding
+  warnings:                                        # validate.py only (non-fatal WARNs)
+    type: array
+    items: {type: object}
+  errors:                                          # tool faults (broken check, parse failure)
+    type: array
+    items:
+      type: object
+      properties:
+        spec_id: {type: [string, "null"]}
+        spec_path: {type: string}
+        message: {type: string}
+        suggested_route: {const: fix-check}
+  coverage:
+    type: object
+    required: [checked, passed, failed, skipped, errors, pending]
+    properties:
+      checked: {type: integer}
+      passed: {type: integer}
+      failed: {type: integer}
+      skipped: {type: integer}    # adapter/backend unavailable — coverage statement, not a pass
+      errors: {type: integer}
+      pending: {type: integer}    # target_status: pending specs
+  remaining_delta:
+    type: integer                 # violations after baseline suppression (= all, until CK-07)
