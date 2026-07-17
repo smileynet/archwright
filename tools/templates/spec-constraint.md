@@ -10,6 +10,10 @@ check:
   method: grep  # grep | semgrep | script | alloy
   target: "path/to/check"
   pattern: "regex or semgrep pattern"
+  include: ["*.cs"]  # optional globs scoping which files are searched — bare glob
+                     # matches file name, glob with '/' matches project-relative path.
+                     # Scope to source extensions so docs/assets/configs don't drown
+                     # the check in noise. Not valid with command: checks.
   expect: absent  # absent | present
 links:
   - target: "behavior:affected-component"

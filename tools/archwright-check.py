@@ -17,6 +17,7 @@ Dispatches by spec kind:
 import sys
 import os
 import re
+import fnmatch
 import yaml
 import subprocess
 import json
@@ -259,20 +260,45 @@ _LINE_COMMENT = {
 }
 
 
-def _python_grep(target_path, pattern, project_root=None, strip_comments=True):
+def _include_match(path, include_globs, project_root=None):
+    """True if the file matches any include glob. Bare globs match the file name;
+    globs containing '/' match the project-relative POSIX path."""
+    rel = None
+    if project_root:
+        try:
+            rel = path.relative_to(project_root).as_posix()
+        except ValueError:
+            rel = path.as_posix()
+    for g in include_globs:
+        if "/" in g:
+            if rel and fnmatch.fnmatch(rel, g):
+                return True
+        elif fnmatch.fnmatch(path.name, g):
+            return True
+    return False
+
+
+def _python_grep(target_path, pattern, project_root=None, strip_comments=True, include=None):
     """Portable grep replacement: regex search over text files. Returns 'path:line:text' lines.
     Paths are emitted project-relative with forward slashes so only-in filters match portably.
     By default the comment portion of each line is stripped before matching (per-extension
-    line-comment tokens) so commented-out code never triggers a constraint."""
+    line-comment tokens) so commented-out code never triggers a constraint.
+    `include`: optional list of globs limiting which files are searched — a bare glob
+    (`*.cs`) matches the file name; a glob containing `/` matches the project-relative
+    POSIX path. Explicitly-named single-file targets are NOT filtered (unlike GNU grep
+    --include, which silently filters those too — the field false-pass gotcha)."""
     rx = re.compile(pattern)
     out = []
-    paths = [target_path] if target_path.is_file() else None
+    single_file = target_path.is_file()
+    paths = [target_path] if single_file else None
     if paths is None:
         paths = []
         for p in target_path.rglob("*"):
             if p.is_file() and not (set(p.parts) & _SKIP_DIRS):
                 paths.append(p)
     for p in paths:
+        if include and not single_file and not _include_match(p, include, project_root):
+            continue
         try:
             if p.stat().st_size > 5_000_000:
                 continue
@@ -289,9 +315,17 @@ def _python_grep(target_path, pattern, project_root=None, strip_comments=True):
             shown = p.as_posix()
         comment_token = _LINE_COMMENT.get(p.suffix) if strip_comments else None
         for i, line in enumerate(text.splitlines(), 1):
-            haystack = line.split(comment_token, 1)[0] if comment_token and comment_token in line else line
-            if rx.search(haystack):
-                out.append(f"{shown}:{i}:{line.strip()[:200]}")
+            if comment_token and comment_token in line:
+                # Positional check, NOT truncation: a match counts only if it starts
+                # before the comment token. Truncating at the token broke any pattern
+                # containing the token itself — e.g. "http://" contains "//", so TLS
+                # checks in //-comment languages could never match (false PASS).
+                cpos = line.find(comment_token)
+                if not any(m.start() < cpos for m in rx.finditer(line)):
+                    continue
+            elif not rx.search(line):
+                continue
+            out.append(f"{shown}:{i}:{line.strip()[:200]}")
     return "\n".join(out)
 
 
@@ -302,6 +336,9 @@ def _check_grep(check, spec_id, confidence, project_root):
     expect = check.get("expect", "absent")
     command = check.get("command")
     only_in = check.get("only_in")
+    include = check.get("include")
+    if isinstance(include, str):
+        include = [include]
 
     # Unknown expect values are a TOOL ERROR, never a silent pass (CK-05/B4, A1/F3).
     if expect not in ("absent", "present", "only-in"):
@@ -310,6 +347,13 @@ def _check_grep(check, spec_id, confidence, project_root):
     if expect == "only-in" and not only_in:
         return [{"invariant": spec_id, "status": "error",
                  "message": "expect: only-in requires an only_in: key naming the allowed location"}]
+    if include is not None and (not isinstance(include, list) or not all(isinstance(g, str) for g in include)):
+        return [{"invariant": spec_id, "status": "error",
+                 "message": "include: must be a glob string or list of glob strings"}]
+    if include and command:
+        return [{"invariant": spec_id, "status": "error",
+                 "message": "include: applies to declarative target+pattern checks only — "
+                            "fold the filter into the command itself"}]
 
     if command:
         # Custom command: prefer bash (grep/coreutils available), fall back to system shell.
@@ -340,7 +384,8 @@ def _check_grep(check, spec_id, confidence, project_root):
                      "message": f"Target path not found: {target_path}"}]
         try:
             matches = _python_grep(target_path, pattern, project_root,
-                                   strip_comments=not check.get("include_comments", False))
+                                   strip_comments=not check.get("include_comments", False),
+                                   include=include)
         except re.error as e:
             return [{"invariant": spec_id, "status": "error",
                      "message": f"invalid pattern: {e}"}]
