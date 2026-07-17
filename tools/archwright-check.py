@@ -27,7 +27,7 @@ SCRIPT_DIR = Path(__file__).parent
 
 def extract_frontmatter(path):
     """Extract YAML frontmatter from a markdown file."""
-    content = path.read_text()
+    content = path.read_text(encoding="utf-8")
     if not content.startswith("---"):
         return None
     parts = content.split("---", 2)
@@ -40,7 +40,7 @@ def load_spec(path):
     """Load a spec file, return (data, kind)."""
     path = Path(path)
     if path.suffix in (".yaml", ".yml"):
-        data = yaml.safe_load(path.read_text())
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
         return data, data.get("kind")
     elif path.suffix == ".md":
         data = extract_frontmatter(path)
@@ -413,7 +413,7 @@ def check_trace(spec_path, trace_path):
     
     # Load spec
     if spec_path.suffix in (".yaml", ".yml"):
-        data = yaml.safe_load(spec_path.read_text())
+        data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
     else:
         print(json.dumps({"status": "error", "message": "Trace checking requires a YAML behavior spec"}))
         return 2
@@ -424,7 +424,7 @@ def check_trace(spec_path, trace_path):
     
     # Load trace
     try:
-        trace = json.loads(trace_path.read_text())
+        trace = json.loads(trace_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as e:
         print(json.dumps({"status": "error", "message": f"Failed to parse trace: {e}"}))
         return 2

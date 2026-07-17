@@ -18,7 +18,7 @@ from pathlib import Path
 
 def load_spec(path):
     """Load a behavior spec YAML file."""
-    data = yaml.safe_load(Path(path).read_text())
+    data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     if data.get("kind") != "behavior":
         print(f"Error: {path} is not a behavior spec (kind: {data.get('kind')})")
         sys.exit(1)
