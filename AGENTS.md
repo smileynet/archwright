@@ -58,6 +58,10 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │       ├── game/                  # Game scales + 13 predicates + research sources
 │       ├── web/                   # Web scales + predicates
 │       └── general/               # Fallback scales + cross-cutting predicates
+├── tools/stacks/                  # Stack adapters: per-language/engine mechanical components (ADR 0008)
+│   ├── REGISTRY.yaml              # Adapter kinds × status (pending/★/★★, computed) + since: history
+│   ├── gdscript/                  # All pending (T7 converted)
+│   └── typescript/                # Pending; C10 builds trace_emitter as first measured adapter
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
 │   ├── PLAN.md                    # Phases 0–4 historical; Phase 5 ACTIVE (polyglot check tool — executor assigned, see specs/polyglot-check-tooling.md)
@@ -144,6 +148,7 @@ Note: `archwright-check.py` flags are `--static`, `--trace`, `--all`, `--target`
 - Specs are flat, typed (kind field), linked via `kind:id` references
 - Contract phase solely owns contract specs (C7, ratified 2026-07-16) — model emits contract *candidates* (identity/direction, no payloads); one spec per event type, with a one-protocol/one-authority-actor cluster exception; `from_model:` provenance required
 - Design artifacts are live documents in the target project — committed to the current branch (no special design branches); large projects/monorepos get per-area pipeline runs + an all-up reconciliation pass (grill Q06)
+- Coverage gaps follow the Extension Protocol (ADR 0008): pending-with-reason, new instances flow through, new kinds need ADR + HITL; adapter status in `tools/stacks/REGISTRY.yaml` is computed by the fixture suite, never hand-declared
 - The agent IS the system; tools are mechanical servants
 - Subagents extract (read files → structured output); main agent synthesizes (dedup, cluster, merge)
 

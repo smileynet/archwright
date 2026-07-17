@@ -19,16 +19,17 @@ Verify specs against their stated invariants. Report violations with provenance.
    - Code changed → specs whose `check.target` overlaps changed files
    - Full audit → all specs in `design/specs/`
 
-2. **Run checks by kind:**
-   - `behavior` → compile to Alloy → bounded model check → counterexamples
+2. **Run checks by kind** (consult `tools/stacks/REGISTRY.yaml` for the target's stack first — a check whose adapter is `pending` SKIPs with the registry's stated reason; it never fails and never silently passes):
+   - `behavior` → compile to Alloy → bounded model check → counterexamples. Trace validation additionally needs the stack's `trace_emitter` adapter (★ or better).
    - `contract` → validate types/fields against implementation
-   - `constraint` → execute `check` field from frontmatter (grep/semgrep/script)
+   - `constraint` → execute `check` field from frontmatter (grep/semgrep/script). Structural (ast-grep) checks need the stack's `ast_grammar` adapter; grep fallback runs regardless.
    - `dependency` → run import/call analysis from `allowed`/`forbidden`
 
 3. **Interpret results:**
    - `pass` → record as evidence toward confidence promotion
    - `fail` → route violation via provenance (step 4)
    - `error` → fix the check itself, not the spec
+   - `skip` → adapter/backend unavailable (pending registry row, missing Alloy jar). Report the declared reason. A skip is a coverage statement, not a pass — it counts as no evidence in either direction.
 
 4. **Route violations** — read `from_pattern` + `from_force` from violated invariant. Severity from confidence (★★=error, ★=warning, —=info). Present contrast pair if available. See `archwright-resolve` skill [references/pass-up.md](../archwright-resolve/references/pass-up.md).
 

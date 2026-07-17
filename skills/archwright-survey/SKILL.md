@@ -52,6 +52,10 @@ Triggered by: "Do a full state review" / "What's covered?" / "Design audit"
 
 **Detect the domain FIRST.** Apply the manifest rules in `references/domains/detect.yaml` (deployed with this skill; source: `tools/domains/` in the archwright repo) — game / web / general. An explicit `domain:` in the target's `design/domain.yaml`, or the human stating it, overrides detection. Record the domain and what triggered it in the intake outline; downstream phases (forces, tensions, formalize, model) load `references/domains/<domain>/{scales,predicates}.yaml` (via `../archwright-survey/` from their own skill dirs) for vocabulary and prior art. Detection reads the architecture, not the theme — a game-themed project on an express backend is `web`.
 
+**Detect the stack alongside the domain.** Match the target's manifests against the `detect:` globs in `references/stacks/REGISTRY.yaml` (deployed with this skill; source: `tools/stacks/REGISTRY.yaml`). Stack and domain are orthogonal axes — a TypeScript game backend is `web` domain + `typescript` stack. Record in the intake outline: the detected stack(s) and each adapter's registry status (trace_emitter / ast_grammar / check_patterns). `pending` adapters mean downstream checks of that kind will SKIP with reason — flag this as expected coverage limits, not as gaps to fix now. A stack with no registry entry at all is an Extension Protocol gap: record it pending-with-reason in the outline (what's missing, what it unblocks) per `steering/archwright-conventions.md` § Extension Protocol.
+
+**Scope the run by size (grill Q06).** Default: full project, all areas, one pipeline run. **Large projects and monorepos** (workspace layouts like `apps/`+`packages/`, multiple deployable units, or a source corpus far beyond the subagent sizing guidance) are the exception: propose AREA PARTITION in the intake outline — per-area pipeline runs followed by an all-up **reconciliation pass** (dedupe forces across areas, surface cross-area tensions, unify models). Name the proposed areas and their run order (most invariant-dense first). Design artifacts commit to the CURRENT project branch unless the human specifies otherwise — no special design branches.
+
 **Start with purpose.** Before reading architectural decisions, establish WHY the project exists and WHO it serves.
 
 Product-level sources (read FIRST — these establish the generative desires):
@@ -127,6 +131,12 @@ Write to `.memory/archwright-survey.md`:
 
 ## Domain
 <game | web | general> — detected via <trigger> (or: overridden by <source>)
+
+## Stack
+<stack(s)> — adapter status per references/stacks/REGISTRY.yaml (trace_emitter / ast_grammar / check_patterns: ★★ / ★ / pending). Unregistered stack → Extension Protocol gap, pending-with-reason.
+
+## Run Scope
+<full-project (default) | area-partitioned: [areas, run order] + reconciliation pass> — artifacts commit to the current branch
 
 ## Destination
 <what "fully covered" looks like for this project>

@@ -181,6 +181,11 @@ Specs are written to the target project's `design/specs/` directory:
 
 ## Check Method Guidance (for constraint specs)
 
+**Consult the stack registry first** (`../archwright-survey/references/stacks/REGISTRY.yaml`, or `tools/stacks/REGISTRY.yaml` in the archwright repo; the survey intake outline records the detected stack). The registry tells you which check machinery actually exists for this stack:
+- `ast_grammar` ★/★★ → prefer structural `ast-grep` checks per the table below
+- `ast_grammar` pending → fall back to grep with comment-exclusion patterns; note the fallback in the spec (`# ast-grep pending for <stack> — grep fallback`)
+- No registry entry for the stack → Extension Protocol gap: record it pending-with-reason (what adapter, what it unblocks) per `steering/archwright-conventions.md` § Extension Protocol; do NOT invent an unverified check method
+
 When writing the `check` block, prefer structural checks over text grep:
 
 | Language | Recommended check method | Why |

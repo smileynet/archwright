@@ -79,3 +79,9 @@ Not the raw counterexample (too noisy) and not just the classification (too abst
 **12. Bounded checking is necessary but not sufficient for ★★.**
 
 Alloy finds counterexamples fast (94ms) but can only prove "no violation up to scope N." For genuine ★★ confidence (true invariant), unbounded proof is needed. Lean + AI provers (88.9% on benchmarks, 2025) provide the promotion path: compile spec to Lean theorem, attempt proof, kernel guarantees correctness if proof found.
+
+---
+
+**13. The methodology is self-extending — a coverage gap is a counterexample against archwright's own abstractions.**
+
+When archwright encounters a stack, domain, or situation its material doesn't cover, that gap is not a descope candidate — it is CEGAR applied to the methodology itself. The failure artifact identifies the missing distinction (which adapter, which kind, what it unblocks); the extension is a new *instance* of an existing kind (a predicate, an overlay, a stack adapter), generated from the axis's existing template, conformance-tested at birth, and registered with guarantee-tiered status. Changing the *kinds themselves* is rarer and separately governed (ADR + human). This mirrors all three parent traditions: CEGAR refines abstractions minimally from the spurious counterexample; Alexander's pattern format is its own extension mechanism (new patterns are discovered in use, never invented top-down); reflective architectures bound the recursion — instances extend automatically, the meta-level answers to the human. (ADR 0008; protocol rules in `steering/archwright-conventions.md`.)
