@@ -99,6 +99,17 @@ def check_conformance(data, spec_path):
     spec_id = data.get("id", "unknown")
     confidence = data.get("confidence", "—")
 
+    # Specs whose check target doesn't exist yet (system not implemented) declare
+    # target_status: pending — report as skipped, not failed (see archwright-derive skill).
+    if check.get("target_status") == "pending":
+        return [{
+            "invariant": spec_id,
+            "status": "skipped",
+            "confidence": confidence,
+            "message": "target_status: pending — check target not yet implemented; activates when it exists",
+        }]
+
+
     # Determine the working directory (look for project root)
     # Honor ARCHWRIGHT_PROJECT_ROOT env var if set, otherwise auto-detect
     env_root = os.environ.get("ARCHWRIGHT_PROJECT_ROOT")
@@ -126,8 +137,52 @@ def check_conformance(data, spec_path):
         }]
 
 
+def _find_bash():
+    """Locate a bash for command-mode checks (Git bash on Windows puts GNU grep on PATH)."""
+    import shutil
+    b = shutil.which("bash")
+    if b:
+        return b
+    git = shutil.which("git")
+    if git:
+        cand = Path(git).parent.parent / "bin" / "bash.exe"
+        if cand.exists():
+            return str(cand)
+    return None
+
+
+_SKIP_DIRS = {".git", "Library", "Temp", "obj", "Build", ".vs", ".idea", "PackageCache", "node_modules"}
+
+
+def _python_grep(target_path, pattern):
+    """Portable grep replacement: regex search over text files. Returns 'path:line:text' lines."""
+    rx = re.compile(pattern)
+    out = []
+    paths = [target_path] if target_path.is_file() else None
+    if paths is None:
+        paths = []
+        for p in target_path.rglob("*"):
+            if p.is_file() and not (set(p.parts) & _SKIP_DIRS):
+                paths.append(p)
+    for p in paths:
+        try:
+            if p.stat().st_size > 5_000_000:
+                continue
+            with open(p, "rb") as f:
+                head = f.read(8192)
+                if b"\x00" in head:
+                    continue
+            text = p.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        for i, line in enumerate(text.splitlines(), 1):
+            if rx.search(line):
+                out.append(f"{p}:{i}:{line.strip()[:200]}")
+    return "\n".join(out)
+
+
 def _check_grep(check, spec_id, confidence, project_root):
-    """Run a grep-based check."""
+    """Run a grep-based check (pure-Python for target+pattern; bash for custom commands)."""
     target = check.get("target", ".")
     pattern = check.get("pattern", "")
     expect = check.get("expect", "absent")
@@ -135,32 +190,37 @@ def _check_grep(check, spec_id, confidence, project_root):
     only_in = check.get("only_in")
 
     if command:
-        # Custom command provided
+        # Custom command: prefer bash (grep/coreutils available), fall back to system shell.
+        bash = _find_bash()
         try:
-            result = subprocess.run(
-                command, shell=True, capture_output=True, text=True,
-                cwd=str(project_root)
-            )
+            if bash:
+                result = subprocess.run(
+                    [bash, "-c", command], capture_output=True, text=True,
+                    cwd=str(project_root)
+                )
+            else:
+                result = subprocess.run(
+                    command, shell=True, capture_output=True, text=True,
+                    cwd=str(project_root)
+                )
+            # Loud failure: interpreter/tool missing must never read as "no matches".
+            err = (result.stderr or "").lower()
+            if result.returncode > 1 or "not recognized" in err or "command not found" in err:
+                return [{"invariant": spec_id, "status": "error",
+                         "message": f"check command failed (rc {result.returncode}): {(result.stderr or '')[:200]}"}]
             matches = result.stdout.strip()
         except Exception as e:
             return [{"invariant": spec_id, "status": "error", "message": str(e)}]
     else:
-        # Build grep command from target + pattern
         target_path = project_root / target
         if not target_path.exists():
             return [{"invariant": spec_id, "status": "error",
                      "message": f"Target path not found: {target_path}"}]
-
-        if target_path.is_dir():
-            cmd = ["grep", "-rn", pattern, str(target_path)]
-        else:
-            cmd = ["grep", "-n", pattern, str(target_path)]
-
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            matches = result.stdout.strip()
-        except Exception as e:
-            return [{"invariant": spec_id, "status": "error", "message": str(e)}]
+            matches = _python_grep(target_path, pattern)
+        except re.error as e:
+            return [{"invariant": spec_id, "status": "error",
+                     "message": f"invalid pattern: {e}"}]
 
     # Interpret results based on expect
     if expect == "absent":
@@ -215,10 +275,21 @@ def _check_script(check, spec_id, confidence, project_root):
     expect = check.get("expect", "absent")
 
     try:
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True,
-            cwd=str(project_root)
-        )
+        bash = _find_bash()
+        if bash:
+            result = subprocess.run(
+                [bash, "-c", command], capture_output=True, text=True,
+                cwd=str(project_root)
+            )
+        else:
+            result = subprocess.run(
+                command, shell=True, capture_output=True, text=True,
+                cwd=str(project_root)
+            )
+        err = (result.stderr or "").lower()
+        if result.returncode > 1 or "not recognized" in err or "command not found" in err:
+            return [{"invariant": spec_id, "status": "error",
+                     "message": f"check script failed (rc {result.returncode}): {(result.stderr or '')[:200]}"}]
         output = result.stdout.strip()
     except Exception as e:
         return [{"invariant": spec_id, "status": "error", "message": str(e)}]
