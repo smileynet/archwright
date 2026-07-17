@@ -36,7 +36,7 @@ The downward direction: forces → pattern → sub-patterns → architecture. Co
 _Avoid_: "top-down" (implies hierarchy without the reciprocal)
 
 **Pass-up**:
-The upward flow: downstream findings → revised design. Generalizes. Level-terminating, confidence-gated, follows provenance links.
+The upward flow: downstream findings → revised design. Generalizes. Level-terminating, confidence-gated, follows provenance links. Owned by the `archwright-passup` skill (decided 2026-07-17, grill Q02) — check verifies and emits structured violations; passup lifts and routes them.
 _Avoid_: "feedback" (too vague), "escalation" (implies hierarchy)
 
 **Provenance link**:
@@ -112,3 +112,15 @@ Model-phase output naming an event's identity/direction/producer WITHOUT payload
 **Domain overlay**:
 Per-domain vocabulary pack (`tools/domains/<domain>/` — game, web, general): `scales.yaml` maps the four canonical scale IDs to domain-native labels/examples; `predicates.yaml` holds advisory, prior-art-backed design rules. Detected via `detect.yaml` manifest rules (architecture over theme — a game-themed express backend is `web`); explicit override wins. Deployed with the survey skill (`references/domains/`).
 _Avoid_: per-domain scale IDs — the enum is canonical; only labels vary.
+
+**Extension Protocol**:
+How archwright extends itself when it encounters a situation its material doesn't cover (grill Q05, 2026-07-17): gaps surface as pending-with-reason → research (2+ sources or spike) → generate a new INSTANCE from the axis's existing template → conformance-test at birth (golden corpus in the fixture suite; status computed, not declared) → register with tiered status (pending → ★ → ★★) → activation-gated enforcement. New KINDS/axes/format changes bypass the protocol and require ADR + HITL (two-tier governance).
+_Avoid_: treating coverage gaps as descope candidates — a gap is a counterexample against archwright's own abstractions (CEGAR applied to the methodology).
+
+**Stack adapter**:
+Per-language/engine mechanical component (`tools/stacks/<stack>/`): trace emitter, ast-grep grammar, check-pattern library. Orthogonal to domain overlays (dynamodb-game-demo = web domain + typescript stack). Tracked in `tools/stacks/REGISTRY.yaml` with guarantee-tiered status and measured cost; built on first encounter per the Extension Protocol.
+_Avoid_: conflating stack (language/engine) with domain (vocabulary).
+
+**Reconciliation pass**:
+For large projects/monorepos: after per-area pipeline runs, an all-up synthesis that dedupes forces across areas, surfaces cross-area tensions, and unifies models. Only used when scale forces area partitioning — normal projects run full-project/all-areas in one pipeline (grill Q06, 2026-07-17). Design artifacts are live documents committed branch-agnostically to the current project branch unless the user specifies otherwise.
+_Avoid_: area-scoping small projects (partition is the exception for scale, not the norm); special design branches by default.
