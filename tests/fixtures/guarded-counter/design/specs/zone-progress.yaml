@@ -1,0 +1,89 @@
+# Conformance corpus for guard/assign compilation (ticket 008).
+# Mirrors ExposeAR's solved-iff-win-condition acceptance case: the invariant
+# is provable ONLY when the SOLVE guard compiles into the model. The
+# unguarded twin (zone-progress-unguarded.yaml) MUST FAIL — Extension
+# Protocol rule 4: a checker proven only on passing cases may be vacuous.
+kind: behavior
+id: zone-progress
+from_patterns:
+  - "pattern:zone-progress"
+
+protects_experience: "win-when-complete"
+user_story: "A player sees the Solved screen only when every zone is actually correct — never early, never spuriously."
+
+context:
+  variables:
+    zones_correct:
+      type: int
+      initial: 0
+      from_force: win-when-complete
+    zones_total:
+      type: int
+      initial: 3
+      from_force: win-when-complete
+
+initial: idle
+
+states:
+  idle:
+    type: atomic
+    "on":
+      PLACE:
+        target: placing
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+  placing:
+    type: atomic
+    "on":
+      ZONE_CORRECT:
+        target: placing
+        guard:
+          predicate: "zones_correct < zones_total"
+          from_force: win-when-complete
+          confidence: "★★"
+        assign:
+          zones_correct: "zones_correct + 1"
+        from_force: win-when-complete
+        from_pattern: zone-progress
+      SOLVE:
+        target: solved
+        guard:
+          predicate: "zones_correct == zones_total"
+          from_force: win-when-complete
+          confidence: "★★"
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+  solved:
+    type: atomic
+    "on":
+      PROGRESS_RESET:
+        target: placing
+        assign:
+          zones_correct: 0
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+invariants:
+  - id: solved-iff-win-condition
+    type: temporal
+    predicate: "always (state == solved implies zones_correct == zones_total)"
+    # Provable ONLY with the SOLVE guard compiled: without it the model
+    # enters Solved with zones_correct = 0 and this assert is SAT.
+    alloy: "always (M.current = Solved implies M.zonesCorrect = M.zonesTotal)"
+    confidence: "★★"
+    from_force: win-when-complete
+    from_pattern: zone-progress
+    description: "The machine is in Solved only when every zone is correct"
+
+links: []
+
+abstraction_notes:
+  included: [zone counting, win-condition guard, progress reset]
+  excluded: [CV validation mechanics, per-zone identity, timing]
+  justification: "The checked property (Solved implies full count) depends only on the counter and the guard, not on which zones or how they were validated."
+  scope_limit: "Checked at scope 4 (Int bitwidth 4: -8..7), 6 steps — zones_total=3 fits comfortably."

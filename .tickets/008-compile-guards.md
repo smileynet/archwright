@@ -1,12 +1,42 @@
 ---
 id: 008
 title: Compile transition guards into Alloy models (currently comments)
-status: open
+status: done
 blocked_by: []
 created: 2026-07-17
+closed: 2026-07-17
 ---
 
 # Compile transition guards into Alloy models
+
+## Resolution (2026-07-17)
+
+Shipped in `archwright-compile-alloy.py`:
+- Guard predicates compile into transition preds — translatable subset: enum `==`/`!=`,
+  int comparisons (`==`, `!=`, `<`, `>`, `<=` → Alloy `=<`, `>=`), var-to-var,
+  `&&`/`and` conjunctions. Alloy int syntax empirically verified against the jar
+  before codegen (`plus[a,b]`, `=<`).
+- `assign:` maps on transitions (new schema surface, in spec-behavior template):
+  int/enum literals, var copy, `var + N` / `var - N` → primed updates replacing
+  frame conditions for assigned vars.
+- Non-translatable guards/assigns stay comments and TAINT their referenced vars +
+  target state; invariants touching tainted elements are skipped with reason via
+  `SKIP-INVARIANT:` stdout lines that `archwright-check.py` consumes (skipped
+  result, not "no verdict" error). Blanket frozen-var WARN removed — constant
+  vars are now legitimately checkable (e.g. `zones_total`).
+- Conformance corpus at `tests/fixtures/guarded-counter/` (3 specs), wired into
+  the suite (+4 assertions, 35/0/0): guarded PASS, unguarded twin FAILs with
+  counterexample (rule 4 violating scenario), opaque-guard twin SKIPs with taint
+  reason (rule 1). Vacuity probe run in-session: deliberately-false
+  `always M.current != Solved` FAILed, proving Solved reachable under the guard.
+- Acceptance case verified with the exact expression from this ticket:
+  `alloy: "always (M.current = Solved implies M.zonesCorrect = M.zonesTotal)"`
+  PASSes bounded check; removing the guard makes it FAIL.
+- Docs: spec-behavior template + derive skill step 4 updated (context vars no
+  longer forbidden in `alloy:` expressions).
+
+ExposeAR's `placement-lifecycle.yaml` can now carry the invariant — that edit
+belongs to the ExposeAR lane.
 
 ## Why (field finding, ExposeAR behavior checks 2026-07-17)
 

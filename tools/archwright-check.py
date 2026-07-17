@@ -124,6 +124,28 @@ def check_behavior(data, spec_path):
                 "message": f"Alloy compilation failed: {(comp.stderr or comp.stdout)[:200]}",
             } for inv in checkable]
 
+        # The compiler skips invariants the model can't reliably check
+        # (uncompiled guard/assign taint) — honor those as skipped, not errors.
+        compiler_skips = {}
+        for m in re.finditer(r"^SKIP-INVARIANT:\s*([\w-]+):\s*(.+)$", comp.stdout or "", re.MULTILINE):
+            compiler_skips[m.group(1)] = m.group(2).strip()
+        still_checkable = []
+        for inv in checkable:
+            inv_id = inv.get("id", "unknown")
+            if inv_id in compiler_skips:
+                results.append({
+                    "invariant": inv_id,
+                    "status": "skipped",
+                    "message": compiler_skips[inv_id],
+                    "confidence": inv.get("confidence", "—"),
+                    "assurance": "none",
+                })
+            else:
+                still_checkable.append(inv)
+        checkable = still_checkable
+        if not checkable:
+            return results
+
         try:
             run = subprocess.run(
                 [java, "-Djava.awt.headless=true", "-jar", str(alloy_jar), "exec", str(als_path)],

@@ -106,6 +106,47 @@ else
 fi
 
 echo ""
+echo "=== Guard Compilation Conformance (ticket 008) ==="
+# Golden corpus (Extension Protocol rule 4): guarded spec PASSes, its
+# unguarded twin FAILs (the invariant is provable ONLY with the guard
+# compiled), and an opaque-guard twin SKIPs with reason (rule 1 — never a
+# spurious FAIL). Requires the Alloy jar + java, like behavior checks.
+GUARD_SPECS="$TOOLS/../tests/fixtures/guarded-counter/design/specs"
+GC_JAR="${ARCHWRIGHT_ALLOY_JAR:-$TOOLS/../.references/alloy6.jar}"
+if [ ! -d "$GUARD_SPECS" ]; then
+  report SKIP "guard conformance (fixture missing)"
+elif [ ! -f "$GC_JAR" ] || ! command -v java >/dev/null 2>&1; then
+  report SKIP "guard conformance (alloy jar or java unavailable)"
+else
+  if python3 "$VALIDATE" "$GUARD_SPECS"/*.yaml >/dev/null 2>&1; then
+    report PASS "guard fixture: all 3 specs schema-valid"
+  else
+    report FAIL "guard fixture: all 3 specs schema-valid"
+  fi
+
+  rc=0; out=$(python3 "$CHECK" "$GUARD_SPECS/zone-progress.yaml" 2>&1) || rc=$?
+  if [ $rc -eq 0 ] && echo "$out" | grep -q "PASS"; then
+    report PASS "guard compiled: solved-iff-win-condition holds (bounded)"
+  else
+    report FAIL "guard compiled: solved-iff-win-condition holds (bounded)" "$out"
+  fi
+
+  rc=0; out=$(python3 "$CHECK" "$GUARD_SPECS/zone-progress-unguarded.yaml" 2>&1) || rc=$?
+  if [ $rc -eq 1 ] && echo "$out" | grep -q "counterexample"; then
+    report PASS "guard removed: same invariant FAILs w/ counterexample (non-vacuous)"
+  else
+    report FAIL "guard removed: same invariant FAILs w/ counterexample (non-vacuous)" "exit=$rc: $out"
+  fi
+
+  rc=0; out=$(python3 "$CHECK" "$GUARD_SPECS/zone-progress-opaque-guard.yaml" 2>&1) || rc=$?
+  if [ $rc -eq 0 ] && echo "$out" | grep -q "reachable without their guard"; then
+    report PASS "opaque guard: invariant SKIPs with taint reason (no spurious FAIL)"
+  else
+    report FAIL "opaque guard: invariant SKIPs with taint reason (no spurious FAIL)" "exit=$rc: $out"
+  fi
+fi
+
+echo ""
 echo "=== Check-Tool Feature Tests ==="
 # Golden assertions for check-backend features (tickets 005/006) — temp specs
 # run against the fixture tree, cleaned up unconditionally.

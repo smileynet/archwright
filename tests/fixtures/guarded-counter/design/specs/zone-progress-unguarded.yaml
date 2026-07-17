@@ -1,0 +1,82 @@
+# VIOLATING twin of zone-progress.yaml (Extension Protocol rule 4): identical
+# machine minus the SOLVE guard. The invariant MUST FAIL with a counterexample
+# — this proves guard compilation is load-bearing (the invariant passes only
+# because of it) and that the checker can fail (non-vacuity).
+kind: behavior
+id: zone-progress-unguarded
+from_patterns:
+  - "pattern:zone-progress"
+
+protects_experience: "win-when-complete"
+user_story: "Deliberately broken twin: SOLVE has no guard, so Solved is reachable with an incomplete count."
+
+context:
+  variables:
+    zones_correct:
+      type: int
+      initial: 0
+      from_force: win-when-complete
+    zones_total:
+      type: int
+      initial: 3
+      from_force: win-when-complete
+
+initial: idle
+
+states:
+  idle:
+    type: atomic
+    "on":
+      PLACE:
+        target: placing
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+  placing:
+    type: atomic
+    "on":
+      ZONE_CORRECT:
+        target: placing
+        guard:
+          predicate: "zones_correct < zones_total"
+          from_force: win-when-complete
+          confidence: "★★"
+        assign:
+          zones_correct: "zones_correct + 1"
+        from_force: win-when-complete
+        from_pattern: zone-progress
+      SOLVE:
+        target: solved
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+  solved:
+    type: atomic
+    "on":
+      PROGRESS_RESET:
+        target: placing
+        assign:
+          zones_correct: 0
+        from_force: win-when-complete
+        from_pattern: zone-progress
+    from_pattern: zone-progress
+
+invariants:
+  - id: solved-iff-win-condition
+    type: temporal
+    predicate: "always (state == solved implies zones_correct == zones_total)"
+    alloy: "always (M.current = Solved implies M.zonesCorrect = M.zonesTotal)"
+    confidence: "★★"
+    from_force: win-when-complete
+    from_pattern: zone-progress
+    description: "MUST FAIL here: SOLVE is unguarded, Solved reachable at count 0"
+
+links: []
+
+abstraction_notes:
+  included: [zone counting, progress reset — SOLVE guard deliberately removed]
+  excluded: [CV validation mechanics, per-zone identity, timing]
+  justification: "Negative conformance case — exists to prove the checker produces a counterexample when the guard is absent."
+  scope_limit: "Counterexample expected within 2 steps (idle → placing → solved at count 0)."
