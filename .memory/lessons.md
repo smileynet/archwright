@@ -21,3 +21,13 @@ One-line: mise.toml now owns tools/env/tasks; one gotcha — mise's Windows pyth
 2. **mise's Windows python ships only `python.exe`** — no `python3` binary or shim, so bare `python3` still hits the MS Store stub even under `mise run`. `run-fixture-tests.sh` defines a `python3()` → `python` fallback function; scripts calling `python3` need the same guard or must use `python`.
 3. **`mise run test` green baseline is now 27/0/0 (feature tests added same day; was 22/0/0 at mise adoption)** (behavior check active — jar + temurin-21 both mise-provisioned; verified 2026-07-17).
 4. `cargo:`-backend tools deliberately excluded from mise.toml (rust toolchain too heavy for optional merman-cli renderer).
+
+## 2026-07-17 — Alloy wiring + DoD-5 chain session
+
+One-line: first jar execution exposed two dormant compiler bugs; negative tests are the only proof a checker works.
+
+1. **YAML 1.1 parses the key `on:` as boolean `True`.** The trace validator carried the workaround inline; the Alloy compiler didn't — it generated transition-less (stutter-only) models for months and every behavior check passed vacuously. Fixes: shared `tools/archwright_common.py::state_events()` (all tools MUST use it), templates/fixture now write `"on":` quoted. Rule: when one tool works around a parsing quirk, grep every other tool for the same raw access.
+2. **A checker proven only on passing cases may be vacuous.** The transition bug was invisible until a deliberately-violating spec (`alloy: "always M.current = Held"`) unexpectedly PASSED. Codified: Extension Protocol rule 4 now requires a violating scenario in every conformance corpus; the suite's feature tests model the pattern.
+3. **Reporters must surface the source's reason, not re-derive it.** `run-fixture-tests.sh` hardcoded "(alloy jar unavailable)" as the skip label; when the real reason changed (compilation not automated), the label lied. Fixed: the suite prints check.py's own skip message.
+4. **Context vars are frozen in generated Alloy models** (guards/actions don't compile) — `alloy:` expressions must reference `M.current` + state sigs only; the compiler now warns on context-var references.
+5. **Deployed skills can't use repo-relative tool paths** — they run from target projects where `tools/` doesn't exist. Skills now say `<archwright-repo>/tools/...` with a locator note in archwright-check.
