@@ -185,7 +185,7 @@ Show the human:
 - Growth rules: see `archwright-resolve` [references/growth-rules.md]
 - Context assembly: see `archwright-resolve` [references/context-assembly.md]
 - Findings (stable theory): `docs/findings.md` in the archwright repo
-- Glossary: `docs/glossary.md` in the archwright repo
+- Glossary: `references/glossary.md` (deployed with this skill; source: `docs/glossary.md` in the archwright repo)
 
 ## Does NOT
 

@@ -111,7 +111,7 @@ We built [feature X]
 | L4 | Inferred | Logical derivation from one source (Five Whys, domain analysis) |
 | L5 | Speculated | Plausible but no direct evidence |
 
-**Relationship to confidence stars (★★/★/—):** L-levels are a different axis — they measure evidence for a FORCE's existence; stars measure checkability of a RESOLUTION. Evidence bounds confidence downstream: a resolution serving only L4/L5 forces should not start above ★. Full vocabulary map: `docs/glossary.md` in the archwright repo.
+**Relationship to confidence stars (★★/★/—):** L-levels are a different axis — they measure evidence for a FORCE's existence; stars measure checkability of a RESOLUTION. Evidence bounds confidence downstream: a resolution serving only L4/L5 forces should not start above ★. Full vocabulary map: `../archwright-survey/references/glossary.md` (deployed; source: `docs/glossary.md` in the archwright repo).
 
 **Rules:**
 - L1-L3 product forces can drive pattern formalization directly
