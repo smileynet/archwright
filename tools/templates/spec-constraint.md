@@ -8,13 +8,14 @@ protects_experience: "experience-id"  # modeled experience (preferred) or produc
 user_story: "One sentence describing what the user experiences when this rule holds."
 check:
   method: grep  # grep | semgrep | script | alloy
-  target: "path/to/check"
+  target: "path/to/check"     # or a YAML list of roots — matches are unioned
   pattern: "regex or semgrep pattern"
   include: ["*.cs"]  # optional globs scoping which files are searched — bare glob
                      # matches file name, glob with '/' matches project-relative path.
                      # Scope to source extensions so docs/assets/configs don't drown
                      # the check in noise. Not valid with command: checks.
-  expect: absent  # absent | present
+  expect: absent  # absent | present | only-in (only-in also requires only_in: <substring>)
+  # include_comments: true    # optional: match inside comments too (stripped by default)
 links:
   - target: "behavior:affected-component"
     type: constrains

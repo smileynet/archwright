@@ -14,7 +14,7 @@ Prioritized. Resolved questions marked; new questions added from validation spik
 
 ### 1. The Lift Contract ← partially addressed
 
-The explicit rule by which a child level translates its failure into the parent's vocabulary. R1 research established the three components (project, summarize, attribute) and S2 proved the provenance roundtrip works. Remaining: formalize the "summarize" step (currently requires AI judgment — can it be made more mechanical?).
+The explicit rule by which a child level translates its failure into the parent's vocabulary. R1 research established the three components (project, summarize, attribute) and S2 proved the provenance roundtrip works. Remaining: formalize the "summarize" step (currently requires AI judgment — can it be made more mechanical?). **Home:** the lift contract now lives in `skills/archwright-passup/` (step 2) and matures there — refinements land in the skill, not here.
 
 ### 2. State Explosion Mitigation ← NEW (from V2, Penguin Clash)
 

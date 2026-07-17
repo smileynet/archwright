@@ -106,5 +106,135 @@ else
 fi
 
 echo ""
+echo "=== Check-Tool Feature Tests ==="
+# Golden assertions for check-backend features (tickets 005/006) — temp specs
+# run against the fixture tree, cleaned up unconditionally.
+FEAT_DIR=$(mktemp -d)
+trap 'rm -rf "$FEAT_DIR"' EXIT
+export ARCHWRIGHT_PROJECT_ROOT="$(cd "$FIXTURE" && pwd)"
+
+# 005a: include glob scopes matching — 'extends' exists in .gd files, but scoped
+# to a glob matching nothing it must not match (expect: absent → PASS).
+cat > "$FEAT_DIR/incl-scope.md" <<'EOF'
+---
+kind: constraint
+id: incl-scope
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "client/src"
+  pattern: "extends"
+  include: "*.nomatch"
+  expect: absent
+---
+# T
+## Rule
+Include glob excludes all files.
+EOF
+if python3 "$CHECK" "$FEAT_DIR/incl-scope.md" >/dev/null 2>&1; then
+  report PASS "feature: include glob scopes out non-matching files"
+else
+  report FAIL "feature: include glob scopes out non-matching files"
+fi
+
+# 005b: include glob admits matching files (expect: present with *.gd → PASS).
+cat > "$FEAT_DIR/incl-admit.md" <<'EOF'
+---
+kind: constraint
+id: incl-admit
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "client/src"
+  pattern: "extends"
+  include: ["*.gd"]
+  expect: present
+---
+# T
+## Rule
+Include glob admits .gd files.
+EOF
+if python3 "$CHECK" "$FEAT_DIR/incl-admit.md" >/dev/null 2>&1; then
+  report PASS "feature: include glob (list form) admits matching files"
+else
+  report FAIL "feature: include glob (list form) admits matching files"
+fi
+
+# 006a: multi-target union — pattern only in project.godot; list target must find it.
+cat > "$FEAT_DIR/multi-target.md" <<'EOF'
+---
+kind: constraint
+id: multi-target
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: ["client/src", "project.godot"]
+  pattern: "config_version"
+  expect: present
+---
+# T
+## Rule
+Multi-target unions matches.
+EOF
+if python3 "$CHECK" "$FEAT_DIR/multi-target.md" >/dev/null 2>&1; then
+  report PASS "feature: multi-target unions matches across roots"
+else
+  report FAIL "feature: multi-target unions matches across roots"
+fi
+
+# 006b: missing entry in a target list = loud tool error (exit 2).
+cat > "$FEAT_DIR/multi-missing.md" <<'EOF'
+---
+kind: constraint
+id: multi-missing
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: ["client/src", "does/not/exist"]
+  pattern: "x"
+  expect: absent
+---
+# T
+## Rule
+Missing target list entry errors loudly.
+EOF
+rc=0; python3 "$CHECK" "$FEAT_DIR/multi-missing.md" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 2 ]; then
+  report PASS "feature: missing multi-target entry = tool error (exit 2)"
+else
+  report FAIL "feature: missing multi-target entry = tool error (exit 2)" "exit was $rc"
+fi
+
+# CK-05 regression: unknown expect value = tool error (exit 2), never silent pass.
+cat > "$FEAT_DIR/bad-expect.md" <<'EOF'
+---
+kind: constraint
+id: bad-expect
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "client/src"
+  pattern: "x"
+  expect: absnet
+---
+# T
+## Rule
+Unknown expect errors.
+EOF
+rc=0; python3 "$CHECK" "$FEAT_DIR/bad-expect.md" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 2 ]; then
+  report PASS "feature: unknown expect value = tool error (exit 2)"
+else
+  report FAIL "feature: unknown expect value = tool error (exit 2)" "exit was $rc"
+fi
+
+unset ARCHWRIGHT_PROJECT_ROOT
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

@@ -283,8 +283,8 @@ def _python_grep(target_path, pattern, project_root=None, strip_comments=True, i
     Paths are emitted project-relative with forward slashes so only-in filters match portably.
     By default the comment portion of each line is stripped before matching (per-extension
     line-comment tokens) so commented-out code never triggers a constraint.
-    `include`: optional list of globs limiting which files are searched — a bare glob
-    (`*.cs`) matches the file name; a glob containing `/` matches the project-relative
+    `include`: optional list of globs limiting which files are searched (ticket 005) — a bare
+    glob (`*.cs`) matches the file name; a glob containing `/` matches the project-relative
     POSIX path. Explicitly-named single-file targets are NOT filtered (unlike GNU grep
     --include, which silently filters those too — the field false-pass gotcha)."""
     rx = re.compile(pattern)
@@ -378,14 +378,27 @@ def _check_grep(check, spec_id, confidence, project_root):
         except Exception as e:
             return [{"invariant": spec_id, "status": "error", "message": str(e)}]
     else:
-        target_path = project_root / target
-        if not target_path.exists():
-            return [{"invariant": spec_id, "status": "error",
-                     "message": f"Target path not found: {target_path}"}]
+        # target: single path or list of paths (ticket 006) — matches are unioned
+        targets = target if isinstance(target, list) else [target]
+        target_paths = []
+        for t in targets:
+            tp = project_root / t
+            if not tp.exists():
+                hint = " (multiple roots? use a YAML list for target:)" \
+                    if isinstance(target, str) and " " in target else ""
+                return [{"invariant": spec_id, "status": "error",
+                         "message": f"Target path not found: {tp}{hint}"}]
+            target_paths.append(tp)
+
         try:
-            matches = _python_grep(target_path, pattern, project_root,
-                                   strip_comments=not check.get("include_comments", False),
-                                   include=include)
+            all_matches = []
+            for tp in target_paths:
+                m = _python_grep(tp, pattern, project_root,
+                                 strip_comments=not check.get("include_comments", False),
+                                 include=include)
+                if m:
+                    all_matches.append(m)
+            matches = "\n".join(all_matches)
         except re.error as e:
             return [{"invariant": spec_id, "status": "error",
                      "message": f"invalid pattern: {e}"}]

@@ -31,7 +31,7 @@ Verify specs against their stated invariants. Report violations with provenance.
    - `error` → fix the check itself, not the spec
    - `skip` → adapter/backend unavailable (pending registry row, missing Alloy jar). Report the declared reason. A skip is a coverage statement, not a pass — it counts as no evidence in either direction.
 
-4. **Route violations** — read `from_pattern` + `from_force` from violated invariant. Severity from confidence (★★=error, ★=warning, —=info). Present contrast pair if available. See `archwright-resolve` skill [references/pass-up.md](../archwright-resolve/references/pass-up.md).
+4. **Hand off violations** — run with `--json` and hand the structured violations (provenance, severity, escalate flags, contrast pairs) to `archwright-passup`, which lifts each to its owning level and routes per confidence. This skill verifies; it does not route.
 
 ## Assurance Levels
 
@@ -70,21 +70,25 @@ Behavior checks need the Alloy jar, which is NOT in the repo (`.references/` is 
 |---------|-----------|-----------|
 | `alloy6.jar` (Alloy ≥ 6.2.0 — `exec` CLI added in 6.2.0) | `behavior` kind: bounded model check | `curl -L -o <archwright-repo>/.references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar` |
 | Java (`java` on PATH) | running the jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
-| `semgrep` (optional) | `constraint` kind: AST checks | `pipx install semgrep` — grep fallback runs without it |
+| `semgrep` (optional) | `constraint` kind: `method: semgrep` specs | `pipx install semgrep` — NOTE: `archwright-check.py`'s semgrep runner is a stub today; `method: semgrep` specs SKIP with "not yet implemented" regardless of the binary. Prefer `method: grep` with `include:` scoping until a spec genuinely needs AST matching (rule-of-two) |
 
-The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 26/0/0, behavior fixture active).
+The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 31/0/0, behavior fixture active).
 
 ## Commands
 
 ```bash
-archwright-validate <file>           # Schema validation
-archwright-validate --links design/  # Link graph check
-archwright-check <spec>              # Full verification
-archwright-check --all design/specs/ # Check everything
+python3 tools/archwright-validate.py [--json] <file>     # Schema validation
+python3 tools/archwright-validate.py [--json] --links design/  # Link graph check
+python3 tools/archwright-check.py <spec>... [--json]     # Full verification
+python3 tools/archwright-check.py --all design/specs/    # Check everything
+python3 tools/archwright-check.py --static design/specs/ [--target <root>]  # Constraint/dependency only
 ```
 
-## Does NOT Cover
+Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output contract (status, scope, violations w/ provenance + contrast pairs, coverage, remaining_delta) — the payload `archwright-passup` consumes.
 
-- Writing patterns or specs (use `archwright-formalize` / `archwright-derive`)
+## Does NOT
+
+- Write patterns or specs (use `archwright-formalize` / `archwright-derive`)
+- Route or fix violations (use `archwright-passup` — this skill produces the payload, passup consumes it)
 - Implementation testing (use your project's test framework)
 - Code review (this checks architectural properties, not style)

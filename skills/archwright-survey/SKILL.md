@@ -15,7 +15,11 @@ The entry point for archwright. Routes to the right specialist, or maps a projec
 
 ```
 survey → forces → tensions → resolve → formalize → model → contract → derive → check
+                     ↑                                                        │
+                     └────────────── passup (violations lift & route) ────────┘
 ```
+
+Hands-down runs left to right and concretizes. Pass-up (`archwright-passup`) consumes check violations, lifts each to the level that owns the violated force, and routes per confidence — most terminate at implementation; only re-opened tensions reach resolve.
 
 ## Route to the Right Skill
 
@@ -31,6 +35,7 @@ survey → forces → tensions → resolve → formalize → model → contract 
 | Derive typed data contracts from the model | `archwright-contract` |
 | Generate specs from a pattern + model | `archwright-derive` |
 | Verify specs against implementation | `archwright-check` |
+| Route violations to the level that owns them | `archwright-passup` |
 | Review code for design alignment | `archwright-review` |
 | Render models/patterns as diagrams | `archwright-diagram` |
 
@@ -176,6 +181,7 @@ Route each gap to the appropriate specialist:
 | Specs exist but not verified | `archwright-check` | AFK |
 | Docs may contradict code | `archwright-audit` | AFK |
 | Code may violate specs | `archwright-review` | AFK |
+| Check found violations needing routing | `archwright-passup` | AFK (★★ violations escalate to HITL inside it) |
 
 ### 5. Present the outline, propose a span, and STOP
 

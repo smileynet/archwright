@@ -19,7 +19,7 @@ One-line: mise.toml now owns tools/env/tasks; one gotcha — mise's Windows pyth
 
 1. **`mise install && mise run setup && mise run rehydrate-alloy` is the full rehydration path** (AGENTS.md "Dependency Rehydration"). `[env]` sets `PYTHONIOENCODING=utf-8` + `ARCHWRIGHT_ALLOY_JAR` automatically in-repo — the manual env dance and `/tmp/pyshim` hack are obsolete.
 2. **mise's Windows python ships only `python.exe`** — no `python3` binary or shim, so bare `python3` still hits the MS Store stub even under `mise run`. `run-fixture-tests.sh` defines a `python3()` → `python` fallback function; scripts calling `python3` need the same guard or must use `python`.
-3. **`mise run test` green baseline** (behavior check active — jar + temurin-21 both mise-provisioned; verified 2026-07-17): 22/0/0, then 26/0/0 after the include-glob + comment-positional conformance fixtures landed later that day. Trust the docs (AGENTS.md/fixture README) for the current number.
+3. **`mise run test` green baseline** (behavior check active — jar + temurin-21 both mise-provisioned; verified 2026-07-17): 22/0/0 at mise adoption → 31/0/0 same day after both sessions' additions (include-glob + comment-positional conformance fixtures, check-tool feature tests). Trust the docs (AGENTS.md/fixture README) for the current number.
 4. `cargo:`-backend tools deliberately excluded from mise.toml (rust toolchain too heavy for optional merman-cli renderer).
 
 ## 2026-07-17 — include: globs + comment-stripping false-pass

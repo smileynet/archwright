@@ -57,7 +57,7 @@ The four scale IDs are canonical and domain-invariant (they're levels of Alexand
 ## The Resolution Flow & Its Two Directions
 
 - **Hands-down** — the downward resolution: forces → pattern → sub-patterns → state / data / interface / invariant. *Concretizes.*
-- **Pass-up** — the upward flow: downstream findings → revised design. *Generalizes.* Level-terminating, confidence-gated, follows provenance links.
+- **Pass-up** — the upward flow: downstream findings → revised design. *Generalizes.* Level-terminating, confidence-gated, follows provenance links. Owned by the `archwright-passup` skill: check verifies and emits structured violations; passup lifts and routes them.
 - **Provenance link** — the recorded "this came from that" trace laid down during hands-down; walked backward by pass-up. The routing table.
 - **Counterexample** — a trace that violates an invariant; a case where a Constraint defeats a Desire (or two Desires collide) that a resolution missed. Falsification.
 - **Spurious vs. real (the CEGAR fork)** — a *real* counterexample means the resolution is genuinely wrong → pass up. A *spurious* one is an artifact of over-abstraction → refine the model locally, no ascent. This fork is the routing/triage rule.
