@@ -1,5 +1,5 @@
 ---
-id: 009
+id: 013
 title: "validate-links: accept boundary entities as from_model contract producers (C9)"
 status: open
 blocked_by: []
