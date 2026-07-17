@@ -89,6 +89,11 @@ if [ -d "$STEERING_SRC" ]; then
   for file in "$STEERING_SRC"/*.md; do
     [ -f "$file" ] || continue
     name=$(basename "$file")
+    # Skip same-inode destinations (symlinked steering) — cp errors on same file
+    if [ -e "$STEERING_DST/$name" ] && [ "$file" -ef "$STEERING_DST/$name" ]; then
+      echo "  ✓ steering: $name (linked — already live)"
+      continue
+    fi
     cp "$file" "$STEERING_DST/$name"
     echo "  ✓ steering: $name"
   done

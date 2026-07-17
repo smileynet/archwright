@@ -12,7 +12,7 @@ node = "22"
 # toolchain for an optional renderer. Manual: `cargo install merman-cli`.
 
 [env]
-# ★/— glyphs break on cp1252 consoles without this (lessons.md #5)
+# ★/— glyphs break on cp1252 consoles without this (.memory/lessons/utf8-encoding-explicit.md)
 PYTHONIOENCODING = "utf-8"
 # archwright-check.py honors this override (upstream 410623c); keeps behavior
 # checks working regardless of checkout path.

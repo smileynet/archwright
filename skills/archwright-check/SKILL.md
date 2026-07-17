@@ -76,12 +76,14 @@ The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/a
 
 ## Commands
 
+`<archwright-repo>` = the archwright checkout (skills deploy globally; the tools do not). Locate it: `ls ~/code/archwright` is the conventional path; otherwise ask the human or check `ARCHWRIGHT_ALLOY_JAR`'s parent. Inside the repo, prefer `mise run <task>` (test, validate, check-static, deploy-skills).
+
 ```bash
-python3 tools/archwright-validate.py [--json] <file>     # Schema validation
-python3 tools/archwright-validate.py [--json] --links design/  # Link graph check
-python3 tools/archwright-check.py <spec>... [--json]     # Full verification
-python3 tools/archwright-check.py --all design/specs/    # Check everything
-python3 tools/archwright-check.py --static design/specs/ [--target <root>]  # Constraint/dependency only
+python3 <archwright-repo>/tools/archwright-validate.py [--json] <file>     # Schema validation
+python3 <archwright-repo>/tools/archwright-validate.py [--json] --links design/  # Link graph check
+python3 <archwright-repo>/tools/archwright-check.py <spec>... [--json]     # Full verification
+python3 <archwright-repo>/tools/archwright-check.py --all design/specs/    # Check everything
+python3 <archwright-repo>/tools/archwright-check.py --static design/specs/ [--target <root>]  # Constraint/dependency only
 ```
 
 Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output contract (status, scope, violations w/ provenance + contrast pairs, coverage, remaining_delta) — the payload `archwright-passup` consumes.

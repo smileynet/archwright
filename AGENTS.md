@@ -46,6 +46,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
 │   ├── contract-schema.yaml       # JSON Schema for contract specs (from_model, events)
+│   ├── check-output-schema.yaml   # CK-03 output contract (check/validate --json shape)
 │   ├── trace-schema.ts            # Trace event type definitions
 │   ├── templates/                 # Document templates
 │   │   ├── pattern.md             # New pattern template
@@ -69,9 +70,12 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── specs/                     # Specs for plan deliverables (incl. Phase 5)
 │   ├── audit/                     # Audit reports (tools, skills, claims)
 │   ├── grill/                     # Grill session decision records (INDEX.md + Q-files per topic)
+│   ├── lessons/                   # One durable lesson per file + README index/session log
 │   ├── research-*.md              # Research plans & syntheses
 │   └── adr/                       # Architecture decision records
 ├── audit-plan.md                  # Active standalone audit plan (tickets A/B/C/D)
+├── mise.toml                      # Managed toolchain + env + tasks (see Dependency Rehydration)
+├── .tickets/                      # Frontier tickets (frontmatter status/blocked_by)
 ├── .scratch/                      # Ephemeral working notes (gitignored)
 ├── .references/                   # Reference repos (gitignored)
 └── AGENTS.md                      # This file
@@ -162,6 +166,7 @@ Notes:
 - `archwright-check.py` locates the jar via `ARCHWRIGHT_ALLOY_JAR`, then script-relative `.references/alloy6.jar`, then the legacy `~/code/archwright/` path. Behavior checks report SKIP (exit 0) when it's absent — a coverage gap, not a pass.
 - Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
 - Windows: bare `python3` resolves to a broken MS Store stub, and mise's python ships only `python.exe` — use `mise exec -- python` or `mise run` tasks (`run-fixture-tests.sh` has its own python3→python guard). Without mise, real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` and `PYTHONIOENCODING=utf-8` must be set manually (★ output vs cp1252 console).
+- After ANY merge from upstream: `mise run test` (suite green) + `mise run deploy-skills` (upstream may have edited skills — deployed copies go stale silently).
 - After rehydrating the jar, run `mise run test` — the ball-state-lifecycle skip becomes an active behavior check (green = 31/0/0).
 
 ## Workflows
@@ -190,7 +195,7 @@ Notes:
 
 The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`) is a sequence of discrete phases. **Gates block only where human input is needed** (ADR 0007, `.memory/adr/0007-hitl-only-gates.md`):
 
-- **HITL-blocking (always stop):** resolve (decisions; pre-resolved = one batched confirmation), L4/L5 desire validation in forces, any ★★ event (violation / unratified assignment / demotion), fog (unknown forces mid-span), end-of-span digest acceptance.
+- **HITL-blocking (always stop):** resolve (decisions; pre-resolved = one batched confirmation), L4/L5 desire validation in forces, ★★ events surviving the ADR-0010 research gate (genuine new decisions arrive w/ research + recommendation; noise/known are proposed/logged; unratified assignment & demotion always block), fog (unknown forces mid-span), end-of-span digest acceptance.
 - **Flow-through (auto-advance):** all other phase transitions — only within a human-pre-authorized span, only when the phase's artifacts pass `archwright-validate.py`, and only with a digest entry written. No span authorized → stop after each phase.
 
 Constants: survey never writes patterns/specs or resolves tensions; a skill's "Does NOT" section is a hard boundary; "proceed" authorizes the next phase or an explicitly accepted span — never a silent run to completion.

@@ -23,7 +23,7 @@
 ## Success Criteria
 
 1. Structural validation (spec YAML schema + `kind:id` link resolution) is owned by `archwright-validate.py` (exit 0 valid / 1 broken) and emits `--json` conforming to the CK-03 output schema (CK-21). ~~`archwright-check --structural`~~ — descoped per grill Q3; check.py does not duplicate structural validation.
-2. `archwright-check --static design/specs/ --project ~/code/catalyst-mono/game/` executes grep/ast-grep checks and reports pass/fail per spec with evidence
+2. `archwright-check --static design/specs/ --target ~/code/catalyst-mono/game/` executes grep/ast-grep checks (flag corrected 2026-07-17: `--project` never existed; `--target` is real) and reports pass/fail per spec with evidence
 3. Output conforms to structured JSON schema (violations carry `spec_id`, `from_pattern`, `from_force`, `suggested_route`, `contrast_pair`)
 4. `--baseline design/.archwright-baseline.json` suppresses known violations; only new violations fail
 5. `--output sarif` produces valid SARIF 2.1.0 consumable by GitHub Code Scanning
@@ -63,7 +63,7 @@
 | CK-02 | ~~Link resolution check~~ **DESCOPED (grill Q3)** — owned by `archwright-validate.py --links` (force + model indexes, C8/C9). See CK-21. | — | — |
 | CK-21 | validate.py `--json` output conforming to the CK-03 schema — structural results consumable by agents alongside check results. | Small | CK-03 (schema) |
 | CK-20 | Fixture test hardening (from audit A5 + B1/B2 reviews) | `run-fixture-tests.sh` gains: (a) violation-overlay test (inject known violation, assert FAIL with file:line, revert); (b) bad-spec fixtures (malformed YAML, dangling refs → assert FAIL); (c) trace fixtures (valid + violating trace → assert `--trace` verdicts); (d) B2 warn-path assertion — spec missing `protects_experience` emits WARN and still exits 0; (e) domain-overlay structural check — every `tools/domains/*/scales.yaml` id list equals the pattern-schema enum in canonical order, predicates have no dup ids and all 4 required fields. | Medium (~2.5h) | None (independent of check.py rewrite) |
-| CK-03 | Structured JSON output contract | Define and implement the output JSON schema. All modes produce conforming output. Include `status`, `scope`, `violations[]`, `remaining_delta`, `coverage`. | Medium | None (chain start) |
+| CK-03 | Structured JSON output contract | Define and implement the output JSON schema (authoritative: `tools/check-output-schema.yaml`). All modes produce conforming output. Include `status`, `scope`, `violations[]`, `remaining_delta`, `coverage`. | Medium | None (chain start) |
 | CK-04 | Exit code contract | Exit 0 = pass, 1 = violations, 2 = tool error. Wire through all modes. | Trivial | CK-03 |
 
 ### Phase 5b: Static Checks + Baseline (core value)

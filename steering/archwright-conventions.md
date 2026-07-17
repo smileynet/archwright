@@ -17,7 +17,7 @@ The archwright pipeline (`survey → forces → tensions → resolve → formali
 2. **HITL-blocking gates** — always stop and wait for the human:
    - `resolve` (decisions; pre-resolved tensions = ONE batched confirmation, still presented)
    - Inferred product-desire validation (L4/L5) inside `forces`
-   - Any ★★ event: violation found, ★★ assigned beyond what resolve ratified, or demotion proposed
+   - Any ★★ event that survives the research gate (ADR 0010): before escalating a ★★ violation, research it (prior art, related decision records, contrast pair) — check defects/spec noise get proposed fixes, known-and-accepted items get logged with the reference, and only genuine new decisions (tradeoffs, novel security judgment) block, arriving WITH research + recommended disposition. Hard floor always blocks: irreversible, security-material-and-novel, or contradicting a ratified resolution. ★★ assignment beyond what resolve ratified and demotion proposals still block unconditionally
    - Fog: unknown forces / unresolved tension encountered mid-span
    - End of span: present the full digest for acceptance
 3. **Flow-through gates** — auto-advance WITHOUT stopping, but only when ALL hold:
@@ -72,7 +72,7 @@ Six rules:
 1. **Gaps are pending-with-reason, never silent.** The gap artifact names the missing adapter (stack, kind, what it unblocks) — a `pending` registry row, a `target_status: pending` on a spec, or a SKIP-with-reason in check output. Checks that can't run because an adapter is missing SKIP with the declared reason; they never fail and never silently pass.
 2. **Two-tier governance.** New INSTANCES of existing kinds (a new stack adapter, a new domain overlay, a new predicate) flow through this protocol. New KINDS, new axes, or format/schema changes bypass it and require an ADR + HITL.
 3. **Research before generating.** 2+ independent sources or a spike before writing the new instance. Spike output IS the conformance scenario.
-4. **Conformance at birth.** Every new instance ships with a golden corpus (scenario source + expected output) wired into `tools/run-fixture-tests.sh`. No corpus → the instance stays `pending`.
+4. **Conformance at birth.** Every new instance ships with a golden corpus (scenario source + expected output) wired into `tools/run-fixture-tests.sh`. No corpus → the instance stays `pending`. **The corpus MUST include at least one violating scenario that produces FAIL** — a checker proven only on passing cases may be vacuous (the Alloy compiler generated transition-less models for months; every check passed until a deliberately-violating spec exposed it, 2026-07-17).
 5. **Tiered status by guarantee**, reusing the confidence vocabulary: `pending` (registered, unproven) → ★ (conformance corpus passes) → ★★ (corpus in the fixture suite + measured cost recorded). Status is COMPUTED by the suite, not hand-declared. Demotion is stepwise (★★→★→pending, never cliff-edge) and `since:` history is retained in the registry row.
 6. **Activation-gated enforcement + rule-of-two.** An adapter's checks run only where its stack/domain is detected (survey records detection; downstream phases consult it). Build no axis scaffolding (schemas, harnesses, plugin machinery) until ≥2 concrete entries need it.
 
