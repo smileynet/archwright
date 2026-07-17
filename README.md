@@ -25,7 +25,7 @@ Keep *forces* first-class — and product-level desires (what humans need) are t
 
 Archwright is a **methodology embodied as agent skills**, with supporting tools for mechanical tasks. The AI agent IS the system — it holds the design methodology. Humans express intent through conversation; the agent resolves it into checkable specifications.
 
-- **Skills** (global, `~/.kiro/skills/`) — the design methodology: force identification, resolution, verification, correction
+- **Skills** (deployed to the target tool's skills dir — kiro, claude, codex, agy all supported) — the design methodology: force identification, resolution, verification, correction
 - **Tools** (`tools/`, invoked via interpreter) — mechanical operations: schema validation, spec → Alloy compilation, checking, parsing
 - **Patterns** (in target project, `design/patterns/`) — captured design intent
 - **Models** (in target project, `design/models/`) — domain actors, state machines, event flows, composition
