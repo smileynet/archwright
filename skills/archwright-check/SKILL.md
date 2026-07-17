@@ -72,7 +72,7 @@ Behavior checks need the Alloy jar, which is NOT in the repo (`.references/` is 
 | Java (`java` on PATH) | running the jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
 | `semgrep` (optional) | `constraint` kind: AST checks | `pipx install semgrep` — grep fallback runs without it |
 
-The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 22/0/0, behavior fixture active).
+The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 26/0/0, behavior fixture active).
 
 ## Commands
 
