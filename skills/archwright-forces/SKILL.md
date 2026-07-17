@@ -204,6 +204,8 @@ serves: [ball-always-somewhere]   # constraints only: bare ids of desires served
 
 These files are what `serves:` (patterns) and `from_force:` (specs) resolve against — `archwright-validate.py --links` enforces resolution once `design/forces/` contains at least one force. Write force files ONLY for forces that survive validation (L4/L5 desires require the HITL gate first); the working inventory may contain more candidates than get durable files.
 
+**Generation is mechanical — use the tool:** `python3 <archwright-repo>/tools/archwright-forces-gen.py <inventory.yaml> -o design/forces` projects the working inventory into force files (strip unvalidated L4/L5 candidates from the inventory first, or into a filtered copy). Then validate: `python3 <archwright-repo>/tools/archwright-validate.py design/forces/*.md`.
+
 ## Quality Checks
 
 Before presenting output:

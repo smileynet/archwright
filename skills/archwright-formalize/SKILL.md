@@ -166,6 +166,10 @@ List each as `"<kind>:<proposed-id>"` in the frontmatter.
 - `resolves_into` links name specs that don't exist yet (created downstream: contract specs by `archwright-contract`, the rest by `archwright-derive`)
 - `serves` links to at least one product-level desire from the force inventory — patterns without a human purpose are architectural indulgence
 
+### 8. Audit tension coverage (batch runs)
+
+When formalizing from a tension map, close the loop before finishing: every tension in the map must have (a) a pattern, (b) an explicit fold note ("folds into pattern X — same resolution"), or (c) an explicit defer note with reason. Silent gaps hide easily in batches — a field run wrote 9 patterns for a 9-tension map and still missed one tension (two patterns had come from the same tension, one from an unopposed given); only a mechanical tension→pattern recount caught it.
+
 ## Does NOT
 
 - Extract forces (receives them from `archwright-forces`)

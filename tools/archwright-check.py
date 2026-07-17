@@ -6,6 +6,7 @@ Usage:
   archwright-check --all <dir>                   Check all specs in directory
   archwright-check --static <dir> [--target <root>]   Check constraint/dependency specs only
   archwright-check --trace <spec.yaml> <trace.json>   Validate a trace against a behavior spec
+  archwright-check --probe <spec.yaml>           Non-vacuity probe: a false invariant MUST FAIL
 
 Dispatches by spec kind:
   behavior    → compile to Alloy, run model checker (if alloy6.jar available)
@@ -1016,9 +1017,82 @@ def build_document(mode, target_root, per_file):
     }
 
 
+def probe_behavior(spec_path):
+    """Non-vacuity probe (Extension Protocol rule 4 applied to authoring):
+    replace the spec's invariants with one deliberately-false invariant
+    (`always M.current != <reachable-state>`) and run the Alloy check.
+    The probe MUST FAIL — a checker that passes a false invariant is vacuous.
+
+    Exit meaning: 0 = probe produced a counterexample (checker non-vacuous),
+    1 = probe PASSED (model vacuous — stutter-only or unreachable states),
+    2 = tool error / not probeable (no transitions, jar missing, etc.).
+    """
+    import tempfile
+
+    data, kind = load_spec(Path(spec_path))
+    if kind != "behavior":
+        print(f"Error: --probe requires a behavior spec (got kind: {kind})")
+        return 2
+
+    # Pick a syntactically-reachable non-initial state (a transition target).
+    initial = data.get("initial")
+    target_state = None
+    for state_name, state_def in (data.get("states") or {}).items():
+        for _event, trans in state_events(state_def).items():
+            if isinstance(trans, dict):
+                t = trans.get("target", state_name)
+                if t != initial:
+                    target_state = t
+                    break
+        if target_state:
+            break
+    if target_state is None:
+        print("Error: no transition leaves the initial state — nothing to probe "
+              "(a transition-less machine is vacuous by construction)")
+        return 2
+
+    sig = "".join(p.capitalize() for p in target_state.replace("-", "_").split("_"))
+    probe = dict(data)
+    probe["id"] = f"{data.get('id', 'spec')}-probe"
+    probe["invariants"] = [{
+        "id": "vacuity-probe",
+        "type": "temporal",
+        "predicate": f"deliberately false: {target_state} is never reached",
+        "alloy": f"always M.current != {sig}",
+        "confidence": "★★",
+        "description": "MUST FAIL — proves the checker can produce a counterexample on this model",
+    }]
+
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False, encoding="utf-8") as tmp:
+        yaml.dump(probe, tmp, allow_unicode=True, sort_keys=False)
+        tmp_path = tmp.name
+    try:
+        results = check_behavior(probe, tmp_path)
+    finally:
+        os.unlink(tmp_path)
+
+    statuses = {r.get("status") for r in results}
+    if "fail" in statuses:
+        print(f"PROBE OK: false invariant produced a counterexample "
+              f"(state '{target_state}' reachable) — checker is non-vacuous for this spec")
+        return 0
+    if "error" in statuses:
+        for r in results:
+            if r.get("status") == "error":
+                print(f"PROBE ERROR: {r.get('message', '')}")
+        return 2
+    if "skipped" in statuses and "pass" not in statuses:
+        for r in results:
+            print(f"PROBE SKIP: {r.get('message', '')}")
+        return 2
+    print(f"PROBE VACUOUS: the deliberately-false invariant PASSED — the model cannot "
+          f"reach '{target_state}'; do not trust PASSes from this spec's checks")
+    return 1
+
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace>")
+        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace> | --probe <spec>")
         sys.exit(2)
 
     # Handle --trace mode early (different flow)
@@ -1027,6 +1101,13 @@ def main():
             print(json.dumps({"status": "error", "message": "Usage: archwright-check --trace <spec.yaml> <trace.json>"}))
             sys.exit(2)
         sys.exit(check_trace(sys.argv[2], sys.argv[3]))
+
+    # Handle --probe mode early (different flow)
+    if sys.argv[1] == "--probe":
+        if len(sys.argv) < 3:
+            print("Usage: archwright-check --probe <behavior-spec.yaml>")
+            sys.exit(2)
+        sys.exit(probe_behavior(sys.argv[2]))
 
     files = []
     target_root = None
