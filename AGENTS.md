@@ -42,7 +42,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
 │   ├── run-fixture-tests.sh       # Full check suite vs tests/fixtures/lacrosse-bosse
-│   ├── deploy-skills.sh           # Sync skills + steering + domain overlays + glossary to ~/.kiro/ (or --project <path>)
+│   ├── deploy-skills.sh           # Sync skills + steering + domain overlays + glossary to the target tool's discovery dirs (--tool kiro|claude|codex|agy, --project <path>)
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
 │   ├── contract-schema.yaml       # JSON Schema for contract specs (from_model, events)
@@ -85,7 +85,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 
 A **methodology embodied as agent skills** with supporting tools. The AI agent IS the system — it holds the design methodology. Tools handle deterministic mechanical tasks.
 
-**Skills** (source in `skills/`, deployed to `~/.kiro/skills/`):
+**Skills** (source in `skills/`, deployed to the target tool's skills dir — kiro: `~/.kiro/skills/`, claude: `~/.claude/skills/`, codex/agy: `.agents/skills/`):
 - `archwright-survey` — entry point: map project design state, dispatch specialists
 - `archwright-forces` — extract desires and constraints from project sources
 - `archwright-tensions` — cluster forces into named tensions
@@ -100,7 +100,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-diagram` — render models/patterns as Mermaid diagrams
 - `archwright-passup` — consume check violations, lift to the owning level, route per confidence (★★→HITL, ★→propose, —→auto-adjust)
 
-**Steering** (source in `steering/`, deployed to `~/.kiro/steering/`):
+**Steering** (source in `steering/`, deployed to the tool's rules dir — kiro: `~/.kiro/steering/`, claude: `~/.claude/rules/`; codex/agy have no native equivalent — deploy prints wiring guidance):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates
 - `subagent-reliability.md` — failure handling for parallel dispatch
 
@@ -108,7 +108,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-validate.py` — schema + link validation; `archwright-check.py` — check dispatcher (static/trace/Alloy)
 - `archwright-compile-alloy.py` — behavior spec → Alloy 6 model; `archwright-check-compile.mjs` — intent → check blocks
 - Templates for patterns and each spec kind (`tools/templates/`)
-- `deploy-skills.sh` — sync skills + steering + domain overlays + glossary from repo to global `~/.kiro/` (or `--project <path>`)
+- `deploy-skills.sh` — sync skills + steering + domain overlays + glossary from repo to the target tool's discovery dirs (`--tool kiro|claude|codex|agy`, default kiro global; `--project <path>` for project scope)
 
 **Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills.sh` to push to global.
 
@@ -225,6 +225,6 @@ target-project/
 
 ## Customization
 
-- Project-specific steering: add to `.kiro/steering/` in this repo
+- Project-specific steering: add to the tool's project rules dir in this repo (kiro: `.kiro/steering/`, claude: `.claude/rules/`)
 - Domain terms: keep `.memory/CONTEXT.md` current
 - Decisions: record in `.memory/adr/` using ADR format

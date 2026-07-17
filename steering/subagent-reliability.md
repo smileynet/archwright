@@ -130,4 +130,4 @@ If 2+ stages in a batch return empty:
 
 ## Tool-Specific Limits
 
-For per-tool concurrency limits and validated failure patterns (kiro-cli, codex, agy, crush), read [references/tool-limitations.md](references/tool-limitations.md).
+For per-tool concurrency limits and validated failure patterns (kiro-cli, codex, agy, crush), read `references/tool-limitations.md` **if present** alongside this file — it ships with some deployments, not all. Absent = no validated per-tool data; apply the general rules above.
