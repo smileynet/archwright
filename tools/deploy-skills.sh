@@ -64,6 +64,15 @@ if [ -d "$DOMAINS_SRC" ] && [ -d "$SKILLS_DST/archwright-survey" ]; then
   echo "  ✓ domains: $(ls "$DOMAINS_SRC" | tr '\n' ' ')"
 fi
 
+# Deploy the glossary (confidence vocabulary anchor) the same way — skills
+# reference it as ../archwright-survey/references/glossary.md off-repo.
+GLOSSARY_SRC="$REPO_DIR/docs/glossary.md"
+if [ -f "$GLOSSARY_SRC" ] && [ -d "$SKILLS_DST/archwright-survey" ]; then
+  mkdir -p "$SKILLS_DST/archwright-survey/references"
+  cp "$GLOSSARY_SRC" "$SKILLS_DST/archwright-survey/references/glossary.md"
+  echo "  ✓ glossary: references/glossary.md"
+fi
+
 # Deploy steering
 if [ -d "$STEERING_SRC" ]; then
   for file in "$STEERING_SRC"/*.md; do
