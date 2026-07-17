@@ -218,7 +218,7 @@ All fills use white text (`color:#fff`). Strokes are lighter tints of the fill f
 | Sequences | `merman-cli` (sequenceDiagram) | (same) | Standard notation, good rendering |
 | Traceability maps | `merman-cli` (flowchart LR) | (same) | Pipeline visualization |
 
-**If a renderer is not installed** (check with `which`): install it from the table above, or fall back to presenting the Mermaid/smcat source unrendered and note that diagrams are unverified. Never block on a missing renderer. These are external tools rehydrated per machine — see AGENTS.md "Dependency Rehydration" in the archwright repo.
+**If a renderer is not installed** (check with `which`): install it from the table above (in the archwright repo, `mise install` provides `smcat`), or fall back to presenting the Mermaid/smcat source unrendered and note that diagrams are unverified. Never block on a missing renderer. These are external tools rehydrated per machine — see AGENTS.md "Dependency Rehydration" in the archwright repo.
 
 ### smcat quick reference
 

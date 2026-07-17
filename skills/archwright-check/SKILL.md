@@ -60,15 +60,19 @@ Beyond individual specs, validate the graph:
 
 ## Backend Prerequisites (rehydration)
 
-Behavior checks need the Alloy jar, which is NOT in the repo (`.references/` is gitignored). Before reporting SKIPs on behavior specs, offer to rehydrate:
+Behavior checks need the Alloy jar, which is NOT in the repo (`.references/` is gitignored). Before reporting SKIPs on behavior specs, offer to rehydrate.
+
+**With mise** (preferred — the archwright repo has a `mise.toml`): `mise install && mise run rehydrate-alloy` provisions java + the jar and sets `ARCHWRIGHT_ALLOY_JAR` automatically.
+
+**Manual fallback:**
 
 | Backend | Needed for | Rehydrate |
 |---------|-----------|-----------|
-| `alloy6.jar` (Alloy ≥ 6.2.0 — `exec` CLI added in 6.2.0) | `behavior` kind: bounded model check | `curl -L -o ~/code/archwright/.references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar` |
+| `alloy6.jar` (Alloy ≥ 6.2.0 — `exec` CLI added in 6.2.0) | `behavior` kind: bounded model check | `curl -L -o <archwright-repo>/.references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar` |
 | Java (`java` on PATH) | running the jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
 | `semgrep` (optional) | `constraint` kind: AST checks | `pipx install semgrep` — grep fallback runs without it |
 
-The tool looks for the jar ONLY at `~/code/archwright/.references/alloy6.jar` (hardcoded, no env/flag override). After rehydrating, re-run the skipped specs — and in the archwright repo, `tools/run-fixture-tests.sh` (the behavior fixture un-skips).
+The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 22/0/0, behavior fixture active).
 
 ## Commands
 
