@@ -28,7 +28,7 @@ LINK_REF_PATTERN = re.compile(r"^(behavior|contract|constraint|dependency|bounda
 
 def extract_frontmatter(path):
     """Extract YAML frontmatter from a markdown file."""
-    content = path.read_text()
+    content = path.read_text(encoding="utf-8")
     if not content.startswith("---"):
         return None, "File does not start with YAML frontmatter (---)"
     parts = content.split("---", 2)
@@ -48,7 +48,7 @@ def load_file(path):
 
     if path.suffix == ".yaml" or path.suffix == ".yml":
         try:
-            data = yaml.safe_load(path.read_text())
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
             if not isinstance(data, dict):
                 return None, None, ["File does not contain a YAML mapping"]
             return data, data.get("kind"), errors
