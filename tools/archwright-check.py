@@ -154,8 +154,9 @@ def _find_bash():
 _SKIP_DIRS = {".git", "Library", "Temp", "obj", "Build", ".vs", ".idea", "PackageCache", "node_modules"}
 
 
-def _python_grep(target_path, pattern):
-    """Portable grep replacement: regex search over text files. Returns 'path:line:text' lines."""
+def _python_grep(target_path, pattern, project_root=None):
+    """Portable grep replacement: regex search over text files. Returns 'path:line:text' lines.
+    Paths are emitted project-relative with forward slashes so only-in filters match portably."""
     rx = re.compile(pattern)
     out = []
     paths = [target_path] if target_path.is_file() else None
@@ -175,9 +176,13 @@ def _python_grep(target_path, pattern):
             text = p.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
+        try:
+            shown = p.relative_to(project_root).as_posix() if project_root else p.as_posix()
+        except ValueError:
+            shown = p.as_posix()
         for i, line in enumerate(text.splitlines(), 1):
             if rx.search(line):
-                out.append(f"{p}:{i}:{line.strip()[:200]}")
+                out.append(f"{shown}:{i}:{line.strip()[:200]}")
     return "\n".join(out)
 
 
@@ -217,7 +222,7 @@ def _check_grep(check, spec_id, confidence, project_root):
             return [{"invariant": spec_id, "status": "error",
                      "message": f"Target path not found: {target_path}"}]
         try:
-            matches = _python_grep(target_path, pattern)
+            matches = _python_grep(target_path, pattern, project_root)
         except re.error as e:
             return [{"invariant": spec_id, "status": "error",
                      "message": f"invalid pattern: {e}"}]
