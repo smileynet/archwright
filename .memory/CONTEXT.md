@@ -93,6 +93,14 @@ Turning implicit into explicit — e.g., extended-state variable → discrete mo
 **CEGAR**:
 Counterexample-Guided Abstraction Refinement. The formal-methods loop that archwright generalizes to a design tower.
 
+**Baseline**:
+Known-debt suppression for check runs (CK-07/08): `.archwright-baseline.json` entries (human-created, never tool-added) suppress fully-fingerprint-matched constraint/dependency violations to warnings with `baselined: true`. A baselined ★★ keeps its escalate flag (no back door around C2); behavior/trace violations are never suppressible. `--update-baseline` is a remove-only ratchet.
+_Avoid_: treating a baseline entry as a waiver of the ★★ hard floor, or as applying to behavior/trace FAILs.
+
+**Fingerprint (aw/v1)**:
+A violation's stable identity: sha256 over spec_id + invariant + normalized path + normalized evidence content, truncated to 16 hex chars, with a visible `_<n>` occurrence suffix for identical duplicates. Line numbers never enter the hash. Version tag (`algo: aw/v1`) stored alongside; unknown versions are unmatchable, never guessed. Shared plumbing for the baseline and the ADR-0009 evidence ledger.
+_Avoid_: file+line as identity (churns on every edit above the match).
+
 **Force file**:
 The durable per-force artifact (`design/forces/<id>.md`, kind: force) — the root of provenance. `serves:` and `from_force:` resolve against these once at least one exists.
 _Avoid_: calling the working YAML inventory (`.memory/archwright-forces-*.yaml`) "the forces" — that's extraction scaffolding.
