@@ -1,7 +1,7 @@
 ---
 id: 017
 title: "Evidence ledger (ADR 0009): auto-appended confidence events in archwright-check"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -64,20 +64,20 @@ In `tools/archwright-check.py`:
 
 ## Acceptance criteria
 
-- [ ] No ledger file + no flag → check runs write nothing, create nothing
-- [ ] `--evidence <tmp>` + ★★ FAIL → demotion-candidate with aw/v1 fingerprints
-- [ ] Re-run appends nothing (dedup)
-- [ ] Baselined violation → no demotion event
-- [ ] `—` confidence FAIL → no demotion event
-- [ ] Pass streak (threshold via `config.promotion_streak`) → one
+- [x] No ledger file + no flag → check runs write nothing, create nothing
+- [x] `--evidence <tmp>` + ★★ FAIL → demotion-candidate with aw/v1 fingerprints
+- [x] Re-run appends nothing (dedup)
+- [x] Baselined violation → no demotion event
+- [x] `—` confidence FAIL → no demotion event
+- [x] Pass streak (threshold via `config.promotion_streak`) → one
       promotion-candidate, emitted once; FAIL resets the streak
-- [ ] Trace FAIL on ★★ invariant → demotion-candidate, `fingerprints: []`
-- [ ] Trace PASS increments streaks for checked invariants
-- [ ] Malformed ledger → exit 2
-- [ ] (Alloy-gated) ★ invariant passing bounded check → promotion-candidate
+- [x] Trace FAIL on ★★ invariant → demotion-candidate, `fingerprints: []`
+- [x] Trace PASS increments streaks for checked invariants
+- [x] Malformed ledger → exit 2
+- [x] (Alloy-gated) ★ invariant passing bounded check → promotion-candidate
       with deeper-check reason
-- [ ] All wired into `tools/run-fixture-tests.sh`; suite green
-- [ ] Docs updated: check-output-schema.yaml, check skill (invocation
+- [x] All wired into `tools/run-fixture-tests.sh`; suite green
+- [x] Docs updated: check-output-schema.yaml, check skill (invocation
       contract per CK-17), AGENTS.md flags note + count row, PLAN.md,
       glossary (`Evidence ledger`), ADR 0009 status line
 

@@ -594,6 +594,218 @@ else
 fi
 
 echo ""
+echo "=== Evidence Ledger (ADR 0009 / ticket 017) ==="
+# Tool-owned confidence evidence events. Activation by existence (or explicit
+# --evidence); demotion-candidate on ★★/★ FAIL (never baselined/—);
+# promotion-candidate on pass streak or deeper-tier (bounded) pass; dedup on
+# identical re-observation; malformed ledger = exit 2.
+ADR9_TREE="$FEAT_DIR/adr9-tree"
+mkdir -p "$ADR9_TREE/src"
+printf 'import direct_db\nx = 1\n' > "$ADR9_TREE/src/app.py"
+ADR9_EV="$FEAT_DIR/adr9-evidence.json"
+cat > "$FEAT_DIR/adr9-star2.md" <<'EOF'
+---
+kind: constraint
+id: adr9-star2
+from_patterns: ["pattern:ball-possession"]
+confidence: "★★"
+check:
+  method: grep
+  target: "src"
+  pattern: "import direct_db"
+  expect: absent
+---
+# T
+## Rule
+No direct db imports.
+EOF
+
+# ADR9-a: no ledger file + no flag → inert (nothing created, no doc key)
+rc=0; ADR9_OUT=$(python3 "$CHECK" --json --target "$ADR9_TREE" "$FEAT_DIR/adr9-star2.md" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] \
+   && ! echo "$ADR9_OUT" | grep -q '"evidence_ledger"' \
+   && [ ! -f "$ADR9_TREE/.archwright-evidence.json" ]; then
+  report PASS "adr9: no ledger + no flag = inert (nothing created)"
+else
+  report FAIL "adr9: no ledger + no flag = inert (nothing created)" "exit=$rc"
+fi
+
+# ADR9-b: --evidence + ★★ FAIL → demotion-candidate with aw/v1 fingerprints
+echo '{}' > "$ADR9_EV"
+rc=0; ADR9_OUT=$(python3 "$CHECK" --json --target "$ADR9_TREE" --evidence "$ADR9_EV" "$FEAT_DIR/adr9-star2.md" 2>&1) || rc=$?
+ADR9_CHECK=$(python3 -c "
+import json
+L = json.load(open('$ADR9_EV'))
+e = L['events'][0]
+ok = (e['event'] == 'demotion-candidate' and e['key'] == 'constraint:adr9-star2'
+      and e['confidence'] == '★★' and e['fingerprints'] and e['at'])
+print('OK' if ok and len(L['events']) == 1 else 'BAD: ' + json.dumps(e))
+" 2>&1) || ADR9_CHECK="extract-failed"
+if [ "$rc" -eq 1 ] && [ "$ADR9_CHECK" = "OK" ] \
+   && echo "$ADR9_OUT" | grep -q '"events_appended": 1'; then
+  report PASS "adr9: ★★ FAIL appends demotion-candidate with fingerprints"
+else
+  report FAIL "adr9: ★★ FAIL appends demotion-candidate with fingerprints" "exit=$rc $ADR9_CHECK"
+fi
+
+# ADR9-c: identical re-run appends nothing (dedup)
+rc=0; ADR9_OUT=$(python3 "$CHECK" --json --target "$ADR9_TREE" --evidence "$ADR9_EV" "$FEAT_DIR/adr9-star2.md" 2>&1) || rc=$?
+ADR9_N=$(python3 -c "import json; print(len(json.load(open('$ADR9_EV'))['events']))" 2>/dev/null) || ADR9_N="?"
+if echo "$ADR9_OUT" | grep -q '"events_appended": 0' && [ "$ADR9_N" = "1" ]; then
+  report PASS "adr9: identical re-observation deduped (1 event total)"
+else
+  report FAIL "adr9: identical re-observation deduped (1 event total)" "events=$ADR9_N"
+fi
+
+# ADR9-d: baselined violation emits NO event (the baseline IS the adjudication)
+echo "$ADR9_OUT" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+entries = [{'fingerprint': fp, 'algo': 'aw/v1'} for v in d['violations'] for fp in v['fingerprints']]
+print(json.dumps({'entries': entries}))
+" > "$FEAT_DIR/adr9-baseline.json"
+echo '{}' > "$ADR9_EV"
+rc=0; python3 "$CHECK" --json --target "$ADR9_TREE" --baseline "$FEAT_DIR/adr9-baseline.json" --evidence "$ADR9_EV" "$FEAT_DIR/adr9-star2.md" >/dev/null 2>&1 || rc=$?
+ADR9_N=$(python3 -c "import json; print(len(json.load(open('$ADR9_EV'))['events']))" 2>/dev/null) || ADR9_N="?"
+if [ "$rc" -eq 0 ] && [ "$ADR9_N" = "0" ]; then
+  report PASS "adr9: baselined violation emits no demotion event"
+else
+  report FAIL "adr9: baselined violation emits no demotion event" "exit=$rc events=$ADR9_N"
+fi
+
+# ADR9-e: '—' confidence FAIL emits nothing (no confidence claim to demote)
+sed 's/adr9-star2/adr9-dash/; s/★★/—/' "$FEAT_DIR/adr9-star2.md" > "$FEAT_DIR/adr9-dash.md"
+echo '{}' > "$ADR9_EV"
+rc=0; python3 "$CHECK" --json --target "$ADR9_TREE" --evidence "$ADR9_EV" "$FEAT_DIR/adr9-dash.md" >/dev/null 2>&1 || rc=$?
+ADR9_N=$(python3 -c "import json; print(len(json.load(open('$ADR9_EV'))['events']))" 2>/dev/null) || ADR9_N="?"
+if [ "$rc" -eq 1 ] && [ "$ADR9_N" = "0" ]; then
+  report PASS "adr9: — confidence FAIL emits no event"
+else
+  report FAIL "adr9: — confidence FAIL emits no event" "exit=$rc events=$ADR9_N"
+fi
+
+# ADR9-f: pass streak (config.promotion_streak) → exactly ONE promotion-candidate;
+# a FAIL resets the streak and lands a ★ demotion-candidate.
+cat > "$FEAT_DIR/adr9-star1.md" <<'EOF'
+---
+kind: constraint
+id: adr9-star1
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "src"
+  pattern: "import forbidden_thing"
+  expect: absent
+---
+# T
+## Rule
+No forbidden imports.
+EOF
+printf '{"config": {"promotion_streak": 3}}' > "$ADR9_EV"
+for _i in 1 2 3 4; do
+  python3 "$CHECK" --json --target "$ADR9_TREE" --evidence "$ADR9_EV" "$FEAT_DIR/adr9-star1.md" >/dev/null 2>&1 || true
+done
+ADR9_CHECK=$(python3 -c "
+import json
+L = json.load(open('$ADR9_EV'))
+promos = [e for e in L['events'] if e['event'] == 'promotion-candidate']
+ok = (len(promos) == 1 and promos[0]['reason'] == 'pass-streak-3'
+      and promos[0]['confidence'] == '★'
+      and L['streaks']['constraint:adr9-star1#adr9-star1'] == 4)
+print('OK' if ok else 'BAD: ' + json.dumps(L))
+" 2>&1) || ADR9_CHECK="extract-failed"
+if [ "$ADR9_CHECK" = "OK" ]; then
+  report PASS "adr9: pass streak emits one promotion-candidate (config threshold honored)"
+else
+  report FAIL "adr9: pass streak emits one promotion-candidate (config threshold honored)" "$ADR9_CHECK"
+fi
+
+printf 'import direct_db\nimport forbidden_thing\n' > "$ADR9_TREE/src/app.py"
+rc=0; python3 "$CHECK" --json --target "$ADR9_TREE" --evidence "$ADR9_EV" "$FEAT_DIR/adr9-star1.md" >/dev/null 2>&1 || rc=$?
+ADR9_CHECK=$(python3 -c "
+import json
+L = json.load(open('$ADR9_EV'))
+demos = [e for e in L['events'] if e['event'] == 'demotion-candidate']
+ok = ('constraint:adr9-star1#adr9-star1' not in L['streaks']
+      and len(demos) == 1 and demos[0]['confidence'] == '★')
+print('OK' if ok else 'BAD: ' + json.dumps(L))
+" 2>&1) || ADR9_CHECK="extract-failed"
+if [ "$rc" -eq 1 ] && [ "$ADR9_CHECK" = "OK" ]; then
+  report PASS "adr9: FAIL resets streak and appends ★ demotion-candidate"
+else
+  report FAIL "adr9: FAIL resets streak and appends ★ demotion-candidate" "exit=$rc $ADR9_CHECK"
+fi
+printf 'import direct_db\nx = 1\n' > "$ADR9_TREE/src/app.py"
+
+# ADR9-g violating scenario (Extension Protocol rule 4): malformed ledger = exit 2
+echo 'not json{' > "$FEAT_DIR/adr9-bad.json"
+rc=0; python3 "$CHECK" --json --target "$ADR9_TREE" --evidence "$FEAT_DIR/adr9-bad.json" "$FEAT_DIR/adr9-star1.md" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 2 ]; then
+  report PASS "adr9: malformed ledger = tool error (exit 2)"
+else
+  report FAIL "adr9: malformed ledger = tool error (exit 2)" "exit=$rc"
+fi
+
+# ADR9-h: trace mode — ★★ invariant FAIL appends demotion-candidate with
+# fingerprints: [] (aw/v1 needs static path+content; CK-07 scope cut upheld);
+# a passing trace credits streaks only for CHECKED (non-skipped) ★/— invariants.
+ADR9_TS="$TOOLS/../tests/fixtures/trace-strict"
+echo '{}' > "$ADR9_EV"
+rc=0; python3 "$CHECK" --trace "$ADR9_TS/trace-strict-conformance.yaml" "$ADR9_TS/violating.trace.json" --json --evidence "$ADR9_EV" >/dev/null 2>&1 || rc=$?
+ADR9_CHECK=$(python3 -c "
+import json
+L = json.load(open('$ADR9_EV'))
+e = L['events'][0]
+ok = (len(L['events']) == 1 and e['event'] == 'demotion-candidate'
+      and e['key'] == 'behavior:trace-strict-conformance'
+      and e['invariant'] == 'count-within-max'
+      and e['confidence'] == '★★' and e['fingerprints'] == [])
+print('OK' if ok else 'BAD: ' + json.dumps(L, ensure_ascii=False))
+" 2>&1) || ADR9_CHECK="extract-failed"
+if [ "$rc" -eq 1 ] && [ "$ADR9_CHECK" = "OK" ]; then
+  report PASS "adr9: trace ★★ FAIL appends demotion-candidate, fingerprints []"
+else
+  report FAIL "adr9: trace ★★ FAIL appends demotion-candidate, fingerprints []" "exit=$rc $ADR9_CHECK"
+fi
+
+rc=0; python3 "$CHECK" --trace "$ADR9_TS/trace-strict-conformance.yaml" "$ADR9_TS/ok.trace.json" --json --evidence "$ADR9_EV" >/dev/null 2>&1 || rc=$?
+ADR9_CHECK=$(python3 -c "
+import json
+L = json.load(open('$ADR9_EV'))
+# count-within-max is ★★ (never promotes → no streak); opaque-* invariants SKIP → no credit
+print('OK' if L['streaks'] == {} else 'BAD: ' + json.dumps(L['streaks']))
+" 2>&1) || ADR9_CHECK="extract-failed"
+if [ "$rc" -eq 0 ] && [ "$ADR9_CHECK" = "OK" ]; then
+  report PASS "adr9: trace pass credits no streaks for ★★/skipped invariants"
+else
+  report FAIL "adr9: trace pass credits no streaks for ★★/skipped invariants" "exit=$rc $ADR9_CHECK"
+fi
+
+# ADR9-i (Alloy-gated): a ★ invariant passing a BOUNDED (mechanical) check is an
+# immediate deeper-tier promotion-candidate.
+if [ -f "$GC_JAR" ] && command -v java >/dev/null 2>&1 && [ -f "$GUARD_SPECS/zone-progress.yaml" ]; then
+  sed 's/confidence: "★★"/confidence: "★"/; s/^id: .*/id: adr9-alloy-star/' "$GUARD_SPECS/zone-progress.yaml" > "$FEAT_DIR/adr9-alloy-star.yaml"
+  echo '{}' > "$ADR9_EV"
+  rc=0; python3 "$CHECK" --json --evidence "$ADR9_EV" "$FEAT_DIR/adr9-alloy-star.yaml" >/dev/null 2>&1 || rc=$?
+  ADR9_CHECK=$(python3 -c "
+import json
+L = json.load(open('$ADR9_EV'))
+promos = [e for e in L['events'] if e['event'] == 'promotion-candidate'
+          and 'deeper-check' in (e.get('reason') or '')]
+ok = promos and all(e['confidence'] == '★' for e in promos)
+print('OK' if ok else 'BAD: ' + json.dumps(L, ensure_ascii=False))
+" 2>&1) || ADR9_CHECK="extract-failed"
+  if [ "$rc" -eq 0 ] && [ "$ADR9_CHECK" = "OK" ]; then
+    report PASS "adr9: ★ invariant passing bounded check = deeper-tier promotion-candidate"
+  else
+    report FAIL "adr9: ★ invariant passing bounded check = deeper-tier promotion-candidate" "exit=$rc $ADR9_CHECK"
+  fi
+else
+  report SKIP "adr9: deeper-tier promotion (alloy jar or java unavailable)"
+fi
+
+echo ""
 echo "=== Pattern Status: gated (ticket 011) ==="
 # gated = resolution ratified, activation gated on a named event. Requires
 # gated_on:; fog stays reserved for unresolved tension (never a ratified deferral).
