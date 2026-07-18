@@ -20,6 +20,9 @@ SPEC_SCHEMA = SCHEMA_DIR / "spec-schema.yaml"
 VALID_KINDS = {"pattern", "behavior", "contract", "constraint", "dependency", "boundary", "protocol", "force"}
 VALID_CONFIDENCES = {"★★", "★", "—"}
 VALID_SCALES = {"premise", "loops-systems", "verbs-interactions", "feel-finish"}
+# gated = resolution ratified, activation gated on a named event (requires gated_on:).
+# fog = unknown forces / unresolved tension — never repurpose for a ratified deferral (ticket 011).
+VALID_PATTERN_STATUSES = {"active", "fog", "gated", "deprecated"}
 VALID_POLARITIES = {"desire", "constraint"}
 VALID_HARDNESS = {"hard", "soft"}
 VALID_EVIDENCE_LEVELS = {"L1", "L2", "L3", "L4", "L5"}
@@ -111,6 +114,19 @@ def validate_pattern(data, path):
         errors.append(f"invalid confidence '{data['confidence']}' — must be one of: {VALID_CONFIDENCES}")
     if data.get("id") and not re.match(r"^[a-z][a-z0-9-]+$", data["id"]):
         errors.append(f"id '{data['id']}' must be lowercase slug (a-z, 0-9, hyphens)")
+
+    # Status vocabulary (ticket 011): gated = resolution RATIFIED, activation
+    # gated on a named future event. Distinct from fog (unknown forces /
+    # unresolved tension — a HITL-blocking condition). Never repurpose fog
+    # for a ratified deferral.
+    status = data.get("status")
+    if status and status not in VALID_PATTERN_STATUSES:
+        errors.append(f"invalid status '{status}' — must be one of: {sorted(VALID_PATTERN_STATUSES)}")
+    if status == "gated" and not (isinstance(data.get("gated_on"), str) and data["gated_on"].strip()):
+        errors.append("status 'gated' requires a gated_on: field naming the unblocking event "
+                      "(e.g. a spike verdict, an engine migration)")
+    if data.get("gated_on") and status != "gated":
+        errors.append(f"gated_on: is only meaningful with status 'gated' (status is '{status}')")
 
     for ref in data.get("resolves_into", []):
         if not LINK_REF_PATTERN.match(ref):

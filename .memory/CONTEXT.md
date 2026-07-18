@@ -100,6 +100,10 @@ _Avoid_: calling the working YAML inventory (`.memory/archwright-forces-*.yaml`)
 **HITL-blocking gate**:
 A pipeline gate that always stops for the human: resolve, L4/L5 desire validation, ★★ events that survive the research gate (ADR 0010 — noise/known dispositions are proposed/logged instead; hard floor always blocks), fog, end-of-span digest. All other gates are **flow-through** (ADR 0007).
 
+**Gated (pattern status)**:
+Pattern status meaning the resolution is RATIFIED but activation is gated on a named future event (`gated_on:` required — e.g. an engine migration, a spike verdict). Validation rejects `gated` without `gated_on:` (ticket 011).
+_Avoid_: `status: fog` for a ratified deferral — fog means unresolved tension and HITL-blocks; repurposing it corrupts the signal.
+
 **Span**:
 A human-pre-authorized run of contiguous flow-through phases ("forces through derive"). Auto-advance never crosses the span boundary; each phase writes a digest entry.
 

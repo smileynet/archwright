@@ -45,6 +45,10 @@ id: <slug>
 name: "<Human Name>"
 scale: <scale>
 confidence: pending  # Set after prior art research (Step 5)
+status: active       # active | fog | gated | deprecated. gated = resolution RATIFIED,
+                     # activation gated on a named event — add gated_on: "<unblocking event>".
+                     # NEVER repurpose fog for a ratified deferral: fog means unresolved
+                     # tension and blocks the pipeline (ticket 011).
 serves:
   - <product-desire-force-id>   # REQUIRED — validation gate rejects patterns without a serves link
 above:
