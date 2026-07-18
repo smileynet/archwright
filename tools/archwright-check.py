@@ -5,7 +5,7 @@ Usage:
   archwright-check <spec-file>...                Check individual specs
   archwright-check --all <dir>                   Check all specs in directory
   archwright-check --static <dir> [--target <root>]   Check constraint/dependency specs only
-  archwright-check --trace <spec.yaml> <trace.json>   Validate a trace against a behavior spec
+  archwright-check --trace <spec.yaml> <trace.json> [--json]   Validate a trace against a behavior spec (--json: CK-03 document)
   archwright-check --probe <spec.yaml>           Non-vacuity probe: a false invariant MUST FAIL
 
 Dispatches by spec kind:
@@ -1334,7 +1334,7 @@ def probe_behavior(spec_path):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace> | --probe <spec>")
+        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace> [--json] | --probe <spec>")
         sys.exit(2)
 
     # Handle --trace mode early (different flow). --json (anywhere after
