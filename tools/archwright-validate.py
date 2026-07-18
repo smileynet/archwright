@@ -271,12 +271,22 @@ def _collect_from_force_refs(node, out):
 def collect_model_index(directory):
     """Index actor ids + contract-candidate events from design/models/*.yaml.
 
-    Returns (model_ids, candidates, models_exist). Enforcement follows the
-    force-inventory pattern: no model files -> from_model refs are not checked.
+    Returns (model_ids, candidates, boundary_nonproducers, models_exist).
+    Enforcement follows the force-inventory pattern: no model files ->
+    from_model refs are not checked.
+
+    Boundary entities (ticket 013): a boundary entity named as a PRODUCER in
+    contract_candidates is a valid from_model target (field case: a
+    configuration-authority producing a contract). Plain boundary entities
+    (not producers) are NOT valid targets — from_model asserts contract
+    provenance, and an element that produces nothing has no provenance role;
+    they are indexed separately for a precise error message.
     """
     directory = Path(directory)
     model_ids = set()
-    candidates = []  # (path, event_name)
+    candidates = []  # (path, event_name, folded_into)
+    boundary_ids = set()
+    producers = set()
     models_exist = False
 
     for path in directory.rglob("*"):
@@ -295,9 +305,18 @@ def collect_model_index(directory):
         for cand in data.get("contract_candidates") or []:
             if isinstance(cand, dict) and cand.get("event"):
                 model_ids.add(cand["event"])
-                candidates.append((path, cand["event"]))
+                candidates.append((path, cand["event"], cand.get("folded_into")))
+                if cand.get("producer"):
+                    producers.add(cand["producer"])
+        for be in data.get("boundary_entities") or []:
+            if isinstance(be, dict) and be.get("id"):
+                boundary_ids.add(be["id"])
 
-    return model_ids, candidates, models_exist
+    # Producer boundary entities resolve; the rest get the precise error.
+    model_ids |= boundary_ids & producers
+    boundary_nonproducers = boundary_ids - producers - model_ids
+
+    return model_ids, candidates, boundary_nonproducers, models_exist
 
 
 def collect_all_refs(directory):
@@ -354,7 +373,7 @@ def collect_all_refs(directory):
 def validate_links(directory):
     """Validate all cross-references resolve. Returns (errors, warnings)."""
     index, all_outgoing, force_outgoing, model_outgoing, event_coverage = collect_all_refs(directory)
-    model_ids, candidates, models_exist = collect_model_index(directory)
+    model_ids, candidates, boundary_nonproducers, models_exist = collect_model_index(directory)
     errors = []
     warnings = []
 
@@ -373,13 +392,45 @@ def validate_links(directory):
     # Model refs + candidate coverage — enforced only once model files exist (same pattern)
     if models_exist:
         for source_path, model_ref in model_outgoing:
-            if model_ref not in model_ids:
+            if model_ref in model_ids:
+                continue
+            if model_ref in boundary_nonproducers:
+                errors.append(
+                    f"{source_path}: from_model ref 'model:{model_ref}' names a boundary "
+                    f"entity that is not a contract producer — from_model asserts contract "
+                    f"provenance; only actors, contract candidates, and boundary entities "
+                    f"named as a producer in contract_candidates resolve (ticket 013)"
+                )
+            else:
                 errors.append(
                     f"{source_path}: from_model ref 'model:{model_ref}' does not resolve "
-                    f"(no actor or contract candidate with that id in design/models/)"
+                    f"(no actor, contract candidate, or producer boundary entity with that "
+                    f"id in design/models/)"
                 )
-        for model_path, event_name in candidates:
+        all_candidate_events = {e for _, e, _ in candidates}
+        for model_path, event_name, folded_into in candidates:
             covering = event_coverage.get(event_name, [])
+            if folded_into:
+                # Folded candidate (ticket 013): its payload rides inside another
+                # event's contract spec (protocol cluster). Coverage follows the fold.
+                if covering:
+                    names = ", ".join(str(p) for p in covering)
+                    errors.append(
+                        f"{model_path}: candidate '{event_name}' is folded into "
+                        f"'{folded_into}' but ALSO directly covered ({names}) — "
+                        f"a folded candidate must not have its own contract spec"
+                    )
+                elif folded_into not in all_candidate_events and folded_into not in event_coverage:
+                    errors.append(
+                        f"{model_path}: candidate '{event_name}' folded_into "
+                        f"'{folded_into}' which is not a known candidate or contract event"
+                    )
+                elif not event_coverage.get(folded_into):
+                    warnings.append(
+                        f"{model_path}: candidate '{event_name}' folded into "
+                        f"'{folded_into}', which has no contract spec yet"
+                    )
+                continue
             if not covering:
                 warnings.append(
                     f"{model_path}: contract candidate '{event_name}' has no contract spec "

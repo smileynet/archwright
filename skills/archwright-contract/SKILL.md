@@ -81,12 +81,15 @@ For each entry in the model's `contract_candidates:` (every event that crosses a
 - **Default: one contract spec per event type.** Independent events evolve independently; each gets its own file and lifecycle.
 - **Sanctioned exception — protocol cluster:** the tightly-coupled messages of ONE protocol, owned by one authority actor, that evolve in lockstep (e.g., the request/accept/reject legs of a single transfer protocol — the request leg produced by the counterparty belongs to the same protocol). Cluster specs are **named for the protocol** (`ball-possession-events`), not the system.
 - **Prohibited: per-system grand event files.** Never collect a system's unrelated events into one `<system>-events.yaml` — that shared artifact kills independent evolution and muddies git history.
+- **Folded candidates (ticket 013):** when a candidate's payload rides inside a protocol-cluster spec rather than getting its own file, annotate the candidate in the MODEL with `folded_into: <owning-event>`. The link validator then follows the fold for coverage: the folded candidate needs no own spec, and having BOTH the annotation and an own spec is a double-ownership error. A fold pointing at an unknown event is an error.
+
+**`from_model:` targets (ticket 013):** the producer is usually an actor, but a **boundary entity named as a producer in `contract_candidates`** is also a valid target (field case: a configuration-authority producing a definition contract). Plain boundary entities that produce nothing are NOT valid — `from_model` asserts contract provenance, and an element with no candidate has no provenance role.
 
 ```yaml
 kind: contract
 id: <event-name>              # or <protocol-name>-events for a protocol cluster
 from_patterns: ["pattern:<source-pattern>"]
-from_model: "model:<producer-actor-id>"   # provenance to the model's candidate entry
+from_model: "model:<producer-id>"   # actor, or boundary entity named as producer in contract_candidates
 
 events:
   <event_name>:               # one event by default; a cluster lists its lockstep siblings
