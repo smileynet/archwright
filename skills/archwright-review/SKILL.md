@@ -36,7 +36,7 @@ What triggered this review?
 
 | Trigger | Scope | Layers to run |
 |---------|-------|---------------|
-| PR/code change | Specs whose `check.target` overlaps changed files | Structural + Semantic |
+| PR/code change | `--changed-only --base <ref>` (CK-19 — mechanical: spec changed, or changed/untracked file under a `check.target`; don't eyeball path overlap) | Structural + Semantic |
 | Periodic audit | All specs | All three layers |
 | Specific concern | Named spec(s) | All three layers |
 | New implementation | Specs from the model's relevant actors | Semantic (primary) + Structural |
@@ -48,6 +48,9 @@ Execute deterministic checks:
 ```bash
 # grep/semgrep checks from constraint specs
 archwright-check --static design/ --target .
+
+# PR review: only specs the diff affects (base = the PR's merge target)
+archwright-check --static design/ --target . --changed-only --base origin/main
 
 # Semgrep rules (if design/specs/semgrep-rules.yaml exists)
 semgrep --config design/specs/semgrep-rules.yaml src/
@@ -181,7 +184,7 @@ For each violation, read `from_pattern` + `from_force`:
 |-------------|-----------|------------|----------|
 | < 20 specs | All, every PR | If instrumented | On-demand |
 | 20-50 specs | All, every PR | If instrumented | Weekly |
-| 50+ specs | Changed-file overlap only | Critical paths | Sprint boundary |
+| 50+ specs | `--changed-only` per PR; full sweep weekly | Critical paths | Sprint boundary |
 
 ## Tool Requirements
 

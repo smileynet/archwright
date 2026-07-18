@@ -8,7 +8,9 @@ Usage:
   archwright-check --trace <spec.yaml> <trace.json> [--json]   Validate a trace against a behavior spec (--json: CK-03 document)
   archwright-check --probe <spec.yaml>           Non-vacuity probe: a false invariant MUST FAIL
   ... [--baseline <file>]                        Explicit baseline (else .archwright-baseline.json auto-discovered up to the git root)
-  ... [--update-baseline]                        Ratchet (CK-08): remove entries that no longer reproduce; NEVER adds
+  ... [--update-baseline]                        Ratchet (CK-08): remove entries that no longer reproduce; NEVER adds.
+                                                 Refuses on errored runs and with --changed-only (a scoped/incomplete
+                                                 run cannot prove a violation is gone).
   ... [--evidence <file>]                        Explicit evidence ledger (else an EXISTING .archwright-evidence.json auto-discovered up-tree)
   ... [--changed-only [--base <ref>]]            Only check specs affected by the git diff vs <ref> (default HEAD): the spec
                                                  file changed, or a changed/untracked file sits under a check.target path.
@@ -1918,6 +1920,14 @@ def main():
         except ValueError as e:
             print(f"ERROR: {e}", file=sys.stderr)
             sys.exit(2)
+    if update_baseline and changed_only:
+        print("ERROR: --update-baseline cannot run with --changed-only — a scoped "
+              "run only re-proves the affected specs, so entries belonging to "
+              "unaffected specs would read as 'resolved' and be wrongly dropped. "
+              "Ratchet on full-scope runs only (same principle as the errored-run "
+              "refusal: an incomplete run cannot prove a violation is gone)",
+              file=sys.stderr)
+        sys.exit(2)
     if update_baseline and baseline_path is None:
         print(f"ERROR: --update-baseline requires an existing {BASELINE_FILENAME} — "
               "baseline entries are created by humans, never by the tool (CK-08)",
