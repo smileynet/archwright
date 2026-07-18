@@ -1,7 +1,7 @@
 ---
 id: 019
 title: "Import facilitation-stance reference from wizard_of_oz patterns"
-status: open
+status: done
 blocked_by: []
 ---
 
