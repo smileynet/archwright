@@ -133,6 +133,20 @@ Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output 
 
 When an Alloy counterexample is surprising, inspect the generated model directly: `python3 <archwright-repo>/tools/archwright-compile-alloy.py <spec.yaml>` prints the Alloy 6 source the checker ran (states, transitions, compiled guards, invariant predicates). A transition-less or guard-less model means the spec didn't compile the way you think it reads — fix the spec (or ticket the compiler gap), don't argue with the counterexample.
 
+### Repair loop convergence (CK-18)
+
+When running a fix → re-check cycle, track `remaining_delta` across iterations — the loop must CONVERGE, not just spin:
+
+1. Record `remaining_delta` (and the violation `fingerprints`) after every re-check.
+2. **Converging** (strictly decreasing) → continue.
+3. **Stagnant** — no decrease for **3 consecutive iterations** → STOP and escalate to the human with: the trajectory (e.g. `7 → 5 → 5 → 5`), the surviving violations, and a diagnosis of which stall it is:
+   - *same fingerprints every round* → the fix isn't touching the real cause; re-triage the route (`fix-implementation` may actually be `fix-spec` — hand to `archwright-passup`)
+   - *fingerprints churn but the count holds* → fixes are trading violations for new ones; the constraint and the code are fighting — likely a design-level tension, not a code bug
+   - *check errors appearing* → stop fixing code, fix the check (`suggested_route: fix-check`)
+4. **Regressing** (`remaining_delta` goes UP) → stop immediately — don't wait for 3 iterations; a fix that creates violations is doing structural damage.
+
+Fingerprints are what make the diagnosis possible: identical fingerprints = the same violation resisting; new fingerprints at the same count = churn. Never loop past the stagnation gate "to try one more thing" — three shapeless retries means the shape is wrong, and the human decides what to reshape.
+
 ## Does NOT
 
 - Write patterns or specs (use `archwright-formalize` / `archwright-derive`)

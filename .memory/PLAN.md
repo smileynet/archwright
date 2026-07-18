@@ -170,7 +170,7 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 | CK-15 | GitHub Actions workflow template | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
 | CK-16 | Fingerprinting for SARIF dedup | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
 | CK-17 | Update archwright-check skill | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — full invocation contract in the check skill (baseline flags, output-field interpretation, PENDING triage, compile-alloy debug aid); passup/derive/review updated alongside |
-| CK-18 | remaining_delta convergence tracking | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-18 | remaining_delta convergence tracking | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — "Repair loop convergence" section in the check skill: converging/stagnant(3-strike escalate w/ trajectory + fingerprint diagnosis)/regressing(stop immediately); skill-level, no tool change |
 | CK-19 | Scope selection from git diff | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
 
 **Critical path:** CK-01 → CK-03 → CK-05 → CK-07 → CK-17 → CK-19
