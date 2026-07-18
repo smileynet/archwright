@@ -878,6 +878,20 @@ EOF
   else
     report FAIL "ck19: bad --base ref = tool error (exit 2)" "exit=$rc"
   fi
+
+  # CK-19e violating scenario: --update-baseline + --changed-only refuses (exit 2)
+  # and leaves the baseline untouched — a scoped run would wrongly drop entries
+  # belonging to unaffected specs (they "don't reproduce" only because they
+  # weren't checked).
+  CK19_BL="$FEAT_DIR/ck19-baseline.json"
+  echo '{"entries": [{"fingerprint": "deadbeefdeadbeef_0", "algo": "aw/v1"}]}' > "$CK19_BL"
+  rc=0; python3 "$CHECK" --static "$CK19_TREE/design/specs" --changed-only --update-baseline --baseline "$CK19_BL" --json --target "$CK19_TREE" >/dev/null 2>&1 || rc=$?
+  CK19_N=$(python3 -c "import json; print(len(json.load(open('$CK19_BL'))['entries']))" 2>/dev/null) || CK19_N="?"
+  if [ "$rc" -eq 2 ] && [ "$CK19_N" = "1" ]; then
+    report PASS "ck19: --update-baseline refuses under --changed-only, baseline untouched (exit 2)"
+  else
+    report FAIL "ck19: --update-baseline refuses under --changed-only, baseline untouched (exit 2)" "exit=$rc entries=$CK19_N"
+  fi
 else
   report SKIP "ck19: changed-only scope selection (git unavailable)"
 fi
