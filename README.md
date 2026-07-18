@@ -1,6 +1,6 @@
 # Archwright
 
-A force-resolution design language that resolves into verified architecture.
+Capture design decisions as forces and patterns, derive machine-checkable specs from them, and catch code that drifts from its own design.
 
 ## What It Does
 
@@ -21,11 +21,13 @@ Archwright is a design methodology embodied as agent skills. You express design 
 mise trust && mise install
 mise run setup                 # python deps
 mise run rehydrate-alloy       # Alloy jar (enables behavior model checks)
-mise run test                  # verify: fixture suite green
+mise run test
+# === Results: … passed, 0 failed, 0 skipped ===
 
 # Deploy the skills + steering to your agent tool
 mise run deploy-skills                          # kiro (default)
 bash tools/deploy-skills.sh --tool claude       # or claude | codex | agy
+# ✓ skill: archwright-survey … Done.
 ```
 
 Then, in any project, ask your agent to **"survey this project"**. The pipeline runs from there:
@@ -35,6 +37,36 @@ survey → forces → tensions → resolve → formalize → model → contract 
 ```
 
 Design artifacts land in the target project under `design/` (forces, patterns, models, specs) — live documents on your current branch, each carrying provenance back to the forces that demanded it.
+
+## What a Catch Looks Like
+
+Checks verify the implementation against the stated design. When code (or an execution trace) violates a design invariant, the violation arrives with everything needed to route it — trimmed real output:
+
+```bash
+python3 tools/archwright-check.py --trace game.spec.yaml game.trace.json --json
+```
+
+```json
+{
+  "status": "fail",
+  "violations": [{
+    "invariant": "count-within-max",
+    "confidence": "★★",
+    "severity": "error",
+    "escalate": true,
+    "message": "Invariant 'count-within-max' violated after event 'TICK' at position 1",
+    "from_pattern": "pattern:bounded-capacity",
+    "from_force": "players-never-stranded",
+    "suggested_route": "fix-implementation",
+    "contrast_pair": {
+      "expected": "Count never exceeds max (always (count <= max))",
+      "actual": "event 'TICK' at trace position 1 with state {\"count\": 3, \"max\": 2}"
+    }
+  }]
+}
+```
+
+The provenance chain (`invariant → from_pattern → from_force`) is what lets the `archwright-passup` skill route the failure to the level that owns it: most violations are implementation drift; a violation that traces all the way to a force means the design itself needs re-resolution.
 
 ## The Thesis
 
