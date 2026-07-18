@@ -8,7 +8,7 @@ The archwright pipeline (`survey → forces → tensions → resolve → formali
 
 **Check is continuous, not terminal:**
 - After contract/derive: run `python3 tools/archwright-validate.py <specs>... && python3 tools/archwright-validate.py --links design/` (spec schema, link resolution)
-- After any code change: run `python3 tools/archwright-check.py --static design/specs/` (verify constraint specs against code). In a target project with a `.archwright-baseline.json`, known debt reports as warnings with `baselined: true` and exit 0 — only NEW violations fail the run; `remaining_delta` is the number being driven to zero (CK-07)
+- After any code change: run `python3 tools/archwright-check.py --static design/specs/` (verify constraint specs against code) — or `--static design/specs/ --changed-only [--base <ref>]` to run only the specs the diff affects (CK-19; CI passes `--base origin/main`). In a target project with a `.archwright-baseline.json`, known debt reports as warnings with `baselined: true` and exit 0 — only NEW violations fail the run; `remaining_delta` is the number being driven to zero (CK-07)
 - Evidence ledger (ADR 0009): in a target project with a `.archwright-evidence.json` (bootstrap: `echo '{}' > design/.archwright-evidence.json`), pass/fail check runs auto-append confidence evidence events (demotion/promotion candidates). When output reports `evidence_ledger.events_appended > 0`, surface the new candidates in the span digest — ratification is human, in the artifact, and ★★ moves always HITL-block
 - After test suite runs: run `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` (verify behavior specs against execution traces)
 - Design audits: AI-assisted via `archwright-review` (no dedicated tool flag exists)

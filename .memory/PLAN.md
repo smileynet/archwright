@@ -1,6 +1,6 @@
 # PLAN: Live Design Checking for Lacrosse-Bosse-Platform
 
-> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) mostly shipped — DoD-5 chain (CK-03→04→05→09→10), CK-21, all of Phase 5b (CK-06/07/08 + R32 baseline/fingerprints), CK-17 (skill invocation contract), and the ADR-0009 evidence ledger (ticket 017) are DONE (fixture-suite-verified); CK-01/02 descoped to validate.py. Open remainder: CK-11–16 (ast-grep/SARIF — parked awaiting a field driver per Extension Protocol), CK-18/19 (convergence tracking, git-diff scope).**
+> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) shipped except the parked tail — DoD-5 chain (CK-03→04→05→09→10), CK-21, all of Phase 5b (CK-06/07/08 + R32 baseline/fingerprints), CK-17/18 (skill invocation contract + repair-loop convergence), CK-19 (changed-only scoping), and the ADR-0009 evidence ledger (ticket 017) are DONE (fixture-suite-verified); CK-01/02 descoped to validate.py. Open remainder: CK-11–16 (ast-grep/SARIF — parked awaiting a field driver per Extension Protocol).**
 > Loose ends: T7 trace emitter → converted to an Extension Protocol pending-registry row `gdscript.trace_emitter` (grill Q5, audit ticket C11 — the "~20 lines" claim becomes measured data on first real build); R18/S15 → C5, folded into C10's DynamoRush reconciliation pass (grill Q7). Phase 5 reconciled with the audit plan 2026-07-16 (absorbs B4/C1/C2) and re-reconciled 2026-07-17 (grill: CK-01/02 descoped to validate.py, CK-21 added, passup skill consumes CK-03 output — see the spec's "Grill reconciliation" section).
 
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
@@ -171,7 +171,7 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 | CK-16 | Fingerprinting for SARIF dedup | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
 | CK-17 | Update archwright-check skill | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — full invocation contract in the check skill (baseline flags, output-field interpretation, PENDING triage, compile-alloy debug aid); passup/derive/review updated alongside |
 | CK-18 | remaining_delta convergence tracking | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — "Repair loop convergence" section in the check skill: converging/stagnant(3-strike escalate w/ trajectory + fingerprint diagnosis)/regressing(stop immediately); skill-level, no tool change |
-| CK-19 | Scope selection from git diff | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-19 | Scope selection from git diff | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — `--changed-only [--base <ref>]` (default HEAD): affected = spec changed or changed/untracked file under check.target; no-file-target specs always run; git failure = exit 2; scope reports specs_total/specs_unaffected; 4 suite checks |
 
 **Critical path:** CK-01 → CK-03 → CK-05 → CK-07 → CK-17 → CK-19
 **Milestone 5a (done):** spec validation + link integrity gate ship as `archwright-validate.py [--links]` — no `--structural` flag exists (CK-01/02 descoped to validate.py, grill 2026-07-17)

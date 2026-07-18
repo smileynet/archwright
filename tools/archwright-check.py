@@ -10,6 +10,9 @@ Usage:
   ... [--baseline <file>]                        Explicit baseline (else .archwright-baseline.json auto-discovered up to the git root)
   ... [--update-baseline]                        Ratchet (CK-08): remove entries that no longer reproduce; NEVER adds
   ... [--evidence <file>]                        Explicit evidence ledger (else an EXISTING .archwright-evidence.json auto-discovered up-tree)
+  ... [--changed-only [--base <ref>]]            Only check specs affected by the git diff vs <ref> (default HEAD): the spec
+                                                 file changed, or a changed/untracked file sits under a check.target path.
+                                                 Specs without a file target (behavior/contract/command-mode) always run.
 
 Baseline (CK-07): suppresses fully-fingerprint-matched constraint/dependency
 violations to warnings (baselined: true). A baselined ★★ keeps escalate: true;
@@ -282,6 +285,65 @@ def write_evidence_ledger(path, ledger):
         return False
 
 
+# ---------------------------------------------------------------------------
+# Changed-only scope selection (CK-19) — `--changed-only [--base <ref>]`.
+# Affected = the spec file itself changed, OR any changed file sits under one
+# of the spec's check.target paths. Specs without a target path (behavior,
+# contract, command/script-mode checks) can't be scoped by file overlap and
+# are treated as always affected — over-checking is safe, silent skipping is
+# not. Git failures are tool errors (exit 2), never an empty "nothing
+# changed" pass.
+# ---------------------------------------------------------------------------
+
+
+def _git_changed_files(base, root):
+    """Absolute paths of files changed vs <base> (committed + working tree)
+    plus untracked files (a NEW file can violate a constraint too).
+    Raises ValueError on any git failure — loud, never a silent empty set."""
+    import shutil
+    if shutil.which("git") is None:
+        raise ValueError("--changed-only requires git on PATH")
+    def _git(*args):
+        r = subprocess.run(["git", "-C", str(root)] + list(args),
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            raise ValueError(f"git {args[0]} failed: {(r.stderr or '').strip()[:200]}")
+        return r.stdout
+    git_root = Path(_git("rev-parse", "--show-toplevel").strip())
+    changed = set()
+    for line in _git("diff", "--name-only", base).splitlines():
+        if line.strip():
+            changed.add((git_root / line.strip()).resolve())
+    for line in _git("ls-files", "--others", "--exclude-standard").splitlines():
+        if line.strip():
+            changed.add((git_root / line.strip()).resolve())
+    return changed
+
+
+def _spec_affected(spec_path, changed):
+    """True if this spec must be re-checked given the changed-file set."""
+    spec_path = Path(spec_path).resolve()
+    if spec_path in changed:
+        return True  # the spec itself changed
+    data, kind = load_spec(spec_path)
+    if not data:
+        return True  # unparseable — let the normal check path report the error
+    check = data.get("check") or {}
+    targets = check.get("target")
+    if not targets or check.get("command"):
+        # No file target to scope by (behavior/contract specs, command-mode
+        # checks whose scope only the command knows): always affected.
+        return True
+    targets = [targets] if isinstance(targets, str) else targets
+    project_root = _project_root_for(spec_path)
+    for t in targets:
+        tp = (project_root / t).resolve()
+        for c in changed:
+            if c == tp or tp in c.parents:
+                return True
+    return False
+
+
 def extract_frontmatter(path):
     """Extract YAML frontmatter from a markdown file."""
     content = path.read_text(encoding="utf-8")
@@ -458,6 +520,22 @@ def _alloy_field_name(name):
     return parts[0] + "".join(p.capitalize() for p in parts[1:])
 
 
+def _project_root_for(spec_path):
+    """Determine the project root for a spec: ARCHWRIGHT_PROJECT_ROOT env
+    (set by --target) wins, else walk up from the spec dir looking for a
+    project marker."""
+    env_root = os.environ.get("ARCHWRIGHT_PROJECT_ROOT")
+    if env_root:
+        return Path(env_root)
+    spec_dir = Path(spec_path).resolve().parent
+    project_root = spec_dir
+    for _ in range(5):
+        if (project_root / "design").exists() or (project_root / "project.godot").exists():
+            break
+        project_root = project_root.parent
+    return project_root
+
+
 def check_conformance(data, spec_path):
     """Check a constraint or dependency spec using its self-described check field."""
     check = data.get("check")
@@ -484,18 +562,7 @@ def check_conformance(data, spec_path):
         }]
 
 
-    # Determine the working directory (look for project root)
-    # Honor ARCHWRIGHT_PROJECT_ROOT env var if set, otherwise auto-detect
-    env_root = os.environ.get("ARCHWRIGHT_PROJECT_ROOT")
-    if env_root:
-        project_root = Path(env_root)
-    else:
-        spec_dir = Path(spec_path).resolve().parent
-        project_root = spec_dir
-        for _ in range(5):
-            if (project_root / "design").exists() or (project_root / "project.godot").exists():
-                break
-            project_root = project_root.parent
+    project_root = _project_root_for(spec_path)
 
     if method == "grep":
         return _check_grep(check, spec_id, confidence, project_root)
@@ -1502,7 +1569,7 @@ def check_trace(spec_path, trace_path, json_output=False, evidence_arg=None):
 
 
 def build_document(mode, target_root, per_file, baseline_fps=None, baseline_path=None,
-                   baseline_entries=0):
+                   baseline_entries=0, scope_extra=None):
     """Build the CK-03 output document from per-file results.
 
     Schema: status, scope, violations[], coverage, remaining_delta.
@@ -1613,7 +1680,8 @@ def build_document(mode, target_root, per_file, baseline_fps=None, baseline_path
     doc = {
         "status": status,
         "scope": {"mode": mode, "specs_checked": coverage["checked"],
-                  "target": str(target_root) if target_root else None},
+                  "target": str(target_root) if target_root else None,
+                  **(scope_extra or {})},
         "violations": violations,
         "errors": errors,
         "skips": skips,
@@ -1750,6 +1818,8 @@ def main():
     baseline_arg = None
     evidence_arg = None
     update_baseline = False
+    changed_only = False
+    base_ref = "HEAD"
 
     # Parse args
     args = sys.argv[1:]
@@ -1786,6 +1856,12 @@ def main():
                 evidence_arg = args[i]
         elif args[i] == "--update-baseline":
             update_baseline = True
+        elif args[i] == "--changed-only":
+            changed_only = True
+        elif args[i] == "--base":
+            i += 1
+            if i < len(args):
+                base_ref = args[i]
         elif args[i] == "--json":
             json_output = True
         else:
@@ -1808,6 +1884,26 @@ def main():
 
     if target_root:
         os.environ["ARCHWRIGHT_PROJECT_ROOT"] = str(target_root)
+
+    # Changed-only scope selection (CK-19): filter to specs affected by the
+    # git diff vs --base (default HEAD = uncommitted work; CI passes e.g.
+    # --base origin/main). Zero affected specs = a legitimate pass (nothing
+    # changed that any spec watches); git failures are exit 2, never an
+    # empty-diff false pass.
+    scope_extra = None
+    if changed_only:
+        try:
+            changed = _git_changed_files(base_ref, target_root or Path.cwd())
+        except ValueError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            sys.exit(2)
+        total = len(files)
+        files = [f for f in files if _spec_affected(f, changed)]
+        scope_extra = {"changed_only": True, "base": base_ref,
+                       "specs_total": total,
+                       "specs_unaffected": total - len(files)}
+        if not json_output:
+            print(f"  changed-only: {len(files)}/{total} spec(s) affected by diff vs {base_ref}")
 
     # Baseline discovery (CK-07): explicit --baseline wins; otherwise walk up
     # from the spec dirs. Missing = no suppression (never silently created).
@@ -1848,7 +1944,8 @@ def main():
 
     doc = build_document(mode, target_root, per_file,
                          baseline_fps=baseline_fps, baseline_path=baseline_path,
-                         baseline_entries=len(baseline_data.get("entries", [])) if baseline_data else 0)
+                         baseline_entries=len(baseline_data.get("entries", [])) if baseline_data else 0,
+                         scope_extra=scope_extra)
 
     # Evidence recording (ADR 0009): errored runs prove nothing — record only
     # from clean pass/fail runs (same discipline as the baseline ratchet).
