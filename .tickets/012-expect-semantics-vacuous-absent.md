@@ -1,7 +1,7 @@
 ---
 id: 012
 title: "Check schema: expect present/absent semantics ambiguous for positive-condition checks"
-status: open
+status: done
 blocked_by: []
 created: 2026-07-17
 ---

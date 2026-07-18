@@ -218,9 +218,10 @@ When writing the `check` block, prefer structural checks over text grep:
 
 Before committing constraint specs, verify check targets against the actual codebase:
 1. Run `find` or `ls` to confirm the `check.target` path exists — **if it doesn't, either fix the path or mark the spec as `check.target_status: pending` (target not yet implemented)**
-2. If using `expect: absent`, verify the grep pattern would match violations (test against a known-bad example if possible)
-3. If using `expect: present`, verify the pattern matches something that currently exists — if nothing matches because the system isn't built yet, set `check.target_status: pending`
-4. Run `python3 <archwright-repo>/tools/archwright-check.py --static` against the batch before committing — fix target paths before the pre-commit hook rejects (note: the flag is `--static`; there is no `--structural` flag)
+2. **Polarity rule (ticket 012):** positive conditions ("X must exist") are ALWAYS `expect: present` on the artifact — never `expect: absent` on the negation. Reserve `absent` for forbidden-pattern greps ("X must never appear"). Field evidence: two same-day specs expressed the same positive condition with inverted polarities; the wrong guess produces a check that silently passes forever. The tool guards the vacuous case (absence claim over 0 scanned files = SKIP, not PASS) but cannot detect inverted intent.
+3. If using `expect: absent`, verify the grep pattern would match violations (test against a known-bad example if possible)
+4. If using `expect: present`, verify the pattern matches something that currently exists — if nothing matches because the system isn't built yet, set `check.target_status: pending`
+5. Run `python3 <archwright-repo>/tools/archwright-check.py --static` against the batch before committing — fix target paths before the pre-commit hook rejects (note: the flag is `--static`; there is no `--structural` flag)
 
 **Target status field:** When a spec's check target doesn't yet exist in the codebase (system not implemented), add:
 ```yaml

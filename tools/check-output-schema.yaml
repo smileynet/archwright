@@ -56,6 +56,15 @@ properties:
         spec_path: {type: string}
         message: {type: string}
         suggested_route: {const: fix-check}
+  skips:                                           # check.py only (ticket 012) — SKIP-with-reason,
+    type: array                                    # never silent: pending adapters, vacuous absence
+    items:                                         # claims (0 files scanned), backend unavailable.
+      type: object                                 # A skip is a coverage statement, not a pass.
+      properties:
+        spec_id: {type: [string, "null"]}
+        spec_path: {type: string}
+        invariant: {type: [string, "null"]}
+        reason: {type: string}
   coverage:
     type: object
     required: [checked, passed, failed, skipped, errors, pending]

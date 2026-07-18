@@ -312,9 +312,12 @@ def _python_grep(target_path, pattern, project_root=None, strip_comments=True, i
     `include`: optional list of globs limiting which files are searched (ticket 005) — a bare
     glob (`*.cs`) matches the file name; a glob containing `/` matches the project-relative
     POSIX path. Explicitly-named single-file targets are NOT filtered (unlike GNU grep
-    --include, which silently filters those too — the field false-pass gotcha)."""
+    --include, which silently filters those too — the field false-pass gotcha).
+    Returns (matches_str, files_scanned) — the scan count lets callers detect vacuous
+    absence claims (ticket 012: scanned nothing = proved nothing)."""
     rx = re.compile(pattern)
     out = []
+    files_scanned = 0
     single_file = target_path.is_file()
     paths = [target_path] if single_file else None
     if paths is None:
@@ -335,6 +338,7 @@ def _python_grep(target_path, pattern, project_root=None, strip_comments=True, i
             text = p.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
+        files_scanned += 1
         try:
             shown = p.relative_to(project_root).as_posix() if project_root else p.as_posix()
         except ValueError:
@@ -352,7 +356,7 @@ def _python_grep(target_path, pattern, project_root=None, strip_comments=True, i
             elif not rx.search(line):
                 continue
             out.append(f"{shown}:{i}:{line.strip()[:200]}")
-    return "\n".join(out)
+    return "\n".join(out), files_scanned
 
 
 def _check_grep(check, spec_id, confidence, project_root):
@@ -418,16 +422,29 @@ def _check_grep(check, spec_id, confidence, project_root):
 
         try:
             all_matches = []
+            files_scanned = 0
             for tp in target_paths:
-                m = _python_grep(tp, pattern, project_root,
-                                 strip_comments=not check.get("include_comments", False),
-                                 include=include)
+                m, scanned = _python_grep(tp, pattern, project_root,
+                                          strip_comments=not check.get("include_comments", False),
+                                          include=include)
+                files_scanned += scanned
                 if m:
                     all_matches.append(m)
             matches = "\n".join(all_matches)
         except re.error as e:
             return [{"invariant": spec_id, "status": "error",
                      "message": f"invalid pattern: {e}"}]
+
+        # Ticket 012: an absence claim over zero scanned files is vacuous —
+        # a check that scanned nothing proved nothing. SKIP-with-reason, never
+        # PASS. Applies to both absence polarities (absent, only-in); a present
+        # check over zero files already FAILs loudly. Command-mode checks are
+        # exempt (the command author owns their semantics).
+        if expect in ("absent", "only-in") and files_scanned == 0:
+            return [{"invariant": spec_id, "status": "skipped",
+                     "message": f"vacuous {expect}-check: 0 files scanned under "
+                                f"'{target}' (empty target or include filter matched "
+                                f"nothing) — scanned nothing, proved nothing"}]
 
     # Interpret results based on expect
     if expect == "absent":
@@ -1050,6 +1067,7 @@ def build_document(mode, target_root, per_file):
     """
     violations = []
     errors = []
+    skips = []
     coverage = {"checked": 0, "passed": 0, "failed": 0, "skipped": 0, "errors": 0, "pending": 0}
 
     for spec_path, kind, results in per_file:
@@ -1090,6 +1108,16 @@ def build_document(mode, target_root, per_file):
                     "message": r.get("message"),
                     "suggested_route": r.get("suggested_route", "fix-check"),
                 })
+            elif r["status"] == "skipped":
+                # Skips carry their reason into the document (Extension Protocol
+                # rule 1: SKIP-with-reason, never silent) — a skip is a coverage
+                # statement, not a pass.
+                skips.append({
+                    "spec_id": r.get("spec_id"),
+                    "spec_path": str(spec_path),
+                    "invariant": r.get("invariant"),
+                    "reason": r.get("message"),
+                })
 
     if errors:
         status = "error"
@@ -1104,6 +1132,7 @@ def build_document(mode, target_root, per_file):
                   "target": str(target_root) if target_root else None},
         "violations": violations,
         "errors": errors,
+        "skips": skips,
         "coverage": coverage,
         # Baseline suppression arrives with CK-07; until then delta = all violations.
         "remaining_delta": len(violations),
