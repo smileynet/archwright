@@ -40,6 +40,11 @@ Authoritative schema: `<archwright-repo>/tools/check-output-schema.yaml`. If han
 
 **`skips[]` are NOT routed.** The document may carry a `skips` array ({spec_id, spec_path, invariant, reason}) — pending adapters, untranslatable predicates, vacuous absence claims. A skip is a coverage statement, not a fault: there is nothing to lift and no level to route it to. Surface skips in the span digest so the human sees the coverage gap, and treat a GROWING skip list of one kind as an Extension Protocol signal (a missing adapter or translator capability wants building — pending-with-reason, research, conformance-at-birth).
 
+**Evidence ledger events (ADR 0009).** When the document carries `evidence_ledger: {path, events_appended}`, the run auto-appended confidence evidence events to `.archwright-evidence.json` (demotion-candidate on ★★/★ FAIL; promotion-candidate on pass streak or deeper-tier pass). Routing:
+- A **★★ demotion candidate** IS this skill's escalation payload — the violation that produced it is already in `violations[]` with `escalate: true`; route it through the research gate (ADR 0010) with the counterexample as the citation. The ledger event is the durable record, not a second signal to route.
+- **★ demotion and all promotion candidates** are span-digest items, not escalations: list them so the human sees pending confidence moves.
+- **Never ratify from the ledger.** A candidate becomes a confidence change only when a human edits the artifact (confidence field + Evidence line citing the events); ★★ transitions always block for HITL (ADR 0007). This skill surfaces candidates; it does not apply them.
+
 ## Process
 
 ### 1. Triage: the CEGAR fork (spurious vs. real)

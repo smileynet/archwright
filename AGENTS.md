@@ -39,6 +39,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 ├── tools/                         # Mechanical operations
 │   ├── archwright-validate.py     # Schema + link validation for patterns/specs
 │   ├── archwright-forces-gen.py   # Force inventory YAML → design/forces/*.md (mechanical projection)
+│   ├── archwright_common.py       # Shared spec-parsing helpers (state_events) — imported by check + compile-alloy; not a CLI
 │   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static; baseline suppression + ratchet (CK-07/08); evidence ledger (ADR 0009)
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
@@ -110,6 +111,16 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-compile-alloy.py` — behavior spec → Alloy 6 model; `archwright-check-compile.mjs` — intent → check blocks
 - Templates for patterns and each spec kind (`tools/templates/`)
 - `deploy-skills.sh` — sync skills + steering + domain overlays + glossary from repo to the target tool's discovery dirs (`--tool kiro|claude|codex|agy`, default kiro global; `--project <path>` for project scope)
+
+**Tool→skill ownership** (which skill carries each tool's usage + output-interpretation contract — keep current when flags or output change):
+
+| Tool | Owning skill |
+|------|--------------|
+| `archwright-check.py`, `archwright-validate.py`, `archwright-compile-alloy.py` (debug use) | `archwright-check` |
+| `archwright-check-compile.mjs`, `alloy:` expression authoring | `archwright-derive` |
+| `archwright-forces-gen.py` | `archwright-forces` |
+| `run-fixture-tests.sh`, `deploy-skills.sh` | none — repo-internal; this file is their home (decision 2026-07-18) |
+| `archwright_common.py` | none — shared module, not a CLI |
 
 **Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills.sh` to push to global.
 
