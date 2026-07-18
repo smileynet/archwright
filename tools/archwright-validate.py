@@ -2,8 +2,16 @@
 """archwright-validate: Validate pattern and spec files against schemas.
 
 Usage:
-  archwright-validate <file>...          Validate individual files
-  archwright-validate --links <dir>      Validate all links resolve
+  archwright-validate [--json] <file>...          Validate individual files
+  archwright-validate [--json] --links <dir>      Validate all links resolve
+
+Output: per-file PASS/FAIL plus non-fatal `WARN:` lines (advisory quality
+signals, e.g. a spec missing `protects_experience`) — warnings never affect
+the exit code. `--json` emits the CK-03 document shape (see
+check-output-schema.yaml) with warnings[] alongside violations[].
+
+Exit codes: 0 = all valid (warnings allowed), 1 = validation failures,
+2 = tool/input error.
 """
 
 import sys

@@ -87,6 +87,11 @@ The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/a
 ```bash
 python3 <archwright-repo>/tools/archwright-validate.py [--json] <file>     # Schema validation
 python3 <archwright-repo>/tools/archwright-validate.py [--json] --links design/  # Link graph check
+```
+
+Validation emits non-fatal `WARN:` lines (advisory quality signals — e.g. a spec missing `protects_experience`); in `--json` they arrive as `warnings[]`. **Warnings never fail the run or block the ADR-0007 flow-through gate** — surface them in the span digest instead of stopping, and treat a recurring warning across a whole batch as a template/derive defect worth fixing at the source.
+
+```bash
 python3 <archwright-repo>/tools/archwright-check.py <spec>... [--json]     # Full verification
 python3 <archwright-repo>/tools/archwright-check.py --all design/specs/    # Check everything
 python3 <archwright-repo>/tools/archwright-check.py --static design/specs/ [--target <root>]  # Constraint/dependency only

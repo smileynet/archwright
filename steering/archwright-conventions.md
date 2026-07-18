@@ -8,7 +8,7 @@ The archwright pipeline (`survey → forces → tensions → resolve → formali
 
 **Check is continuous, not terminal:**
 - After contract/derive: run `python3 tools/archwright-validate.py <specs>... && python3 tools/archwright-validate.py --links design/` (spec schema, link resolution)
-- After any code change: run `python3 tools/archwright-check.py --static design/specs/` (verify constraint specs against code)
+- After any code change: run `python3 tools/archwright-check.py --static design/specs/` (verify constraint specs against code). In a target project with a `.archwright-baseline.json`, known debt reports as warnings with `baselined: true` and exit 0 — only NEW violations fail the run; `remaining_delta` is the number being driven to zero (CK-07)
 - After test suite runs: run `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` (verify behavior specs against execution traces)
 - Design audits: AI-assisted via `archwright-review` (no dedicated tool flag exists)
 
