@@ -43,10 +43,11 @@ stacks:
     detect: ["tsconfig.json", "*.ts"]
     adapters:
       trace_emitter:
-        status: pending
+        status: "★★"
         since:
+          - {status: "★★", date: 2026-07-18, note: "C10: corpus wired into run-fixture-tests.sh (3 checks — emit, pass-validate, violate-FAIL); suite 42/0/0. Measured cost: emitter 75 LOC, scenario run 63ms, ~8 lines of test integration per spec. Bonus: rule-4 violating scenario exposed a check-tool defect (translate_predicate had no numeric comparisons — trace guards/invariants using </<=/>/>= passed vacuously; fixed same commit)."}
           - {status: pending, date: 2026-07-17, note: "birth entry — C10 (DynamoRush run) builds this as the first Extension Protocol adapter with measured cost"}
-        reason: "Scheduled: C10 builds it against dynamodb-game-demo. Unblocks: trace validation of behavior specs in TS projects."
+        evidence: "tools/stacks/typescript/trace_emitter/conformance/ (scenario.ts + ts-emitter-conformance.yaml); suite section 'Stack Adapter Conformance'. Field use: dynamodb-game-demo session/quest lifecycle traces."
       ast_grammar:
         status: pending
         since:

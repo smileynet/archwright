@@ -238,6 +238,35 @@ EOF
 fi
 
 echo ""
+echo "=== Stack Adapter Conformance: typescript.trace_emitter ==="
+# Extension Protocol rules 3-5: spike output is the scenario; corpus includes a
+# violating trace that must FAIL; status is computed by this suite.
+TE_DIR="$TOOLS/stacks/typescript/trace_emitter"
+if ! command -v node >/dev/null 2>&1; then
+  report SKIP "ts trace emitter conformance (node unavailable)"
+else
+  TE_OUT=$(mktemp -d)
+  if node --experimental-strip-types "$TE_DIR/conformance/scenario.ts" "$TE_OUT" >/dev/null 2>&1; then
+    report PASS "ts-emitter: scenario emits traces via recorder"
+  else
+    report FAIL "ts-emitter: scenario emits traces via recorder"
+  fi
+  rc=0; python3 "$CHECK" --trace "$TE_DIR/conformance/ts-emitter-conformance.yaml" "$TE_OUT/passing.trace.json" >/dev/null 2>&1 || rc=$?
+  if [ $rc -eq 0 ]; then
+    report PASS "ts-emitter: guarded run trace validates (exit 0)"
+  else
+    report FAIL "ts-emitter: guarded run trace validates (exit 0)" "exit=$rc"
+  fi
+  rc=0; python3 "$CHECK" --trace "$TE_DIR/conformance/ts-emitter-conformance.yaml" "$TE_OUT/violating.trace.json" >/dev/null 2>&1 || rc=$?
+  if [ $rc -eq 1 ]; then
+    report PASS "ts-emitter: unguarded run trace FAILs at capacity breach (exit 1)"
+  else
+    report FAIL "ts-emitter: unguarded run trace FAILs at capacity breach (exit 1)" "exit=$rc"
+  fi
+  rm -rf "$TE_OUT"
+fi
+
+echo ""
 echo "=== Check-Tool Feature Tests ==="
 # Golden assertions for check-backend features (tickets 005/006) — temp specs
 # run against the fixture tree, cleaned up unconditionally.

@@ -745,6 +745,19 @@ def translate_predicate(pred, state, current_spec_state=None):
         rval = str(state.get(rhs.strip(), rhs.strip()))
         return lval != rval
 
+    # Numeric comparisons (<=, >=, <, >) — var-to-var or var-to-literal.
+    # Order matters: check two-char operators before one-char.
+    for op, fn in ((" <= ", lambda a, b: a <= b), (" >= ", lambda a, b: a >= b),
+                   (" < ", lambda a, b: a < b), (" > ", lambda a, b: a > b)):
+        if op in pred:
+            lhs, rhs = pred.split(op, 1)
+            lraw = state.get(lhs.strip(), lhs.strip())
+            rraw = state.get(rhs.strip(), rhs.strip())
+            try:
+                return fn(float(lraw), float(rraw))
+            except (TypeError, ValueError):
+                return True  # non-numeric operands: untranslatable, fall through open
+
     # Bare identifier: state name reference
     if current_spec_state is not None and re.match(r"^[a-z][a-z0-9-]*$", pred):
         return pred == current_spec_state
