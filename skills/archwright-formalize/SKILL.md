@@ -199,4 +199,4 @@ When formalizing multiple patterns in one session:
 - **Tension section:** Reads as a problem statement. Someone unfamiliar can understand what's at stake.
 - **Resolution section:** A named approach, bolded, followed by how it works. Specific enough that two developers would implement the same architecture from it.
 - **Consequences section:** Honest. Includes "you'll also need X" and "this doesn't cover Y."
-- **Evidence section:** Cited. Not "it's standard practice" but "FIFA/NBA2K use this pattern [source]."
+- **Evidence section (substance, not volume — ticket 014):** Every Therefore commitment traces to at least one Evidence item (prior art, rejected alternative, or mechanism argument) — a commitment with no supporting evidence fails the gate. Citations are locatable ("FIFA/NBA2K use this pattern [source]", never "it's standard practice") and carry a year/version so staleness is visible. There is NO length quota — a short Evidence section that covers every commitment beats a long one that doesn't.

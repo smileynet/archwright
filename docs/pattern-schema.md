@@ -43,7 +43,7 @@ and the system must support both human and AI controllers uniformly.
 
 ## Evidence
 
-(~70% of the pattern body)
+(the substantive core — every Therefore commitment must trace to an item here)
 
 - Prior art: every team sport game uses single-authority possession
 - Rejected: direct writes from controllers → double-possession bugs in 3/12 playtests
@@ -99,7 +99,7 @@ This pattern is incomplete unless it also contains:
 | **Problem** | The core tension as a single bold sentence — stated as a user/domain truth | Start with the human desire being constrained |
 | **Context** | Where this sits in the pattern network | Which larger patterns it helps complete |
 | **Forces** | Desires and constraints — what's pulling in different directions | List desires FIRST (product-level), then constraints. Desires span functional, emotional, and social jobs |
-| **Evidence** | WHY these forces conflict — the longest section (~70% of body) | Rejected alternatives, prior art, empirical observations, mechanism |
+| **Evidence** | WHY these forces conflict — the substantive core (substance gate, ticket 014: every Therefore commitment traces to an item here; no length quota) | Rejected alternatives, prior art, empirical observations, mechanism |
 | **Therefore** | The named resolution — what to DO | Specific enough to derive specs from. Constrains form without determining it |
 | **Consequences** | New forces introduced, what's NOT covered, costs | Honest — includes what you give up |
 | **Verification** | How to check compliance | Mechanical check (★★) or review criteria (★/—) |
