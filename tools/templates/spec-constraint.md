@@ -9,6 +9,9 @@ user_story: "One sentence describing what the user experiences when this rule ho
 check:
   method: grep  # grep | semgrep | script | alloy
   target: "path/to/check"     # or a YAML list of roots — matches are unioned
+  # target_status: pending    # optional (CK-06): the target isn't built yet — check
+                              # reports ○ PENDING (never pass/fail) and activates when
+                              # the target exists. Remove once the code lands.
   pattern: "regex or semgrep pattern"
   include: ["*.cs"]  # optional globs scoping which files are searched — bare glob
                      # matches file name, glob with '/' matches project-relative path.

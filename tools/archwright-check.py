@@ -1777,7 +1777,9 @@ def probe_behavior(spec_path):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace> [--json] | --probe <spec>")
+        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] "
+              "[--changed-only [--base <ref>]] | --trace <spec> <trace> [--evidence <file>] | --probe <spec>\n"
+              "Common flags: --json  --baseline <file>  --update-baseline  --evidence <file>")
         sys.exit(2)
 
     # Handle --trace mode early (different flow). --json (anywhere after
