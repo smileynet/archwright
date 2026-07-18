@@ -71,6 +71,16 @@ Operator policy (grill Q06, 2026-07-17), applies to ALL pipeline runs:
    - Verification: `--links` must pass after edits; full static batch re-run with any pre-existing deliberate FAILs called out as unchanged.
 2. **Artifacts are live documents in the primary repo/branch space.** Commit `design/` output branch-agnostically to the CURRENT project branch unless the user specifies otherwise. No special design branches by default.
 
+## Discovery Track (ADR 0011)
+
+The pipeline has two tracks of work — one methodology, one agent, one artifact space. The **discovery track** (grill sessions, UI wireframing via `archwright-discover-ui`, WoZ imports, spikes) is HITL-dense and divergent; the **verification track** (survey→check) is the flow-through pipeline above. They meet at ONE seam: `resolve`, where approved discovery decisions enter as pre-resolved tensions through the batched-confirmation path.
+
+**Seam contract:** discovery hands over resolved decisions + evidence + an explicit unresolved list — never bare artifacts. The format is the **decision ledger** (`tools/templates/discovery-ledger.md`): append-only `D{NNN}` entries with category (core 5 + domain overlay extensions), origin (`user | suggested | inferred`), verbatim rationale, alternatives; reversals via `SUPERSEDES`; entries are truth — projections regenerate from them, never the reverse.
+
+**Placement + graduation:** discovery artifacts live in the target project at `design/discovery/<area>/` with `status: proposed | approved | superseded`. Graduation is mandatory on approval: decisions thread into force evidence and model seeds citing their `<artifact-id>#D{NNN}` anchors, and `--links` must pass. Unconfirmed `inferred` entries block graduation. **Conservation principle** on every seam transform: nothing invented (every output element cites an anchor), nothing lost (every active decision consumed or explicitly deferred).
+
+**Gates:** discovery inherits consequence-based gating — the ★★ hard floor applies to discovery-surfaced decisions. The rubber-stamp guard is calibrated by session type: creative sessions get the strict 3+-consecutive-`suggested` tripwire; grill-type sessions get periodic decision-surfacing (agreement with researched recommendations is never penalized). Discovery queues are prioritized by **risk/uncertainty**, never value/effort.
+
 ## Extension Protocol
 
 How archwright extends itself when it encounters a situation its material doesn't cover — a stack without an adapter, a domain without an overlay, a check kind without a method (ADR 0008, grill Q05). A coverage gap is a counterexample against archwright's own abstractions, handled by archwright's own loop: detect → research → generate from existing pattern → verify → register.

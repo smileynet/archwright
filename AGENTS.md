@@ -28,7 +28,8 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-review/         # Review code for design alignment
 │   ├── archwright-audit/          # Audit docs for truth (surface contradictions)
 │   ├── archwright-passup/         # Lift check violations to owning level, route per confidence
-│   └── archwright-diagram/        # Render models/patterns as Mermaid diagrams
+│   ├── archwright-diagram/        # Render models/patterns as Mermaid diagrams
+│   └── archwright-discover-ui/    # Discovery track: UI sessions — design system + wireframes + ledger (ADR 0011)
 ├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
 │   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
 │   └── subagent-reliability.md    # Failure handling for parallel dispatch
@@ -56,10 +57,13 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   │   ├── spec-behavior.yaml    # Behavior spec template
 │   │   ├── spec-contract.yaml    # Contract spec template
 │   │   ├── spec-constraint.md    # Constraint spec template
-│   │   └── spec-dependency.md    # Dependency spec template
-│   └── domains/                   # Domain overlays: scales + predicates per domain
+│   │   ├── spec-dependency.md    # Dependency spec template
+│   │   ├── discovery-ledger.md   # Decision-ledger section contract (seam format, ADR 0011)
+│   │   ├── wireframe.md          # Per-screen discovery artifact template
+│   │   └── design-system.md      # Layered design-system artifact template (grill Q3)
+│   └── domains/                   # Domain overlays: scales + predicates + discovery frameworks per domain
 │       ├── detect.yaml            # Manifest → domain rules (survey applies; override wins)
-│       ├── game/                  # Game scales + 13 predicates + research sources
+│       ├── game/                  # Game scales + 13 predicates + research sources + discovery.yaml
 │       ├── web/                   # Web scales + predicates
 │       └── general/               # Fallback scales + cross-cutting predicates
 ├── tools/stacks/                  # Stack adapters: per-language/engine mechanical components (ADR 0008)
@@ -101,6 +105,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-audit` — audit docs for truth (surface contradictions between docs and code)
 - `archwright-diagram` — render models/patterns as Mermaid diagrams
 - `archwright-passup` — consume check violations, lift to the owning level, route per confidence (★★→HITL, ★→propose, —→auto-adjust)
+- `archwright-discover-ui` — discovery track: UI sessions producing ledger-backed decisions that graduate at the resolve seam (ADR 0011)
 
 **Steering** (source in `steering/`, deployed to the tool's rules dir — kiro: `~/.kiro/steering/`, claude: `~/.claude/rules/`; codex/agy have no native equivalent — deploy prints wiring guidance):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates
