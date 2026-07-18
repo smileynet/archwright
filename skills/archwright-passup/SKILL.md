@@ -56,6 +56,7 @@ For each violation, decide: does this trace/finding reflect the REAL system brea
 | Evidence replays against real code/behavior (the file:line really does violate the rule) | **Real** | Continue to lift (step 2) |
 | The spec/model abstracted away something the check needs (e.g., a legitimate writer the model never named) | **Spurious** | Refine locally: fix the spec/model at ITS level; no ascent. Route = `fix-spec` |
 | The check itself is broken (wrong target path, bad pattern, tool error) | **Check fault** | Route = `fix-check`; repair the check block, re-run. Never touches design |
+| A discovery-seam projection (model seed, graduated force evidence) doesn't match its cited ledger anchors — invented or dropped content (ADR 0011) | **Transform fault** | Re-run the transform against the ledger; neither the design nor the code is at fault until the projection is faithful. Never ascends |
 
 `suggested_route` from the tool is the heuristic starting point; this triage confirms or overrides it. Spurious counterexamples are not failures — they are the abstraction asking to be refined (promotion: extended-state variable → discrete mode, unnamed writer → named actor).
 

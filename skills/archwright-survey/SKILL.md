@@ -69,6 +69,8 @@ Product-level sources (read FIRST — these establish the generative desires):
 - Product backlog / roadmap — what's valued and prioritized
 - Domain conventions (sport rules, coaching norms) — what's given by the world
 
+**Discovery artifacts (`design/discovery/`, if present — ADR 0011):** these are pipeline INPUT, not gaps. `status: approved` artifacts carry ledger decisions (`D{NNN}` entries with origin + verbatim rationale) that arrive at resolve as pre-resolved; their Not-Resolved-Here sections are declared model TODOs; unconfirmed `inferred` entries or stale `proposed` artifacts get flagged in the outline. Record what discovery areas exist and their approval state in the intake outline.
+
 Then read architectural sources:
 - `design/patterns/` — existing formalized patterns
 - `design/specs/` — existing checkable specs

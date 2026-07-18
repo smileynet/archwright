@@ -36,6 +36,7 @@ Then read architectural sources:
 - Grill Q-files: extract the **decision**, **rationale**, and **rejected alternatives**
 - ADRs: extract the **context** (forces), **decision**, and **consequences**
 - Spec requirements: extract the **requirement** and its **justification**
+- Discovery ledgers (`design/discovery/*/`, ADR 0011): extract each ACTIVE (non-superseded) `D{NNN}` entry's **decision**, **verbatim rationale**, and **alternatives**. `origin: user` entries are the user's own words — evidence at L1/L2, the strongest kind; `origin: suggested` entries are accepted proposals (L2/L3). Cite as `<artifact-id>#D{NNN}`.
 
 **The key question for every architectural decision:** "Which human desire does this serve?" If you can't trace an architectural constraint back to a product-level desire, either the desire is unnamed (name it) or the constraint is unmotivated (flag it).
 

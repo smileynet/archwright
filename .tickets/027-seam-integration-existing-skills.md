@@ -1,7 +1,7 @@
 ---
 id: 027
 title: "Seam integration: make pipeline skills discovery-aware"
-status: open
+status: done
 blocked_by: [020]
 ---
 

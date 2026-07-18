@@ -28,6 +28,8 @@ If the tension comes from the pipeline (`archwright-tensions`), it arrives pre-a
 
 **When all tensions arrive pre-resolved (mature projects):** This phase becomes a CONFIRMATION PASS — present each resolution to the human, get explicit acknowledgment that it still holds. Do NOT skip this phase. Its value for mature projects is ensuring that decisions made months ago still reflect current intent. Present the resolutions grouped by confidence level, and ask: "Do these still hold, or has anything shifted?"
 
+**Discovery-track arrivals (ADR 0011):** decisions from `status: approved` discovery artifacts (`design/discovery/`) enter through this same pre-resolved path — the seam. Each cites its ledger anchor (`<artifact-id>#D{NNN}`); the verbatim rationale is the evidence. They join the batched confirmation, never a re-derivation. A resolution that contradicts an approved discovery decision is a conflict to surface, not to silently override — the discovery ledger records the user's own words.
+
 ### 2. For partially-resolved tensions: Derive architectural form from desire
 
 When the product desire is clear but the architecture hasn't taken shape yet:
