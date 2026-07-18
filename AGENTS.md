@@ -48,7 +48,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
 │   ├── contract-schema.yaml       # JSON Schema for contract specs (from_model, events)
 │   ├── check-output-schema.yaml   # CK-03 output contract (check/validate --json shape)
-│   ├── trace-schema.ts            # Trace event type definitions
+│   ├── trace-schema.ts            # Trace type definitions (consumer-authoritative: bare array of {event, state, clock})
 │   ├── templates/                 # Document templates
 │   │   ├── pattern.md             # New pattern template
 │   │   ├── force.md               # Per-force file template (design/forces/)
@@ -64,7 +64,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 ├── tools/stacks/                  # Stack adapters: per-language/engine mechanical components (ADR 0008)
 │   ├── REGISTRY.yaml              # Adapter kinds × status (pending/★/★★, computed) + since: history
 │   ├── gdscript/                  # All pending (T7 converted)
-│   └── typescript/                # Pending; C10 builds trace_emitter as first measured adapter
+│   └── typescript/                # trace_emitter ★★ (conformance in suite + field-proven on DynamoRush); ast_grammar/check_patterns pending
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
 │   ├── PLAN.md                    # Phases 0–4 historical; Phase 5 ACTIVE (polyglot check tool — executor assigned, see specs/polyglot-check-tooling.md)
@@ -134,7 +134,7 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 39 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + check-tool feature tests (SKIPs with reason if alloy6.jar or java absent; green = 39/0/0) |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 42 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests (SKIPs with reason if alloy6.jar, java, or node absent; green = 42/0/0) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
@@ -149,7 +149,7 @@ Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`,
 mise trust && mise install     # python 3.12, temurin-21, node 22, smcat
 mise run setup                 # pyyaml
 mise run rehydrate-alloy       # Alloy 6.2.0 dist jar → .references/alloy6.jar
-mise run test                  # verify: 39 passed, 0 failed, 0 skipped
+mise run test                  # verify: 42 passed, 0 failed, 0 skipped
 ```
 
 `mise.toml` also sets `PYTHONIOENCODING=utf-8` and `ARCHWRIGHT_ALLOY_JAR` automatically inside the repo. Prefer `mise run <task>` (see Commands) — tasks run with the managed toolchain on PATH.
@@ -170,7 +170,7 @@ Notes:
 - Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
 - Windows: bare `python3` resolves to a broken MS Store stub, and mise's python ships only `python.exe` — use `mise exec -- python` or `mise run` tasks (`run-fixture-tests.sh` has its own python3→python guard). Without mise, real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` and `PYTHONIOENCODING=utf-8` must be set manually (★ output vs cp1252 console).
 - After ANY merge from upstream: `mise run test` (suite green) + `mise run deploy-skills` (upstream may have edited skills — deployed copies go stale silently).
-- After rehydrating the jar, run `mise run test` — the behavior + guard-conformance skips become active checks (green = 39/0/0).
+- After rehydrating the jar, run `mise run test` — the behavior + guard-conformance skips become active checks (green = 42/0/0).
 
 ## Workflows
 

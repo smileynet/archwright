@@ -127,6 +127,8 @@ The human confirms or overrides (can promote or demote any pattern's confidence)
 
 **When to skip:** If the pattern is a premise-level commitment unique to this project (e.g., a market-position choice like "self-deploy only"), note "deliberate project-specific choice — prior art not applicable" and assign ★ or — based on internal evidence only.
 
+**Grill-embedded research path:** When the source corpus is a researched grill (grill-with-docs output — every decision already carries cited EXTERNAL sources that passed the G1–G3 research gates), a fresh research dispatch may be skipped: reuse the grill's citations in the Evidence section and assign confidence from them (★★ still requires 2+ independent sources from different categories — the grill must actually cite them, not just assert). The confidence table is still presented for human confirm/override — at the batch review, or at the span digest when running inside a pre-authorized span (field-validated: DynamoRush areas 1–3). Uncited grill decisions get no such shortcut — research them.
+
 ### 5. Set confidence
 
 Confidence is assigned AFTER research completes:
