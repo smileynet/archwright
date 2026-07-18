@@ -137,6 +137,30 @@ _Avoid_: treating coverage gaps as descope candidates — a gap is a counterexam
 Per-language/engine mechanical component (`tools/stacks/<stack>/`): trace emitter, ast-grep grammar, check-pattern library. Orthogonal to domain overlays (dynamodb-game-demo = web domain + typescript stack). Tracked in `tools/stacks/REGISTRY.yaml` with guarantee-tiered status and measured cost; built on first encounter per the Extension Protocol.
 _Avoid_: conflating stack (language/engine) with domain (vocabulary).
 
+**Discovery track**:
+The HITL-dense, divergent half of the methodology (grill, wireframes, WoZ, concierge, spikes, future feature intake) feeding the verification track (survey→check) at the `resolve` seam. Same agent, same repo, same `design/` space — two kinds of WORK, never two pipelines (ADR 0011).
+_Avoid_: "design pipeline" (the two-pipeline framing is dual-track agile's documented failure mode)
+
+**Seam contract**:
+What discovery hands to verification: resolved decisions + evidence + an explicit unresolved list — never bare artifacts (wireframes/prototypes are evidence; the decision record is the deliverable). Format: the decision ledger.
+_Avoid_: "handoff" (implies separate owners)
+
+**Decision ledger**:
+The seam's capture format (adopted from wizard_of_oz `contract:decision-entry`): append-only `D{NNN}` entries with phase, category (core 5 + domain extensions), origin (user | suggested | inferred), decision, rationale verbatim, alternatives; reversals via `SUPERSEDES D{NNN}`; entries are truth — projections regenerate from them, never the reverse.
+_Avoid_: free-prose session notes (unparseable, no origin audit)
+
+**Artifact gap**:
+The explicit "Not resolved here" section every discovery artifact carries (states, edge cases, error/loading, interaction rules — what wireframes deliberately omit). First-class output: becomes the model phase's TODO input.
+_Avoid_: treating omissions as implicitly resolved (the #1 design-to-dev handoff failure)
+
+**Conservation check**:
+The LEC-equivalent for non-deterministic agent transforms (grill Q6): mechanical citation-graph verification that nothing was invented (every output element cites a source) and nothing was lost (every active input decision is consumed or explicitly deferred). Independent of the transform's reasoning; pairs with golden-corpus conformance (process-level).
+_Avoid_: attempting semantic equivalence checks on creative transforms (impossible); trusting the transformer (the Alloy vacuous-model failure class)
+
+**Rubber-stamp guard (calibration)**:
+Origin-counting agency tripwire from wizard_of_oz `facilitated-agency`, calibrated by session type (grill Q4): creative sessions (wireframes, WoZ) keep the strict 3+-consecutive-suggested stop; grill sessions get periodic decision-surfacing instead — agreement with researched recommendations is the system working, never penalized.
+_Avoid_: applying the strict tripwire to grills (punishes legitimate agreement)
+
 **Reconciliation pass**:
 For large projects/monorepos: after per-area pipeline runs, an all-up synthesis that dedupes forces across areas, surfaces cross-area tensions, and unifies models. Only used when scale forces area partitioning — normal projects run full-project/all-areas in one pipeline (grill Q06, 2026-07-17). Design artifacts are live documents committed branch-agnostically to the current project branch unless the user specifies otherwise.
 _Avoid_: area-scoping small projects (partition is the exception for scale, not the norm); special design branches by default.

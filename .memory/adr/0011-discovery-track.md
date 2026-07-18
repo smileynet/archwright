@@ -1,6 +1,6 @@
 # ADR 0011: The Discovery Track
 
-**Status:** Proposed (2026-07-18) — pending grill ratification (`.memory/grill/discovery-track/`)
+**Status:** Accepted (2026-07-18) — ratified via grill (`.memory/grill/discovery-track/`, 6 questions decided)
 **Refines:** ADR 0007 (the HITL/flow-through partition this ADR names as two tracks). Extends the pipeline upstream of `resolve`; changes nothing downstream of it.
 **Source:** Operator directive 2026-07-18 ("a design pipeline… vs a pure archwright pipeline that is largely mechanical"), research synthesis (`.scratch/research/`, 4 tracks), wizard_of_oz corpus review, operator's field-proven UI session prompts. Plan: `.scratch/discovery-track-plan.md`.
 
@@ -47,13 +47,13 @@ A working prototype exists: wizard_of_oz (`~/code/wizard_of_oz`) — a shipped, 
 - **Absorb wizard_of_oz:** it has its own users, release plan, identity; absorption gains nothing the import/export relationship doesn't.
 - **Free-form capture (no ledger):** unparseable for graduation, no origin audit, no rubber-stamp guard — wizard_of_oz rejected free-prose notes for the same reasons with field evidence.
 
-## Open Items (grill queue — dispositions to ratify)
+## Grill Verdicts (ratified 2026-07-18, details in `.memory/grill/discovery-track/`)
 
-| # | Question | Recommended disposition |
-|---|----------|------------------------|
-| Q1 | wizard_of_oz relationship | Standalone + import/export (Decision 9) |
-| Q2 | Ledger category enum | Fixed core + domain-extension via overlay `discovery:` section |
-| Q3 | Design-system artifact placement | `design/discovery/ui/design-system.md` (discovery artifact, graduates evidence into patterns) |
-| Q4 | Grill sessions adopt the ledger format? | Yes — unify capture across discovery techniques (Q-files become ledger-bearing) |
-| Q5 | woz-export: skill or tool? | Tool for the mechanical parse (ledger is regex-parseable) + skill for interpretation |
-| Q6 | LEC-equivalent for agent transforms; commit-binding of seam evidence | Golden-corpus conformance (per Extension Protocol); commit-binding deferred to its own ticket |
+| # | Question | Verdict |
+|---|----------|---------|
+| Q1 | wizard_of_oz relationship | Standalone + import/export; imports are cited snapshots, refreshed deliberately |
+| Q2 | Ledger category enum | Core 5 (`scope, experience, structure, technical, meta`) + domain extensions in overlay `discovery:` sections (game extends: mechanic, feedback, progression, economy, content, narrative) |
+| Q3 | Design-system artifact | Layered: doc permanent at `design/discovery/ui/design-system.md`; tension-resolving choices graduate to patterns; token/rule tables machine-readable + constraint-checkable (agents approximate prose design systems — superdesign.dev 2026) |
+| Q4 | Grill sessions + ledger | Field-level unification: origin recorded, `SUPERSEDES Q{n}` append-discipline. **Guard calibration by session type:** grills get periodic decision-surfacing (agreement with researched recommendations is normal, never penalized); creative sessions (wireframes, WoZ) keep the strict 3+-consecutive-suggested tripwire |
+| Q5 | woz-export ownership | Exporter tool in wizard_of_oz (session → neutral JSON = the inter-project contract, w/ conformance corpus incl. violating scenario); archwright skill consumes + interprets; category mapping on the consumer side |
+| Q6 | LEC-equivalent | Two layers: golden-corpus conformance (process) + **conservation check** (instance): every output element cites a source, every active input decision consumed or explicitly deferred — mechanical citation-graph walk, independent of the transform. Commit-binding of check evidence deferred to ticket 018 |
