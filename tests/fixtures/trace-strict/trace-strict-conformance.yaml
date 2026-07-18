@@ -1,0 +1,67 @@
+# Conformance fixture for ticket 015 — trace predicate strict mode.
+# Untranslatable predicates must SKIP-with-reason (never silent-pass);
+# translatable violations must still FAIL (Extension Protocol rule 4).
+kind: behavior
+id: trace-strict-conformance
+from_patterns:
+  - "pattern:conformance-fixture"
+
+protects_experience: "conformance-fixture"
+user_story: "A predicate the translator doesn't understand is reported as unchecked, not silently satisfied."
+
+context:
+  variables:
+    count:
+      type: int
+      initial: 0
+    max:
+      type: int
+      initial: 2
+
+initial: waiting
+
+states:
+  waiting:
+    type: atomic
+    "on":
+      TICK:
+        target: waiting
+      GO:
+        target: running
+        guard:
+          # Deliberately untranslatable (method call): guard must SKIP with a
+          # note and accept the transition — never silently pass as evaluated.
+          predicate: "players.every(ready)"
+
+  running:
+    type: atomic
+    "on": {}
+
+invariants:
+  - id: count-within-max
+    type: temporal
+    predicate: "always (count <= max)"
+    confidence: "★★"
+    description: "Count never exceeds max (translatable — must still FAIL on violation)"
+  - id: opaque-comparison
+    type: temporal
+    predicate: "always (items.length <= max)"
+    confidence: "★"
+    description: "Deliberately untranslatable: non-numeric comparison operand"
+  - id: opaque-construct
+    type: temporal
+    predicate: "always (exists p: p.ready)"
+    confidence: "—"
+    description: "Deliberately untranslatable: unsupported construct (terminal fall-through)"
+
+check:
+  trace:
+    events: [TICK, GO]
+    state_vars: [count, max]
+    invariants: [count-within-max, opaque-comparison, opaque-construct]
+
+abstraction_notes:
+  included: [one translatable invariant, two untranslatable invariants, one untranslatable guard]
+  excluded: [everything else — this is a strict-mode conformance fixture]
+  justification: "Exercises every Untranslatable code path: comparison non-numeric operands, terminal fall-through, guard skip."
+  scope_limit: "Trace check only."

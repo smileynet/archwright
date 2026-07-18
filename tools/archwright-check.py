@@ -685,8 +685,28 @@ def _split_op(pred, op):
     return parts
 
 
+class Untranslatable:
+    """Sentinel: a predicate (or atom) the translator cannot evaluate (ticket 015).
+
+    Returned by translate_predicate instead of a silent True so callers can
+    SKIP-with-reason at the invariant/guard granularity — mirroring the
+    Alloy-side taint discipline (ticket 008). Refuses bool() coercion so any
+    unaudited call site fails loudly instead of silently passing.
+    """
+    def __init__(self, reason):
+        self.reason = reason
+
+    def __bool__(self):
+        raise TypeError(f"Untranslatable predicate used as bool: {self.reason}")
+
+
 def translate_predicate(pred, state, current_spec_state=None):
-    """Evaluate a spec predicate against a state dict."""
+    """Evaluate a spec predicate against a state dict.
+
+    Returns True, False, or Untranslatable (three-valued — Kleene semantics
+    for composites: a composite is decided only when its translatable parts
+    decide it; otherwise the Untranslatable propagates).
+    """
     pred = pred.strip()
 
     # Strip balanced outer parens
@@ -708,21 +728,48 @@ def translate_predicate(pred, state, current_spec_state=None):
         return translate_predicate(inner, state, current_spec_state)
 
     if pred.startswith("not "):
-        return not translate_predicate(pred[4:], state, current_spec_state)
+        r = translate_predicate(pred[4:], state, current_spec_state)
+        if isinstance(r, Untranslatable):
+            return r
+        return not r
 
     # Binary operators (lowest precedence first, respecting braces/parens)
     idx = _find_op(pred, " implies ")
     if idx >= 0:
         lhs, rhs = pred[:idx].strip(), pred[idx+9:].strip()
-        return not translate_predicate(lhs, state, current_spec_state) or translate_predicate(rhs, state, current_spec_state)
+        l = translate_predicate(lhs, state, current_spec_state)
+        if l is False:
+            return True
+        r = translate_predicate(rhs, state, current_spec_state)
+        if r is True:
+            return True
+        if isinstance(l, Untranslatable):
+            return l
+        if isinstance(r, Untranslatable):
+            return r
+        return r  # l is True, r is False
 
     idx = _find_op(pred, " or ")
     if idx >= 0:
-        return any(translate_predicate(p, state, current_spec_state) for p in _split_op(pred, " or "))
+        untranslatable = None
+        for p in _split_op(pred, " or "):
+            r = translate_predicate(p, state, current_spec_state)
+            if r is True:
+                return True
+            if isinstance(r, Untranslatable) and untranslatable is None:
+                untranslatable = r
+        return untranslatable if untranslatable is not None else False
 
     idx = _find_op(pred, " and ")
     if idx >= 0:
-        return all(translate_predicate(p, state, current_spec_state) for p in _split_op(pred, " and "))
+        untranslatable = None
+        for p in _split_op(pred, " and "):
+            r = translate_predicate(p, state, current_spec_state)
+            if r is False:
+                return False
+            if isinstance(r, Untranslatable) and untranslatable is None:
+                untranslatable = r
+        return untranslatable if untranslatable is not None else True
 
     # Atoms
     if " in {" in pred:
@@ -756,7 +803,8 @@ def translate_predicate(pred, state, current_spec_state=None):
             try:
                 return fn(float(lraw), float(rraw))
             except (TypeError, ValueError):
-                return True  # non-numeric operands: untranslatable, fall through open
+                return Untranslatable(
+                    f"non-numeric operands in comparison: '{pred}'")
 
     # Bare identifier: state name reference
     if current_spec_state is not None and re.match(r"^[a-z][a-z0-9-]*$", pred):
@@ -765,7 +813,7 @@ def translate_predicate(pred, state, current_spec_state=None):
     if pred in state:
         return bool(state[pred])
 
-    return True
+    return Untranslatable(f"unsupported predicate construct: '{pred}'")
 
 
 def check_trace(spec_path, trace_path):
@@ -807,6 +855,11 @@ def check_trace(spec_path, trace_path):
     
     # Replay trace
     current_state = initial_state
+    # Ticket 015: untranslatable predicates SKIP-with-reason, never silent-pass.
+    # Sticky per-invariant: once untranslatable at any step, the invariant is
+    # skipped for the rest of the trace and excluded from invariants_checked.
+    skipped_invariants = {}  # id -> reason
+    guards_skipped = []      # [{position, event, predicate, reason}]
     
     for i, entry in enumerate(trace):
         event = entry.get("event", "")
@@ -830,7 +883,11 @@ def check_trace(spec_path, trace_path):
                 return 1
             # Check invariants at initial state
             for inv in active_invariants:
-                if not translate_predicate(inv["predicate"], state_snapshot, current_state):
+                res = translate_predicate(inv["predicate"], state_snapshot, current_state)
+                if isinstance(res, Untranslatable):
+                    skipped_invariants.setdefault(inv["id"], res.reason)
+                    continue
+                if not res:
                     print(json.dumps({
                         "status": "fail",
                         "assurance": "trace",
@@ -899,7 +956,17 @@ def check_trace(spec_path, trace_path):
             guard_pred = guard.get("predicate") if isinstance(guard, dict) else None
             
             if guard_pred:
-                if not translate_predicate(guard_pred, prev_state, current_state):
+                g = translate_predicate(guard_pred, prev_state, current_state)
+                if isinstance(g, Untranslatable):
+                    # Untranslatable guard: SKIP the guard — transition accepted
+                    # with a note, never a silent pass presented as evaluated.
+                    guards_skipped.append({
+                        "position": i,
+                        "event": event,
+                        "predicate": guard_pred,
+                        "reason": g.reason,
+                    })
+                elif not g:
                     continue  # Guard failed, try next
             
             # Transition accepted
@@ -927,7 +994,13 @@ def check_trace(spec_path, trace_path):
         
         # Check invariants after transition
         for inv in active_invariants:
-            if not translate_predicate(inv["predicate"], state_snapshot, current_state):
+            if inv["id"] in skipped_invariants:
+                continue  # sticky skip — partial checking would be misleading
+            res = translate_predicate(inv["predicate"], state_snapshot, current_state)
+            if isinstance(res, Untranslatable):
+                skipped_invariants.setdefault(inv["id"], res.reason)
+                continue
+            if not res:
                 print(json.dumps({
                     "status": "fail",
                     "assurance": "trace",
@@ -949,15 +1022,22 @@ def check_trace(spec_path, trace_path):
                 }))
                 return 1
     
-    # All steps passed
-    print(json.dumps({
+    # All steps passed (exit 0 even with skips — consistent with behavior-check
+    # SKIPs: a skip is a coverage statement, not a pass; JSON makes it visible)
+    result = {
         "status": "pass",
         "assurance": "trace",
         "spec_id": data["id"],
         "steps_checked": len(trace),
         "final_state": current_state,
-        "invariants_checked": [inv["id"] for inv in active_invariants]
-    }))
+        "invariants_checked": [inv["id"] for inv in active_invariants
+                               if inv["id"] not in skipped_invariants],
+        "invariants_skipped": [{"id": k, "reason": v}
+                               for k, v in skipped_invariants.items()],
+    }
+    if guards_skipped:
+        result["guards_skipped"] = guards_skipped
+    print(json.dumps(result))
     return 0
 
 

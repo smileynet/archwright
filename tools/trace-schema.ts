@@ -81,6 +81,25 @@ export interface TraceValidationResult {
   readonly provenance?: { readonly from_force?: string; readonly from_pattern?: string };
   readonly steps_checked?: number;
   readonly final_state?: string;
+  /** Invariants fully evaluated at every step (excludes skipped ones). */
   readonly invariants_checked?: string[];
+  /**
+   * Invariants NOT evaluated because their predicate is untranslatable
+   * (ticket 015 — SKIP-with-reason, never silent-pass). Always present on
+   * pass results; empty when everything translated. A pass with skips still
+   * exits 0, but the skipped list is a coverage statement, not a pass.
+   */
+  readonly invariants_skipped?: ReadonlyArray<{ readonly id: string; readonly reason: string }>;
+  /**
+   * Guards that were untranslatable: the transition was accepted with a note
+   * rather than silently treated as guard-satisfied. Present only when
+   * non-empty.
+   */
+  readonly guards_skipped?: ReadonlyArray<{
+    readonly position: number;
+    readonly event: string;
+    readonly predicate: string;
+    readonly reason: string;
+  }>;
   readonly message?: string;
 }

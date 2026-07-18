@@ -15,3 +15,11 @@ two-char ops before one-char). Non-numeric operands still fall through open — 
 fall-through-True default remains a design smell; a strict mode that reports
 untranslatable predicates as SKIP-with-reason would be the durable fix (candidate
 ticket).
+
+**Durable fix landed (2026-07-18, ticket 015):** `translate_predicate` is now
+three-valued (True/False/`Untranslatable(reason)`, Kleene propagation through
+not/and/or/implies; the sentinel raises on bool() so unaudited call sites fail
+loudly). `check_trace` reports `invariants_skipped: [{id, reason}]` (sticky —
+excluded from `invariants_checked`) and `guards_skipped` (transition accepted
+with note). Exit 0 on pass-with-skips; conformance fixture at
+`tests/fixtures/trace-strict/` with 5 golden checks incl. the still-FAILs case.

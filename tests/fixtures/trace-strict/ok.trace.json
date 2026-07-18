@@ -1,0 +1,5 @@
+[
+  {"event": "INITIAL", "state": {"count": 0, "max": 2}, "clock": 0},
+  {"event": "TICK", "state": {"count": 1, "max": 2}, "clock": 1},
+  {"event": "GO", "state": {"count": 1, "max": 2}, "clock": 2}
+]
