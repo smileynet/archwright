@@ -119,7 +119,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 | `archwright-check.py`, `archwright-validate.py`, `archwright-compile-alloy.py` (debug use) | `archwright-check` |
 | `archwright-check-compile.mjs`, `alloy:` expression authoring | `archwright-derive` |
 | `archwright-forces-gen.py` | `archwright-forces` |
-| `run-fixture-tests.sh`, `deploy-skills.sh` | none — repo-internal; this file is their home (decision 2026-07-18) |
+| `run-fixture-tests.sh`, `deploy-skills.sh` | `.kiro/skills/repo-maintenance` — project-local, never deployed globally (2026-07-18; supersedes "no skill, this file is their home") |
 | `archwright_common.py` | none — shared module, not a CLI |
 
 **Workflow:** Edit skills/steering in this repo → commit → run `tools/deploy-skills.sh` to push to global.
