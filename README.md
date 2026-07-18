@@ -57,7 +57,7 @@ Methodology operational and **field-validated on a second project**. The lacross
 
 Field run evidence (DynamoRush, 4 areas + reconciliation pass): 105 forces, 35 patterns, 33 specs; a ★★ escrow violation was found by check, fixed, and re-verified green — change propagation proven live, not synthetically. First Extension Protocol stack adapter shipped at ★★: the TypeScript trace emitter (75 LOC, 63ms, conformance corpus in the suite). Fixture suite green (0 failed, 0 skipped — current count in AGENTS.md §Commands).
 
-**Next:** frontier tickets in `.tickets/` (011–015: schema semantics, link producers, gate calibration, strict predicate mode) and the CK-07 evidence-ledger implementation (design ratified in ADR 0009).
+**Next:** frontier is clear — all tickets in `.tickets/` (001–016) are done, including trace CK-03 routing (016). Open work: the CK-07 evidence-ledger implementation (design ratified in ADR 0009, blocked on R32 fingerprinting research) and whatever new field findings surface.
 
 ## Lineage
 

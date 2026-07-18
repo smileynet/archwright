@@ -67,9 +67,14 @@ npm test  # traces land in design/specs/traces/
 
 # Validate each trace against its behavior spec
 python3 <archwright-repo>/tools/archwright-check.py --trace design/specs/<behavior-spec>.yaml design/specs/traces/<trace>.json
+
+# When the review will route violations through archwright-passup, add --json:
+# emits the CK-03 document (severity, escalate, contrast_pair, provenance) —
+# trace violations route uniformly with static ones (ticket 016)
+python3 <archwright-repo>/tools/archwright-check.py --trace design/specs/<behavior-spec>.yaml design/specs/traces/<trace>.json --json
 ```
 
-**Output:** Pass/fail per trace. Violations show which event violated which transition.
+**Output:** Pass/fail per trace. Violations show which event violated which transition; untranslatable predicates/guards are reported as skips (coverage statements), never silent passes.
 
 **Prerequisite:** Tests must emit trace JSON files. Instrumentation cost: ~5 lines per state machine.
 

@@ -67,7 +67,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   └── typescript/                # trace_emitter ★★ (conformance in suite + field-proven on DynamoRush); ast_grammar/check_patterns pending
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
-│   ├── PLAN.md                    # Phases 0–4 historical; Phase 5 ACTIVE (polyglot check tool — executor assigned, see specs/polyglot-check-tooling.md)
+│   ├── PLAN.md                    # Phases 0–4 historical; Phase 5 partially shipped (DoD-5 chain CK-03→04→05→09→10 + CK-21 done; open: CK-06/07/08, 11–19 — see specs/polyglot-check-tooling.md)
 │   ├── specs/                     # Specs for plan deliverables (incl. Phase 5)
 │   ├── audit/                     # Audit reports (tools, skills, claims)
 │   ├── grill/                     # Grill session decision records (INDEX.md + Q-files per topic)
