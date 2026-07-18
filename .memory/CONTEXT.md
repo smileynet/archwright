@@ -101,6 +101,10 @@ _Avoid_: treating a baseline entry as a waiver of the ★★ hard floor, or as a
 A violation's stable identity: sha256 over spec_id + invariant + normalized path + normalized evidence content, truncated to 16 hex chars, with a visible `_<n>` occurrence suffix for identical duplicates. Line numbers never enter the hash. Version tag (`algo: aw/v1`) stored alongside; unknown versions are unmatchable, never guessed. Shared plumbing for the baseline and the ADR-0009 evidence ledger.
 _Avoid_: file+line as identity (churns on every edit above the match).
 
+**Evidence ledger**:
+The baseline's tool-owned sibling (`.archwright-evidence.json`, ADR 0009): check runs auto-append confidence evidence events — demotion-candidate (★★/★ FAIL, never baselined/—) and promotion-candidate (pass streak per `config.promotion_streak`, or a ★/— invariant passing a bounded check). Activation by existence (or `--evidence`); deduped; trace events carry `fingerprints: []`. The ledger never changes a confidence value — ratification is human, in the artifact, and ★★ moves always block for HITL.
+_Avoid_: tools editing artifact frontmatter (rejected alternative A — noisy diffs, self-review smell); treating a candidate event as a ratified confidence change.
+
 **Force file**:
 The durable per-force artifact (`design/forces/<id>.md`, kind: force) — the root of provenance. `serves:` and `from_force:` resolve against these once at least one exists.
 _Avoid_: calling the working YAML inventory (`.memory/archwright-forces-*.yaml`) "the forces" — that's extraction scaffolding.

@@ -1,7 +1,7 @@
 # ADR 0009: Confidence Evidence Lifecycle — Split Storage by Author
 
-**Status:** Accepted (2026-07-17)
-**Closes:** Audit ticket C3 (as re-scoped by grill Q04, `.memory/grill/audit-plan-closeout/Q04-evidence-storage.md`). This ADR records the design; the ledger IMPLEMENTATION is deferred to the CK-07 plumbing timeframe (Phase 5b, `.memory/specs/polyglot-check-tooling.md`).
+**Status:** Accepted (2026-07-17); ledger IMPLEMENTED 2026-07-18 (ticket 017 — `archwright-check.py` `--evidence` / activation-by-existence; 11 conformance checks in the fixture suite). The report command (joining ledger + artifacts) remains future work.
+**Closes:** Audit ticket C3 (as re-scoped by grill Q04, `.memory/grill/audit-plan-closeout/Q04-evidence-storage.md`).
 **Relates to:** ADR 0007 (★★ transitions are HITL), ADR 0010 (research-first ★★ disposition), growth rule 7 (promotion = deeper checking + recorded evidence).
 
 ## Context

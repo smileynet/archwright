@@ -109,6 +109,13 @@ properties:
       path: {type: string}
       entries: {type: integer}    # entries in the baseline file
       suppressed: {type: integer} # violations fully matched by the baseline this run
+  evidence_ledger:                # present only when the ADR-0009 evidence ledger is active (an
+    type: object                  # EXISTING .archwright-evidence.json up-tree, or --evidence <file>)
+    properties:                   # and the run wasn't an error (errored runs prove nothing).
+      path: {type: string}
+      events_appended: {type: integer}  # demotion/promotion candidates appended THIS run (post-dedup).
+                                        # Ledger is tool-owned; human ratification happens in the
+                                        # artifact (confidence field + Evidence line; ★★ moves are HITL).
   remaining_delta:
     type: integer                 # violations AFTER baseline suppression (CK-07) — what a fix loop
                                   # drives to zero. No baseline active = all violations.

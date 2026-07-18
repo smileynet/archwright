@@ -9,11 +9,19 @@ Usage:
   archwright-check --probe <spec.yaml>           Non-vacuity probe: a false invariant MUST FAIL
   ... [--baseline <file>]                        Explicit baseline (else .archwright-baseline.json auto-discovered up to the git root)
   ... [--update-baseline]                        Ratchet (CK-08): remove entries that no longer reproduce; NEVER adds
+  ... [--evidence <file>]                        Explicit evidence ledger (else an EXISTING .archwright-evidence.json auto-discovered up-tree)
 
 Baseline (CK-07): suppresses fully-fingerprint-matched constraint/dependency
 violations to warnings (baselined: true). A baselined ★★ keeps escalate: true;
 behavior/trace violations are never suppressed. remaining_delta counts
 violations after suppression.
+
+Evidence ledger (ADR 0009): when active (existing file up-tree, or --evidence),
+pass/fail runs auto-append confidence evidence events — demotion-candidate
+(FAIL on a ★★/★, unless baselined) and promotion-candidate (pass streak per
+config.promotion_streak, default 5, or a ★/— invariant passing a bounded
+check). Tool-owned; human ratification happens in the artifact (★★ moves are
+always HITL). Bootstrap per project: echo '{}' > design/.archwright-evidence.json
 
 Dispatches by spec kind:
   behavior    → compile to Alloy, run model checker (if alloy6.jar available)
@@ -72,12 +80,9 @@ def _split_evidence(item):
     return "", item
 
 
-def find_baseline(start_dirs, explicit=None):
-    """Locate .archwright-baseline.json: explicit flag wins; otherwise walk up
-    from each start dir. Returns a Path or None. No baseline = no suppression
-    (never silently create one — baseline entries are a human decision)."""
-    if explicit:
-        return Path(explicit)
+def _find_up(start_dirs, filename):
+    """Walk up from each start dir looking for filename; stop at the repo
+    boundary (a file above the repo is never ours). Returns Path or None."""
     seen = set()
     for d in start_dirs:
         d = Path(d).resolve()
@@ -85,14 +90,22 @@ def find_baseline(start_dirs, explicit=None):
             d = d.parent
         while d not in seen:
             seen.add(d)
-            cand = d / BASELINE_FILENAME
+            cand = d / filename
             if cand.is_file():
                 return cand
-            # Stop at the repo boundary — a baseline above the repo is never ours.
             if (d / ".git").exists() or d.parent == d:
                 break
             d = d.parent
     return None
+
+
+def find_baseline(start_dirs, explicit=None):
+    """Locate .archwright-baseline.json: explicit flag wins; otherwise walk up
+    from each start dir. Returns a Path or None. No baseline = no suppression
+    (never silently create one — baseline entries are a human decision)."""
+    if explicit:
+        return Path(explicit)
+    return _find_up(start_dirs, BASELINE_FILENAME)
 
 
 def load_baseline(path):
@@ -110,6 +123,163 @@ def load_baseline(path):
            if isinstance(e, dict) and "fingerprint" in e
            and e.get("algo", FINGERPRINT_ALGO) == FINGERPRINT_ALGO}
     return data, fps
+
+
+# ---------------------------------------------------------------------------
+# Evidence ledger (ADR 0009) — tool-owned sibling of the baseline.
+# Machine evidence events (demotion/promotion candidates) are auto-appended
+# here so confidence stops being write-once; human RATIFICATION never happens
+# in this file (it happens in the artifact: confidence field + Evidence line;
+# ★★ transitions always block for HITL — ADR 0007).
+#
+# Activation by existence: writes happen only when the ledger file already
+# exists (discovered up-tree like the baseline) or --evidence names one
+# explicitly (create-if-missing — the flag states intent). No file, no flag =
+# events stay session-ephemeral (the ADR's accepted gap, opted out of per
+# project by touching design/.archwright-evidence.json). This also keeps
+# checked-in fixture trees clean.
+# ---------------------------------------------------------------------------
+
+EVIDENCE_FILENAME = ".archwright-evidence.json"
+PROMOTION_STREAK_DEFAULT = 5
+
+
+def find_evidence_ledger(start_dirs, explicit=None):
+    """Locate the evidence ledger. Explicit flag wins (missing file = will be
+    created on write); otherwise only an EXISTING file activates the ledger."""
+    if explicit:
+        return Path(explicit)
+    return _find_up(start_dirs, EVIDENCE_FILENAME)
+
+
+def load_evidence_ledger(path):
+    """Parse the ledger. Missing file = empty ledger (valid only under an
+    explicit --evidence). Malformed JSON = ValueError (exit 2 upstream) —
+    same discipline as the baseline: never guess at a corrupt ledger."""
+    path = Path(path)
+    if not path.is_file():
+        return {"events": [], "streaks": {}}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        raise ValueError(f"cannot read evidence ledger {path}: {e}")
+    if not isinstance(data, dict):
+        raise ValueError(f"evidence ledger {path}: top level must be an object")
+    data.setdefault("events", [])
+    data.setdefault("streaks", {})
+    if not isinstance(data["events"], list) or not isinstance(data["streaks"], dict):
+        raise ValueError(f"evidence ledger {path}: 'events' must be a list, 'streaks' an object")
+    return data
+
+
+def _event_identity(ev):
+    """Dedup key: identical re-observation of known evidence appends nothing;
+    new evidence (fingerprints), a changed confidence, or a different reason
+    is a new event. Timestamps never enter identity."""
+    return (ev.get("event"), ev.get("key"), ev.get("invariant"),
+            ev.get("confidence"), ev.get("reason"),
+            tuple(sorted(ev.get("fingerprints") or [])))
+
+
+def record_evidence(ledger, per_file, violations_by_spec):
+    """Apply one check run to the ledger (ADR 0009). Returns events appended.
+
+    - demotion-candidate: FAIL on a ★★ or ★ spec/invariant. Baselined
+      violations emit nothing (the baseline entry IS the human adjudication);
+      '—' fails emit nothing (no confidence claim to demote).
+    - promotion-candidate: pass streak reaches config.promotion_streak
+      (default 5) per (key, invariant) — fail resets, error/skip neither
+      counts nor resets (proves nothing) — or a deeper-tier pass: a ★/—
+      invariant passing a mechanical (bounded) check. ★★ never promotes.
+    - Contract/pattern results are schema-only, not evidence: excluded.
+    """
+    from datetime import datetime, timezone
+
+    streak_target = ledger.get("config", {}).get(
+        "promotion_streak", PROMOTION_STREAK_DEFAULT)
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    existing = {_event_identity(e) for e in ledger["events"]
+                if isinstance(e, dict)}
+    appended = []
+
+    def _append(ev):
+        if _event_identity(ev) not in existing:
+            existing.add(_event_identity(ev))
+            ev["at"] = now
+            ledger["events"].append(ev)
+            appended.append(ev)
+
+    for spec_path, kind, results in per_file:
+        if kind not in ("behavior", "constraint", "dependency"):
+            continue
+        doc_violations = violations_by_spec.get(str(spec_path), {})
+        for r in results:
+            spec_id = r.get("spec_id", "unknown")
+            invariant = r.get("invariant")
+            key = f"{kind}:{spec_id}"
+            skey = f"{key}#{invariant}"
+            conf = r.get("confidence", "—")
+            status = r["status"]
+
+            if status == "fail":
+                ledger["streaks"].pop(skey, None)
+                v = doc_violations.get(invariant, {})
+                if v.get("baselined"):
+                    continue
+                if conf not in ("★★", "★"):
+                    continue
+                _append({
+                    "event": "demotion-candidate",
+                    "key": key,
+                    "invariant": invariant,
+                    "confidence": conf,
+                    "assurance": r.get("assurance"),
+                    "fingerprints": v.get("fingerprints", []),
+                    "from_pattern": r.get("from_pattern"),
+                    "from_force": r.get("from_force"),
+                    "message": r.get("message"),
+                })
+            elif status == "pass":
+                if conf == "★★":
+                    continue  # top tier — nothing to promote toward
+                # Deeper-tier pass: heuristic-confidence invariant survived a
+                # mechanical check — immediate promotion candidate.
+                if r.get("assurance") == "bounded":
+                    _append({
+                        "event": "promotion-candidate",
+                        "key": key,
+                        "invariant": invariant,
+                        "confidence": conf,
+                        "reason": "deeper-check-pass (bounded/mechanical)",
+                        "fingerprints": [],
+                    })
+                streak = ledger["streaks"].get(skey, 0) + 1
+                ledger["streaks"][skey] = streak
+                if streak == streak_target:
+                    _append({
+                        "event": "promotion-candidate",
+                        "key": key,
+                        "invariant": invariant,
+                        "confidence": conf,
+                        "reason": f"pass-streak-{streak_target}",
+                        "fingerprints": [],
+                    })
+            # skipped/pending/error: neither counts nor resets — proves nothing.
+    return appended
+
+
+def write_evidence_ledger(path, ledger):
+    """Persist the ledger. A write failure after checks ran must not change
+    the run's verdict: warn on stderr, exit code untouched."""
+    try:
+        Path(path).write_text(
+            json.dumps(ledger, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8")
+        return True
+    except OSError as e:
+        print(f"WARNING: evidence ledger not written ({e}) — events from this "
+              f"run are lost", file=sys.stderr)
+        return False
 
 
 def extract_frontmatter(path):
@@ -676,9 +846,12 @@ def enrich_results(results, data, spec_path):
 
     for r in results:
         r.setdefault("spec_id", data.get("id", "unknown"))
+        # Every result carries a confidence (pass results feed evidence-ledger
+        # streaks at the right tier — ADR 0009); fail keeps its own if set.
+        if not r.get("confidence"):
+            r["confidence"] = data.get("confidence", "—")
         if r["status"] == "fail":
-            conf = r.get("confidence") or data.get("confidence", "—")
-            r["confidence"] = conf
+            conf = r["confidence"]
             r["severity"] = _SEVERITY.get(conf, "info")
             if conf == "★★":
                 r["escalate"] = True  # ★★ violations always route to a human (C2)
@@ -1025,26 +1198,78 @@ def build_trace_document(spec_path, payload, data=None, active_invariants=None):
     }
 
 
-def check_trace(spec_path, trace_path, json_output=False):
+def check_trace(spec_path, trace_path, json_output=False, evidence_arg=None):
     """Validate a JSON trace against a behavior spec.
 
     Output contract (ticket 016): the bespoke replay shape (trace-schema.ts)
     by default; with json_output=True, the CK-03 document (check-output-schema
     .yaml) so archwright-passup routes trace violations uniformly with static
     ones. Exit codes unchanged: 0 pass / 1 fail / 2 error.
+
+    Evidence (ADR 0009): pass/fail runs feed the evidence ledger when one is
+    active (existing file up-tree or explicit --evidence). Trace events carry
+    fingerprints: [] — aw/v1 hashes static path+content, which traces don't
+    have (CK-07 scope cut, upheld); identity = key + invariant + confidence.
     """
     spec_path = Path(spec_path)
     trace_path = Path(trace_path)
 
     data = None
     active_invariants = []
+    evidence_path = None
+    evidence_ledger = None
+
+    def _maybe_record(payload, code):
+        """Record trace evidence: on pass, streak credit per checked invariant;
+        on fail, one demotion-candidate for the violated invariant (structural
+        violations use spec-level confidence). Errors prove nothing. Invariants
+        that merely didn't fail on a FAILED trace get no streak credit — the
+        replay stopped early, so their coverage is incomplete."""
+        if evidence_ledger is None or code not in (0, 1) or data is None:
+            return None
+        spec_id = data.get("id", "unknown")
+        results = []
+        if code == 0:
+            skipped = {s["id"] for s in payload.get("invariants_skipped", [])}
+            for inv in active_invariants:
+                if inv["id"] in skipped:
+                    continue
+                results.append({"status": "pass", "spec_id": spec_id,
+                                "invariant": inv["id"],
+                                "confidence": inv.get("confidence", "—"),
+                                "assurance": "trace"})
+        else:
+            v = payload.get("violation", {})
+            spec_inv = next((i for i in (data.get("invariants") or [])
+                             if i.get("id") == v.get("invariant")), None)
+            prov = payload.get("provenance") or {}
+            results.append({
+                "status": "fail", "spec_id": spec_id,
+                "invariant": v.get("invariant") or f"trace-{v.get('type', 'invariant')}",
+                "confidence": (spec_inv or {}).get("confidence") or data.get("confidence", "—"),
+                "assurance": "trace",
+                "from_pattern": prov.get("from_pattern"),
+                "from_force": prov.get("from_force"),
+                "message": v.get("message"),
+            })
+        appended = record_evidence(evidence_ledger,
+                                   [(spec_path, "behavior", results)], {})
+        write_evidence_ledger(evidence_path, evidence_ledger)
+        return {"path": str(evidence_path), "events_appended": len(appended)}
 
     def _emit(payload, code):
+        ev_info = _maybe_record(payload, code)
         if json_output:
             doc = build_trace_document(spec_path, payload, data, active_invariants)
+            if ev_info:
+                doc["evidence_ledger"] = ev_info
             print(json.dumps(doc, indent=2, ensure_ascii=False))
         else:
             print(json.dumps(payload))
+            if ev_info and ev_info["events_appended"]:
+                # stderr: the bespoke shape is a single parseable stdout line
+                print(f"evidence: {ev_info['events_appended']} event(s) appended "
+                      f"to {ev_info['path']}", file=sys.stderr)
         return code
 
     # Load spec
@@ -1055,6 +1280,16 @@ def check_trace(spec_path, trace_path, json_output=False):
 
     if data.get("kind") != "behavior":
         return _emit({"status": "error", "message": f"Expected kind: behavior, got: {data.get('kind')}"}, 2)
+
+    # Evidence ledger (ADR 0009): load before replay so a malformed ledger is
+    # a tool error (exit 2), never a silently-dropped recording.
+    evidence_path = find_evidence_ledger([spec_path.parent], explicit=evidence_arg)
+    if evidence_path:
+        try:
+            evidence_ledger = load_evidence_ledger(evidence_path)
+        except ValueError as e:
+            evidence_path = None
+            return _emit({"status": "error", "message": str(e)}, 2)
 
     # Load trace
     try:
@@ -1476,14 +1711,29 @@ def main():
         sys.exit(2)
 
     # Handle --trace mode early (different flow). --json (anywhere after
-    # --trace) switches output to the CK-03 document shape (ticket 016).
+    # --trace) switches output to the CK-03 document shape (ticket 016);
+    # --evidence <file> names an explicit evidence ledger (ADR 0009).
     if sys.argv[1] == "--trace":
-        trace_args = [a for a in sys.argv[2:] if a != "--json"]
-        trace_json = "--json" in sys.argv[2:]
+        rest = sys.argv[2:]
+        trace_json = "--json" in rest
+        trace_evidence = None
+        trace_args = []
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--json":
+                pass
+            elif rest[i] == "--evidence":
+                i += 1
+                if i < len(rest):
+                    trace_evidence = rest[i]
+            else:
+                trace_args.append(rest[i])
+            i += 1
         if len(trace_args) < 2:
-            print(json.dumps({"status": "error", "message": "Usage: archwright-check --trace <spec.yaml> <trace.json> [--json]"}))
+            print(json.dumps({"status": "error", "message": "Usage: archwright-check --trace <spec.yaml> <trace.json> [--json] [--evidence <file>]"}))
             sys.exit(2)
-        sys.exit(check_trace(trace_args[0], trace_args[1], json_output=trace_json))
+        sys.exit(check_trace(trace_args[0], trace_args[1], json_output=trace_json,
+                             evidence_arg=trace_evidence))
 
     # Handle --probe mode early (different flow)
     if sys.argv[1] == "--probe":
@@ -1498,6 +1748,7 @@ def main():
     json_output = False
     mode = "files"
     baseline_arg = None
+    evidence_arg = None
     update_baseline = False
 
     # Parse args
@@ -1529,6 +1780,10 @@ def main():
             i += 1
             if i < len(args):
                 baseline_arg = args[i]
+        elif args[i] == "--evidence":
+            i += 1
+            if i < len(args):
+                evidence_arg = args[i]
         elif args[i] == "--update-baseline":
             update_baseline = True
         elif args[i] == "--json":
@@ -1573,6 +1828,17 @@ def main():
               file=sys.stderr)
         sys.exit(2)
 
+    # Evidence ledger (ADR 0009): explicit --evidence wins (created on write);
+    # otherwise only an EXISTING file up-tree activates recording.
+    evidence_path = find_evidence_ledger([f.parent for f in files], explicit=evidence_arg)
+    evidence_ledger = None
+    if evidence_path:
+        try:
+            evidence_ledger = load_evidence_ledger(evidence_path)
+        except ValueError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            sys.exit(2)
+
     per_file = []
     for f in files:
         kind, results = check_file(f)
@@ -1583,6 +1849,19 @@ def main():
     doc = build_document(mode, target_root, per_file,
                          baseline_fps=baseline_fps, baseline_path=baseline_path,
                          baseline_entries=len(baseline_data.get("entries", [])) if baseline_data else 0)
+
+    # Evidence recording (ADR 0009): errored runs prove nothing — record only
+    # from clean pass/fail runs (same discipline as the baseline ratchet).
+    if evidence_ledger is not None and doc["status"] != "error":
+        violations_by_spec = {}
+        for v in doc["violations"]:
+            violations_by_spec.setdefault(v["spec_path"], {})[v["invariant"]] = v
+        appended = record_evidence(evidence_ledger, per_file, violations_by_spec)
+        write_evidence_ledger(evidence_path, evidence_ledger)
+        doc["evidence_ledger"] = {"path": str(evidence_path),
+                                  "events_appended": len(appended)}
+        if not json_output and appended:
+            print(f"  evidence: {len(appended)} event(s) appended to {evidence_path}")
 
     # Baseline ratchet (CK-08): remove entries whose violations no longer
     # reproduce; NEVER add (accepting new debt is a human decision). An errored

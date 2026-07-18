@@ -26,7 +26,7 @@ Verify specs against their stated invariants. Report violations with provenance.
    - `dependency` → run import/call analysis from `allowed`/`forbidden`
 
 3. **Interpret results:**
-   - `pass` → record as evidence toward confidence promotion
+   - `pass` → evidence toward confidence promotion — recorded mechanically when the evidence ledger is active (see §Evidence ledger); candidates surface there, ratification stays human
    - `fail` → route violation via provenance (step 4)
    - `fail` with `baselined: true` (baseline active, CK-07) → known accepted debt: warning severity, doesn't gate the run. Still no evidence FOR the design — and a baselined ★★ keeps its escalate flag (see §Baseline)
    - `error` → fix the check itself, not the spec
@@ -99,6 +99,7 @@ python3 <archwright-repo>/tools/archwright-check.py --trace <spec.yaml> <trace.j
 python3 <archwright-repo>/tools/archwright-check.py --probe <behavior-spec.yaml>      # Non-vacuity probe (false invariant must FAIL)
 python3 <archwright-repo>/tools/archwright-check.py ... --baseline <file>         # Explicit baseline (else auto-discovered)
 python3 <archwright-repo>/tools/archwright-check.py ... --update-baseline         # Ratchet: drop resolved entries (never adds)
+python3 <archwright-repo>/tools/archwright-check.py ... --evidence <file>         # Explicit evidence ledger (else an EXISTING one auto-discovered; works in --trace mode too)
 ```
 
 Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output contract (status, scope, violations w/ provenance + contrast pairs, skips w/ reasons, coverage, remaining_delta) — the payload `archwright-passup` consumes. This includes trace mode (ticket 016): `--trace ... --json` emits the same CK-03 document (trace violations route uniformly; untranslatable predicates/guards land in `skips[]`), while without `--json` trace mode keeps its bespoke replay shape (`trace-schema.ts`).
@@ -118,6 +119,15 @@ Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output 
 - **A baselined ★★ keeps `escalate: true`** — the baseline gates CI exit codes, not human routing; there is no back door around ★★-routes-to-a-human.
 - **Behavior and trace violations are never suppressible** — they're design violations, not adoptable debt.
 - **Entries are created by humans, never by the tool.** Copy the `fingerprints` values from `--json` output into `{"entries": [{"fingerprint": "...", "algo": "aw/v1", "note": "why this debt is accepted"}]}`. `--update-baseline` only ever REMOVES entries that no longer reproduce (refuses on errored runs and when no baseline exists).
+
+### Evidence ledger (confidence lifecycle, ADR 0009)
+
+`.archwright-evidence.json` is the baseline's tool-owned sibling: check runs auto-append confidence evidence events so promotion/demotion candidates stop being session-ephemeral. **Activation by existence** — the tool writes only when the file already exists up-tree from the specs (bootstrap: `echo '{}' > design/.archwright-evidence.json`) or `--evidence <file>` names one explicitly (created on write). No file, no flag = no recording, nothing created.
+
+- `demotion-candidate` — FAIL on a ★★/★ spec or invariant (counterexample found). Baselined violations emit nothing (the baseline entry IS the human adjudication); `—` fails emit nothing (no confidence claim to demote). Static events carry aw/v1 fingerprints; trace events carry `fingerprints: []` (nothing static to hash).
+- `promotion-candidate` — a pass streak reaches `config.promotion_streak` (ledger key, default 5; FAIL resets, error/skip neither counts nor resets), or a ★/— invariant passes a **bounded** (mechanical) check — immediate deeper-tier candidate. ★★ never promotes (top tier).
+- Identical re-observations are deduped; a malformed ledger is a tool error (exit 2); errored runs record nothing (they prove nothing). The `--json` doc reports `evidence_ledger: {path, events_appended}`.
+- **The ledger never changes a confidence value.** Ratification is human, in the artifact: update the `confidence` field AND add one Evidence line citing the ledger events. ★★ transitions (assignment, promotion to, demotion from) always block for HITL (ADR 0007). `archwright-passup` surfaces ★★ demotion candidates as escalations.
 
 ### Debugging a behavior FAIL
 
