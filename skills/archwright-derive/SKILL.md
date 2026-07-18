@@ -233,7 +233,7 @@ check:
   expect: present
 ```
 
-This makes it explicit which specs are checkable NOW vs which activate later — preventing false "N/A" results that hide real issues.
+This makes it explicit which specs are checkable NOW vs which activate later — preventing false "N/A" results that hide real issues. Related guard (ticket 012): declarative absence checks that scan 0 files (empty dir, include glob matching nothing) SKIP-with-reason rather than vacuously pass — `target_status: pending` covers not-yet-existing targets, the vacuous guard covers exists-but-empty; between them, an absence check that proved nothing can no longer read as green.
 
 **Common pitfall:** File/directory names in the target project may differ from spec names (e.g., `practice_setup/` vs `setup/`). Always verify.
 

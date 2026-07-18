@@ -55,7 +55,7 @@ Archwright is a **methodology embodied as agent skills**, with supporting tools 
 
 Methodology operational and **field-validated on a second project**. The lacrosse-bosse tracer bullet proved live checking (static constraint checks block commits; trace validation catches behavior violations with provenance — `.memory/PLAN.md`). The full audit & intent-alignment pass is **complete** ([audit-plan.md](audit-plan.md), closed 2026-07-18): every brief claim is labeled shipped/spike-only/aspirational, check output carries the full promised shape (provenance chain, fix direction, contrast pair, escalation flag), and all pipeline gates are classified HITL-blocking or flow-through (ADR 0007/0010).
 
-Field run evidence (DynamoRush, 4 areas + reconciliation pass): 105 forces, 35 patterns, 33 specs; a ★★ escrow violation was found by check, fixed, and re-verified green — change propagation proven live, not synthetically. First Extension Protocol stack adapter shipped at ★★: the TypeScript trace emitter (75 LOC, 63ms, conformance corpus in the suite). Fixture suite: **42 passed / 0 failed / 0 skipped**.
+Field run evidence (DynamoRush, 4 areas + reconciliation pass): 105 forces, 35 patterns, 33 specs; a ★★ escrow violation was found by check, fixed, and re-verified green — change propagation proven live, not synthetically. First Extension Protocol stack adapter shipped at ★★: the TypeScript trace emitter (75 LOC, 63ms, conformance corpus in the suite). Fixture suite green (0 failed, 0 skipped — current count in AGENTS.md §Commands).
 
 **Next:** frontier tickets in `.tickets/` (011–015: schema semantics, link producers, gate calibration, strict predicate mode) and the CK-07 evidence-ledger implementation (design ratified in ADR 0009).
 

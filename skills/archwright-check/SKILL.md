@@ -29,7 +29,10 @@ Verify specs against their stated invariants. Report violations with provenance.
    - `pass` → record as evidence toward confidence promotion
    - `fail` → route violation via provenance (step 4)
    - `error` → fix the check itself, not the spec
-   - `skip` → adapter/backend unavailable (pending registry row, missing Alloy jar). Report the declared reason. A skip is a coverage statement, not a pass — it counts as no evidence in either direction.
+   - `skip` → coverage statement, not a pass — counts as no evidence in either direction. Report the declared reason. Skip kinds and their remedies:
+     - *adapter/backend unavailable* (pending registry row, missing Alloy jar) → rehydrate or Extension Protocol
+     - *untranslatable predicate* (trace mode, ticket 015: `invariants_skipped`/`guards_skipped` list which invariants/guards were NOT evaluated, with reason) → rewrite the predicate into the translatable subset (enum ==/!=, numeric comparisons, in-set, and/or/not/implies) or ticket the translator gap
+     - *vacuous absence claim* (static mode, ticket 012: `expect: absent`/`only-in` scanned 0 files) → fix the target path or include glob; if the target genuinely doesn't exist yet, use `check.target_status: pending` instead
    - **Changed verdicts are unverified until independently reproduced.** A verdict that flips after a tooling or spec change (fail→pass especially), or a fix whose first verification is the tool that was just fixed, must be confirmed by an independent method (a different grep, manual inspection, a second tool) before being recorded. Field basis: a comment-stripping bug once flipped a check to a false PASS over 2 real violations — caught only by an independent grep; the rule has since caught wrong-token spec noise three times in one field run.
 
 4. **Hand off violations** — run with `--json` and hand the structured violations (provenance, severity, escalate flags, contrast pairs) to `archwright-passup`, which lifts each to its owning level and routes per confidence. This skill verifies; it does not route.
@@ -73,7 +76,7 @@ Behavior checks need the Alloy jar, which is NOT in the repo (`.references/` is 
 | Java (`java` on PATH) | running the jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
 | `semgrep` (optional) | `constraint` kind: `method: semgrep` specs | `pipx install semgrep` — NOTE: `archwright-check.py`'s semgrep runner is a stub today; `method: semgrep` specs SKIP with "not yet implemented" regardless of the binary. Prefer `method: grep` with `include:` scoping until a spec genuinely needs AST matching (rule-of-two) |
 
-The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (green = 31/0/0, behavior fixture active).
+The tool locates the jar via `ARCHWRIGHT_ALLOY_JAR` env var, then `.references/alloy6.jar` relative to the tools dir, then the legacy `~/code/archwright/` path. After rehydrating, re-run the skipped specs — and in the archwright repo, `mise run test` (suite green, 0 failed, 0 skipped — current count in the repo's AGENTS.md §Commands).
 
 ## Commands
 
@@ -85,9 +88,11 @@ python3 <archwright-repo>/tools/archwright-validate.py [--json] --links design/ 
 python3 <archwright-repo>/tools/archwright-check.py <spec>... [--json]     # Full verification
 python3 <archwright-repo>/tools/archwright-check.py --all design/specs/    # Check everything
 python3 <archwright-repo>/tools/archwright-check.py --static design/specs/ [--target <root>]  # Constraint/dependency only
+python3 <archwright-repo>/tools/archwright-check.py --trace <spec.yaml> <trace.json>  # Behavior vs execution trace
+python3 <archwright-repo>/tools/archwright-check.py --probe <behavior-spec.yaml>      # Non-vacuity probe (false invariant must FAIL)
 ```
 
-Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output contract (status, scope, violations w/ provenance + contrast pairs, coverage, remaining_delta) — the payload `archwright-passup` consumes.
+Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output contract (status, scope, violations w/ provenance + contrast pairs, skips w/ reasons, coverage, remaining_delta) — the payload `archwright-passup` consumes.
 
 ## Does NOT
 

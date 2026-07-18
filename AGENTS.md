@@ -42,13 +42,13 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
-│   ├── run-fixture-tests.sh       # Full check suite vs tests/fixtures/ (lacrosse-bosse + guarded-counter)
+│   ├── run-fixture-tests.sh       # Full check suite vs tests/fixtures/ (lacrosse-bosse + guarded-counter + trace-strict)
 │   ├── deploy-skills.sh           # Sync skills + steering + domain overlays + glossary to the target tool's discovery dirs (--tool kiro|claude|codex|agy, --project <path>)
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
 │   ├── contract-schema.yaml       # JSON Schema for contract specs (from_model, events)
-│   ├── check-output-schema.yaml   # CK-03 output contract (check/validate --json shape)
-│   ├── trace-schema.ts            # Trace type definitions (consumer-authoritative: bare array of {event, state, clock})
+│   ├── check-output-schema.yaml   # CK-03 output contract (check/validate --json shape, incl. skips[] coverage reasons)
+│   ├── trace-schema.ts            # Trace types (input: bare array of {event, state, clock}; result: invariants_skipped/guards_skipped per ticket 015)
 │   ├── templates/                 # Document templates
 │   │   ├── pattern.md             # New pattern template
 │   │   ├── force.md               # Per-force file template (design/forces/)
@@ -74,7 +74,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── lessons/                   # One durable lesson per file + README index/session log
 │   ├── research-*.md              # Research plans & syntheses
 │   └── adr/                       # Architecture decision records
-├── audit-plan.md                  # Active standalone audit plan (tickets A/B/C/D)
+├── audit-plan.md                  # Audit plan — CLOSED 2026-07-18 (all 7 DoD verified; see §Plan Close-Out)
 ├── mise.toml                      # Managed toolchain + env + tasks (see Dependency Rehydration)
 ├── .tickets/                      # Frontier tickets (frontmatter status/blocked_by)
 ├── .scratch/                      # Ephemeral working notes (gitignored)
@@ -127,14 +127,14 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Validate links | `python3 tools/archwright-validate.py [--json] --links <dir>` |
 | Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` — exit 0 pass / 1 violations / 2 tool error; `--json` emits status/scope/violations (w/ provenance, severity, escalate, contrast_pair)/coverage/remaining_delta |
 | Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>]` |
-| Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` |
+| Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json>` — untranslatable predicates SKIP-with-reason (`invariants_skipped`/`guards_skipped` in output), never silent-pass (ticket 015) |
 | Non-vacuity probe | `python3 tools/archwright-check.py --probe <behavior-spec.yaml>` — injects a false invariant; exit 0 = counterexample produced (good), 1 = vacuous model, 2 = not probeable |
 | Generate force files | `python3 tools/archwright-forces-gen.py <inventory.yaml> [-o <dir>]` — working inventory → design/forces/*.md |
 | Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 42 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests (SKIPs with reason if alloy6.jar, java, or node absent; green = 42/0/0) |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 56 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests + trace strict-mode (ticket 015) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) (SKIPs with reason if alloy6.jar, java, or node absent; green = 56/0/0 — **this row is the single source for the count; elsewhere say "suite green"**) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
@@ -149,7 +149,7 @@ Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`,
 mise trust && mise install     # python 3.12, temurin-21, node 22, smcat
 mise run setup                 # pyyaml
 mise run rehydrate-alloy       # Alloy 6.2.0 dist jar → .references/alloy6.jar
-mise run test                  # verify: 42 passed, 0 failed, 0 skipped
+mise run test                  # verify: suite green, 0 failed, 0 skipped (count in Commands table)
 ```
 
 `mise.toml` also sets `PYTHONIOENCODING=utf-8` and `ARCHWRIGHT_ALLOY_JAR` automatically inside the repo. Prefer `mise run <task>` (see Commands) — tasks run with the managed toolchain on PATH.
@@ -170,7 +170,7 @@ Notes:
 - Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
 - Windows: bare `python3` resolves to a broken MS Store stub, and mise's python ships only `python.exe` — use `mise exec -- python` or `mise run` tasks (`run-fixture-tests.sh` has its own python3→python guard). Without mise, real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` and `PYTHONIOENCODING=utf-8` must be set manually (★ output vs cp1252 console).
 - After ANY merge from upstream: `mise run test` (suite green) + `mise run deploy-skills` (upstream may have edited skills — deployed copies go stale silently).
-- After rehydrating the jar, run `mise run test` — the behavior + guard-conformance skips become active checks (green = 42/0/0).
+- After rehydrating the jar, run `mise run test` — the behavior + guard-conformance skips become active checks (green = 0 failed, 0 skipped; count in Commands table).
 
 ## Workflows
 
