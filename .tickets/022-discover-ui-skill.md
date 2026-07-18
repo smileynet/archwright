@@ -1,7 +1,7 @@
 ---
 id: 022
 title: "archwright-discover-ui skill + wireframe/design-system templates"
-status: open
+status: done
 blocked_by: [019, 020, 021]
 ---
 
