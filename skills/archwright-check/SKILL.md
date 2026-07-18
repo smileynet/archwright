@@ -16,7 +16,7 @@ Verify specs against their stated invariants. Report violations with provenance.
 1. **Select scope** — what to check:
    - New spec → that spec only
    - Pattern modified → all specs in its `resolves_into`
-   - Code changed → specs whose `check.target` overlaps changed files
+   - Code changed → `--changed-only [--base <ref>]` (CK-19) selects them mechanically: a spec is affected if its file changed or a changed/untracked file sits under one of its `check.target` paths. Base defaults to HEAD (uncommitted work); CI passes `--base origin/main`. Specs without a file target (behavior, contract, command-mode checks) always run — over-checking is safe, silent skipping is not. `scope` reports the filter (`specs_total`/`specs_unaffected`); zero affected specs is a legitimate pass, but a bad ref or missing git is exit 2, never an empty false pass.
    - Full audit → all specs in `design/specs/`
 
 2. **Run checks by kind** (consult `tools/stacks/REGISTRY.yaml` for the target's stack first — a check whose adapter is `pending` SKIPs with the registry's stated reason; it never fails and never silently passes):
@@ -100,6 +100,7 @@ python3 <archwright-repo>/tools/archwright-check.py --probe <behavior-spec.yaml>
 python3 <archwright-repo>/tools/archwright-check.py ... --baseline <file>         # Explicit baseline (else auto-discovered)
 python3 <archwright-repo>/tools/archwright-check.py ... --update-baseline         # Ratchet: drop resolved entries (never adds)
 python3 <archwright-repo>/tools/archwright-check.py ... --evidence <file>         # Explicit evidence ledger (else an EXISTING one auto-discovered; works in --trace mode too)
+python3 <archwright-repo>/tools/archwright-check.py --static design/specs/ --changed-only [--base <ref>]  # Only specs affected by the git diff (CK-19)
 ```
 
 Exit codes: 0 = pass, 1 = violations, 2 = tool error. `--json` emits the output contract (status, scope, violations w/ provenance + contrast pairs, skips w/ reasons, coverage, remaining_delta) — the payload `archwright-passup` consumes. This includes trace mode (ticket 016): `--trace ... --json` emits the same CK-03 document (trace violations route uniformly; untranslatable predicates/guards land in `skips[]`), while without `--json` trace mode keeps its bespoke replay shape (`trace-schema.ts`).

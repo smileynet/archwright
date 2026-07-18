@@ -806,6 +806,83 @@ else
 fi
 
 echo ""
+echo "=== Changed-Only Scope Selection (CK-19) ==="
+# --changed-only [--base <ref>]: only specs affected by the git diff run.
+# Affected = spec file changed OR changed/untracked file under check.target;
+# git failures = exit 2 (never an empty-diff false pass).
+if command -v git >/dev/null 2>&1; then
+  CK19_TREE="$FEAT_DIR/ck19-tree"
+  mkdir -p "$CK19_TREE/src" "$CK19_TREE/lib" "$CK19_TREE/design/specs"
+  printf 'x = 1\n' > "$CK19_TREE/src/app.py"
+  printf 'y = 1\n' > "$CK19_TREE/lib/util.py"
+  cat > "$CK19_TREE/design/specs/watch-src.md" <<'EOF'
+---
+kind: constraint
+id: watch-src
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "src"
+  pattern: "import direct_db"
+  expect: absent
+---
+# T
+## Rule
+No direct db imports in src.
+EOF
+  sed 's/watch-src/watch-lib/; s|target: "src"|target: "lib"|' "$CK19_TREE/design/specs/watch-src.md" > "$CK19_TREE/design/specs/watch-lib.md"
+  git -C "$CK19_TREE" init -q
+  git -C "$CK19_TREE" -c user.email=t@t -c user.name=t add -A
+  git -C "$CK19_TREE" -c user.email=t@t -c user.name=t commit -qm init
+
+  # CK-19a: clean tree → 0 affected specs, exit 0, scope reports the filter
+  rc=0; CK19_OUT=$(python3 "$CHECK" --static "$CK19_TREE/design/specs" --changed-only --json --target "$CK19_TREE" 2>&1) || rc=$?
+  if [ "$rc" -eq 0 ] \
+     && echo "$CK19_OUT" | grep -q '"changed_only": true' \
+     && echo "$CK19_OUT" | grep -q '"specs_checked": 0' \
+     && echo "$CK19_OUT" | grep -q '"specs_total": 2'; then
+    report PASS "ck19: clean tree = 0 affected specs, pass (scope reports filter)"
+  else
+    report FAIL "ck19: clean tree = 0 affected specs, pass (scope reports filter)" "exit=$rc"
+  fi
+
+  # CK-19b violating scenario (Extension Protocol rule 4): an UNTRACKED
+  # violating file under one target selects exactly that spec and FAILs.
+  printf 'import direct_db\n' > "$CK19_TREE/src/new_file.py"
+  rc=0; CK19_OUT=$(python3 "$CHECK" --static "$CK19_TREE/design/specs" --changed-only --json --target "$CK19_TREE" 2>&1) || rc=$?
+  if [ "$rc" -eq 1 ] \
+     && echo "$CK19_OUT" | grep -q '"status": "fail"' \
+     && echo "$CK19_OUT" | grep -q '"spec_id": "watch-src"' \
+     && echo "$CK19_OUT" | grep -q '"specs_checked": 1' \
+     && echo "$CK19_OUT" | grep -q '"specs_unaffected": 1'; then
+    report PASS "ck19: untracked violating file selects only its spec and FAILs (exit 1)"
+  else
+    report FAIL "ck19: untracked violating file selects only its spec and FAILs (exit 1)" "exit=$rc"
+  fi
+  rm "$CK19_TREE/src/new_file.py"
+
+  # CK-19c: a changed spec file re-runs even with no code changes
+  printf '\n<!-- touched -->\n' >> "$CK19_TREE/design/specs/watch-lib.md"
+  rc=0; CK19_OUT=$(python3 "$CHECK" --static "$CK19_TREE/design/specs" --changed-only --json --target "$CK19_TREE" 2>&1) || rc=$?
+  if [ "$rc" -eq 0 ] && echo "$CK19_OUT" | grep -q '"specs_checked": 1'; then
+    report PASS "ck19: changed spec file itself re-runs"
+  else
+    report FAIL "ck19: changed spec file itself re-runs" "exit=$rc"
+  fi
+
+  # CK-19d: bad base ref = tool error (exit 2), never an empty false pass
+  rc=0; python3 "$CHECK" --static "$CK19_TREE/design/specs" --changed-only --base no-such-ref --json --target "$CK19_TREE" >/dev/null 2>&1 || rc=$?
+  if [ "$rc" -eq 2 ]; then
+    report PASS "ck19: bad --base ref = tool error (exit 2)"
+  else
+    report FAIL "ck19: bad --base ref = tool error (exit 2)" "exit=$rc"
+  fi
+else
+  report SKIP "ck19: changed-only scope selection (git unavailable)"
+fi
+
+echo ""
 echo "=== Pattern Status: gated (ticket 011) ==="
 # gated = resolution ratified, activation gated on a named event. Requires
 # gated_on:; fog stays reserved for unresolved tension (never a ratified deferral).

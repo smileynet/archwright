@@ -34,6 +34,11 @@ properties:
       mode: {enum: [files, all, static, trace, validate, links]}
       specs_checked: {type: integer}
       target: {type: [string, "null"]}   # --target root, if given
+      changed_only: {type: boolean}      # present when --changed-only filtered the run (CK-19)
+      base: {type: string}               # the git ref diffed against (default HEAD)
+      specs_total: {type: integer}       # specs in scope BEFORE the changed-only filter
+      specs_unaffected: {type: integer}  # specs filtered out (no overlap with the diff) — not skips:
+                                         # scope selection was explicitly requested and is visible here
   violations:
     type: array
     items:
