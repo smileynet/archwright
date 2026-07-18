@@ -4,7 +4,7 @@
 
 **Goal:** Deep-dive the current functionality, verify it against the original intent (docs/brief.md), close the gap between what the docs claim and what the tools do, and land the improvements identified in real-world pipeline runs.
 
-**Status:** Proposed — initial findings gathered 2026-07-16; re-baselined same day against origin/main (`82c5d30`), which added the `archwright-audit` skill, `archwright-contract` phase, `tools/domains/game/predicates.yaml`, tool file-extension renames, and open questions #9–#13.
+**Status:** **CLOSED 2026-07-18** — all workstreams complete or dispositioned, all 7 DoD items verified (see §Plan Close-Out). Originally proposed 2026-07-16; re-baselined same day against origin/main (`82c5d30`).
 **Prior plan:** [.memory/PLAN.md](.memory/PLAN.md) — complete, with three loose ends inherited here (C4, C5).
 
 ---
@@ -271,8 +271,32 @@ Evidence: suite 21 passed / 0 failed / 1 skipped; all 4 templates PASS validatio
 **B10 ✅ (2026-07-17, block 5):** Tool-agnostic deploy shipped. Conventions VERIFIED before mapping (ticket's hard requirement) — L1 local inspection + 3 research subagents against official docs; evidence at `.memory/audit/deploy-targets.md`. Key facts: all four tools consume the open agent-skills SKILL.md standard (skills deploy unmodified); codex user skills live at `~/.agents/skills` NOT `~/.codex/skills`; steering is kiro/claude-native only (claude: `~/.claude/rules/`); agy has no global copy target (plugins only). `deploy-skills.sh` gains `--tool <kiro|claude|codex|agy>` (default kiro — zero behavior change for existing callers/mise task): claude → `.claude/{skills,rules}`; codex → `.agents/skills` + steering SKIP-with-reason printing `~/.codex/AGENTS.md` wiring guidance (never edits user files — ADR 0009 principle); agy → project-only `.agents/skills` (global = exit 2 with instruction); unknown tool = exit 2. Prose scrubbed: AGENTS.md (5 refs → per-tool comparative lists), README (1), subagent-reliability's dangling `references/tool-limitations.md` link → "if present" guard (file ships with some deployments only). Verified: all 6 modes exercised (kiro global regression-clean, claude/codex/agy project targets land correct trees, both refusal paths exit 2); suite 31/0/0.
 **Ticket 008 ✅ (2026-07-17, inserted before block 6):** Guard + assign compilation shipped in `archwright-compile-alloy.py`. Translatable subset (guards: enum ==/!=, int comparisons, var-to-var, && conjunctions; assigns — NEW `assign:` schema surface on transitions: literals, var copy, `var ± N`) compiles into transition preds; Alloy int syntax (`plus[a,b]`, `=<`) empirically pinned against the jar before codegen. Outside the subset: comment + TAINT (referenced vars + target state) → invariants touching tainted elements SKIP-with-reason via machine-readable `SKIP-INVARIANT:` lines that check.py consumes (skipped result, never spurious FAIL or "no verdict" error). Blanket frozen-var WARN removed — constant vars now legitimately checkable. Conformance corpus `tests/fixtures/guarded-counter/` (3 specs) wired into suite: guarded PASS / unguarded twin FAIL w/ counterexample (rule 4) / opaque-guard SKIP w/ taint reason (rule 1); vacuity probe (false invariant → FAIL) confirmed Solved reachable. Acceptance verified with the ticket's exact expression (`always (M.current = Solved implies M.zonesCorrect = M.zonesTotal)` PASSes; guard removed → FAILs). Template + derive skill updated. **Suite baseline: 35/0/0.** ExposeAR spec edit belongs to that lane.
 
-**Remaining fog (carried):** OQ#1 lift contract (matures inside passup skill); "large project" threshold left to skill judgment (monorepo signal + survey sizing); C3 ledger impl timing rides CK-07; DynamoRush area inventory unknown until its survey runs.
-**ADRs:** 0008 (Extension Protocol) lands in block 1; 0009 (confidence evidence lifecycle) is block 4. Q6 policy → conventions (not ADR-weight).
+**C10 ✅ (2026-07-17/18, block 6):** DynamoRush (`~/code/dynamodb-game-demo`) full field run — 4 area-partitioned pipeline runs + all-up reconciliation pass, all span digests operator-accepted (evidence: `~/code/dynamodb-game-demo/.memory/archwright-digest-area{1..4}.md`). Totals: **105 forces, 35 patterns, 33 specs** across dynamo-core, realtime/market, tutorial, and platform areas. Verification state at close: `--links design/` PASS; static batch 18 PASS / 15 pending-SKIP (declared-reason, Extension Protocol rule 1) / 1 deliberate FAIL (market-GSI sharding — operator call, ticketed as DynamoRush 001, unchanged); target test suite 276/276; behavior traces validate (session 7 steps, quest 5 steps). **C5 (growth-rules/change-propagation) proven live:** escrow ★★ violation found by check, fixed inline, re-check green — real change propagation, not synthetic walkthrough (per grill Q7 fold). Reconciliation deliverables (first field run of the Q06 policy — promoted to conventions §Run Scoping): force dedupe prefers families over merges; feedback-update contract = EXTENSION of surface-protocol (never fold); truthful-cause-effect experience owned by dynamo-core model; `design/models/system-overview.md` written. Operator calls recorded: escrow fixed inline; sharding stays deliberately-red. Remaining DynamoRush archwright work is ticketed IN THAT REPO (`.tickets/002` spec recalibration, `.tickets/003` backend spec activation gated on its phase 3.6) — out of this plan's scope.
+**TypeScript trace emitter ✅ (2026-07-17/18, with block 6 — first Extension Protocol adapter):** `typescript.trace_emitter` shipped at **★★** in `tools/stacks/REGISTRY.yaml` — 75 LOC, 63ms measured, conformance corpus in the fixture suite AND field-proven on DynamoRush. Status computed by the suite per protocol rule 5, `since:` history retained. **Proves prior-plan DoD item 6** ("new language = ~small emitter") with a measured instance. Rule-4 payoff (corpus must include a violating scenario): the violating conformance trace initially PASSed — `translate_predicate` had NO numeric comparison atoms, vacuous since the tracer bullet; fixed, lesson at `.memory/lessons/trace-predicate-vacuity.md`, durable fix (untranslatable predicates SKIP, not silent-pass) ticketed as 015. **Suite baseline: 42/0/0** (3 stack-adapter checks added).
+
+**Remaining fog (carried):** OQ#1 lift contract (matures inside passup skill); "large project" threshold left to skill judgment (monorepo signal + survey sizing); C3 ledger impl timing rides CK-07 (R32 fingerprinting open); ticket 015 SKIP granularity (per-invariant vs per-check — decide at implementation).
+**ADRs:** 0008 (Extension Protocol) lands in block 1; 0009 (confidence evidence lifecycle) is block 4; 0010 (research-first ★★ disposition) via ticket 007. Q6 policy → conventions (not ADR-weight).
+
+---
+
+## Plan Close-Out (2026-07-18)
+
+**This plan is CLOSED.** All workstreams complete or explicitly dispositioned; all 7 Definition-of-Done items verified (see annotations below). Final suite: **42 passed / 0 failed / 0 skipped** (`mise run test`).
+
+**DoD verification:**
+1. ✅ Claims labeled — A4 claims matrix (`.memory/audit/claims.md`); subsequent doc edits kept claims evidence-backed (B10, D4).
+2. ✅ AGENTS.md matches repo — D1 + continuous updates through C11/C12/B10/008 (layout, commands, constraints all verified against tools this cycle).
+3. ✅ All 8 session findings landed/ticketed — B1–B4 mapping (D3 closed the source file).
+4. ✅ Pipeline end-to-end on fixture — A3 dry run (`.memory/audit/pipeline-dryrun.md`); subsequently the full pipeline ran on a real second project (C10).
+5. ✅ Check output carries the brief-promised shape — DoD-5 chain (CK-03/04/05/09/10 + CK-21): provenance chain, fix direction (`suggested_route`), contrast pair, `escalate` flag — verified with injected violations.
+6. ✅ Prior-plan loose ends — T7 closed via Extension Protocol (C11) then PROVEN by the ★★ TypeScript emitter (75 LOC, measured); R18 validated live in C10 (C5 fold, escrow change-propagation); S15 selective re-checking remains descoped (tracked as `remaining_delta`/CK-07 family, not audit scope).
+7. ✅ Gates classified — ADR 0007 (HITL-blocking vs flow-through) + ADR 0010 refinement; field-exercised across 4 C10 spans.
+
+**Explicit remainders (NOT plan-blocking — normal frontier work):**
+- Tickets **011–015** open in `.tickets/` (schema semantics, links producers, gate calibration, strict predicate mode). 011/014 may need operator input.
+- CK-07 evidence-ledger implementation (ADR 0009 design done; blocked on R32 fingerprinting).
+- DynamoRush follow-ups live in that repo's tickets, that lane's ownership.
+- README status refresh (D4 deferred item) — executed alongside this close-out.
 
 ---
 
