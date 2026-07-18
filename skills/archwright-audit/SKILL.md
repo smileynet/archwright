@@ -166,6 +166,7 @@ For projects with 15+ doc files, dispatch subagents per doc group:
 | Design docs | `docs/design/*.md` | Feature status claims match implementation plan |
 | Architecture | AGENTS.md + architecture.md | Structure claims match actual directories |
 | Glossary | `.memory/CONTEXT.md` | Terms match actual type/event declarations in code |
+| Discovery artifacts | `design/discovery/**/*.md` (ADR 0011) | Ledger integrity (append-only numbering, supersession refs point backward); `approved` design-system rows in Graduates-to-Patterns actually have their patterns; graduated force evidence still cites live `D{NNN}` anchors; stale `proposed` artifacts (untouched across sessions) flagged; unconfirmed `inferred` entries in approved artifacts = HIGH finding |
 
 Per `subagent-reliability` steering: each subagent reads specific doc files + corresponding code files. Small prompts ("read X.md, read the corresponding source files, find contradictions"). Synthesis (dedup, severity) done directly.
 

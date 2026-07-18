@@ -1,7 +1,7 @@
 ---
 id: 024
 title: "Discovery track docs sync: steering, AGENTS.md, audit scope"
-status: open
+status: done
 blocked_by: [022]
 ---
 

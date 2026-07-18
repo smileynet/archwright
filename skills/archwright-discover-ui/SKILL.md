@@ -68,7 +68,7 @@ When the session's wireframes are approved:
 2. **Model seed:** compile the Hands-To sections into `design/discovery/ui/model-seed.md` — screen-flow graph + per-screen state/events, every element citing its ledger anchors (conservation: nothing invented). Active decisions not consumed by the seed get an explicit "Unconsumed decisions" list with reasons (nothing lost).
 3. **Model TODOs:** compile all Not-Resolved-Here lists into the seed's TODO section — this is the model phase's input.
 4. **Design-system graduation:** rows in its Graduates-to-Patterns table go to `archwright-formalize` (separate phase — this skill only fills the table).
-5. **Validate:** `python3 tools/archwright-validate.py --links design/` must pass. Exit 0 = clean; failures name the unresolved reference — fix before closing the session.
+5. **Validate:** `python3 tools/archwright-validate.py --links design/` must pass. Exit 0 = clean; failures name the unresolved reference — fix before closing the session. (Link resolution fully covers discovery artifacts — `serves:` refs resolve and broken ones fail. Per-file SCHEMA validation of `kind: discovery` is pending ticket 026; until it ships, `--links` is the graduation gate and per-file validate reports `unknown kind 'discovery'` — expected, not a session failure.)
 
 Unconfirmed `inferred` entries block graduation — surface them for confirmation first.
 
