@@ -1,7 +1,7 @@
 ---
 id: 014
 title: "Pattern quality gate: 70% evidence-share threshold measures the wrong thing"
-status: open
+status: done
 blocked_by: []
 created: 2026-07-17
 ---
@@ -30,3 +30,20 @@ miscalibrated, not the corpus.
       judged good) OR the gate's failure messages identify real substance gaps
 - [ ] A deliberately evidence-free pattern still FAILs the gate
 - [ ] Formalize skill template and gate agree (template output passes its own gate)
+
+## Close-out (2026-07-18)
+
+Ratified: option B (operator, 2026-07-18) — share-of-body replaced with a
+substance gate. New criteria (conventions steering §Pattern Quality Gates,
+formalize skill Writing Quality, pattern-schema.md, pattern template — all
+70% mentions removed):
+1. Every Therefore commitment traces to at least one Evidence item; a
+   commitment with none = gate FAILURE (this is how an evidence-free pattern
+   fails — AC 2).
+2. Citations are locatable (named source), never "it's standard practice".
+3. Freshness visible: year/version on external claims; fast-moving-tech claims
+   verified-current or flagged.
+The gate is agent-judged (honor-system per A3 finding) — no tool change. AC 1
+holds by construction: the criteria are exactly what the AwsArchVR review
+praised in the 13 patterns ("fresh, sourced, specific"); spot verification
+defers to that lane.

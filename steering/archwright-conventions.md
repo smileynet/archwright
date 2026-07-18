@@ -90,7 +90,10 @@ Registries: `tools/stacks/REGISTRY.yaml` (per-language/engine adapters: trace em
 
 Before committing a pattern:
 - Forces section: polarity is clear, each force is one sentence, no solutions disguised as forces
-- Evidence section: ≥70% of the pattern body, cited, not "it's standard practice"
+- Evidence substance (recalibrated per ticket 014 — share-of-body measured volume, not quality; 13/13 field patterns failed it while rating "excellent"):
+  - **Every Therefore commitment traces to Evidence** — each architectural commitment in the Therefore section is justified by at least one Evidence item (prior art, rejected alternative, or mechanism argument). A commitment with no supporting Evidence item = gate FAILURE (this is how an evidence-free pattern fails).
+  - **Citations are locatable** — name the specific source (project, paper, game, engine doc), never "it's standard practice" or "commonly known"
+  - **Freshness is visible** — external claims carry a year/version; claims about fast-moving tech (engine features, API behavior) are verified against the current version or explicitly flagged as unverified
 - Therefore section: specific enough that two developers would implement the same architecture
 - Verification section: names a mechanical check (★★), a heuristic check (★), or — for advisory patterns — states explicitly why no check exists (— is a legitimate confidence, not a missing field; vocabulary map in the deployed `archwright-survey/references/glossary.md`)
 

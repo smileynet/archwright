@@ -29,7 +29,9 @@ Which larger patterns this helps complete. Where it sits in the hierarchy. "In t
 
 ## Evidence
 
-(The longest section — ~70% of the pattern. WHY these forces conflict.)
+(The substantive core — WHY these forces conflict. Substance gate, not volume:
+every Therefore commitment below must trace to at least one item here; citations
+name locatable sources with a year/version. No length quota.)
 
 - Rejected alternatives (configurations that fail, and why)
 - Prior art (how others handle this — cite specifically)
