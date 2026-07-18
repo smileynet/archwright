@@ -397,5 +397,41 @@ fi
 unset ARCHWRIGHT_PROJECT_ROOT
 
 echo ""
+echo "=== Trace Predicate Strict Mode (ticket 015) ==="
+# Untranslatable predicates SKIP-with-reason at invariant/guard granularity —
+# never silent-pass. Corpus includes a translatable violation that must still
+# FAIL (Extension Protocol rule 4). Fixture: tests/fixtures/trace-strict/.
+TS_FIX="$TOOLS/../tests/fixtures/trace-strict"
+TS_OUT=$(mktemp)
+rc=0; python3 "$CHECK" --trace "$TS_FIX/trace-strict-conformance.yaml" "$TS_FIX/ok.trace.json" > "$TS_OUT" 2>&1 || rc=$?
+if [ "$rc" -eq 0 ]; then
+  report PASS "trace-strict: pass-with-skips exits 0"
+else
+  report FAIL "trace-strict: pass-with-skips exits 0" "exit=$rc"
+fi
+if grep -q '"invariants_skipped": \[{"id": "opaque-comparison"' "$TS_OUT" && grep -q '"opaque-construct"' "$TS_OUT"; then
+  report PASS "trace-strict: untranslatable invariants listed in invariants_skipped with reason"
+else
+  report FAIL "trace-strict: untranslatable invariants listed in invariants_skipped with reason"
+fi
+if grep -q '"invariants_checked": \["count-within-max"\]' "$TS_OUT"; then
+  report PASS "trace-strict: skipped invariants excluded from invariants_checked"
+else
+  report FAIL "trace-strict: skipped invariants excluded from invariants_checked"
+fi
+if grep -q '"guards_skipped"' "$TS_OUT" && grep -q '"final_state": "running"' "$TS_OUT"; then
+  report PASS "trace-strict: untranslatable guard = transition accepted with skip note"
+else
+  report FAIL "trace-strict: untranslatable guard = transition accepted with skip note"
+fi
+rc=0; python3 "$CHECK" --trace "$TS_FIX/trace-strict-conformance.yaml" "$TS_FIX/violating.trace.json" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 1 ]; then
+  report PASS "trace-strict: translatable violation still FAILs (exit 1)"
+else
+  report FAIL "trace-strict: translatable violation still FAILs (exit 1)" "exit=$rc"
+fi
+rm -f "$TS_OUT"
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

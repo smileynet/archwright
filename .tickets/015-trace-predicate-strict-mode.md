@@ -1,7 +1,7 @@
 ---
 id: 015
 title: "Trace predicates: untranslatable atoms silently pass — report SKIP-with-reason instead"
-status: open
+status: done
 blocked_by: []
 created: 2026-07-18
 ---
