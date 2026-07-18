@@ -1,7 +1,7 @@
 ---
 id: 016
 title: "Trace mode ignores --json and emits a bespoke shape — wire into the CK-03 document"
-status: open
+status: done
 blocked_by: []
 created: 2026-07-18
 ---
@@ -44,16 +44,41 @@ passup unable to route trace violations.
 
 ## Acceptance criteria
 
-- [ ] `--trace <spec> <trace> --json` on a violating trace emits a CK-03
+- [x] `--trace <spec> <trace> --json` on a violating trace emits a CK-03
       document with all 10 violation fields (or the schema no longer claims
       trace mode, option B)
-- [ ] Skips map into the document's `skips[]` with reasons
-- [ ] Fixture suite gains golden checks for the chosen behavior (incl. a
+- [x] Skips map into the document's `skips[]` with reasons
+- [x] Fixture suite gains golden checks for the chosen behavior (incl. a
       violating case)
-- [ ] check-output-schema.yaml, trace-schema.ts, and the passup skill's Input
+- [x] check-output-schema.yaml, trace-schema.ts, and the passup skill's Input
       section agree with whichever option ships
 
 ## Context
 
 - Tickets 015 (trace skip fields) and 012 (`skips[]` in CK-03)
 - `skills/archwright-passup/SKILL.md` Input section — the intended consumer
+
+## Close-out (2026-07-18)
+
+**Option A shipped.** `check_trace` gained `json_output`; one `_emit` helper
+routes all output sites (4 error paths, `_fail`, pass) through
+`build_trace_document`, which maps the payload into the CK-03 shape:
+
+- Violation carries all 10 fields. Confidence from the violated invariant
+  (spec-level fallback) → severity via `_SEVERITY`, `escalate` on ★★;
+  provenance from the fail payload's `provenance` falling back to
+  `from_patterns[0]` / `protects_experience` (mirrors `enrich_results`);
+  `contrast_pair.expected` via `_expected_for` for spec invariants, derived
+  text for structural (protocol/transition/guard) violations;
+  `suggested_route: fix-implementation` (errors: `fix-check`).
+- `invariants_skipped`/`guards_skipped` → `skips[]` (guard skips carry
+  `invariant: null`).
+- **Coverage counts invariants, not specs** — a structural failure adds one to
+  `checked` so passed+failed+skipped always sums to checked (documented in the
+  schema header).
+- Bespoke replay shape stays the non-`--json` output; exit codes unchanged.
+
+7 golden checks added (passing doc, skips mapping, coverage arithmetic,
+violating doc, 10-field assertion, skips-on-fail, bespoke-shape-preserved);
+suite green (count in AGENTS.md Commands). passup Input section now names
+trace mode and how trace evidence differs (trace step, not file:line).

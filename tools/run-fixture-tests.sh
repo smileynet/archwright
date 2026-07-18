@@ -625,5 +625,63 @@ fi
 rm -f "$TS_OUT"
 
 echo ""
+echo "=== Trace Mode CK-03 Document (ticket 016) ==="
+# --trace --json emits the CK-03 document (check-output-schema.yaml) so passup
+# routes trace violations uniformly with static ones. Bespoke shape stays the
+# non-json output. Reuses the trace-strict fixture (★★ violating invariant +
+# untranslatable skips exercise every mapping).
+T16_OUT=$(mktemp)
+rc=0; python3 "$CHECK" --trace "$TS_FIX/trace-strict-conformance.yaml" "$TS_FIX/ok.trace.json" --json > "$T16_OUT" 2>&1 || rc=$?
+if [ "$rc" -eq 0 ] && grep -q '"mode": "trace"' "$T16_OUT" && grep -q '"status": "pass"' "$T16_OUT"; then
+  report PASS "trace-ck03: passing trace emits CK-03 document (mode trace, exit 0)"
+else
+  report FAIL "trace-ck03: passing trace emits CK-03 document (mode trace, exit 0)" "exit=$rc"
+fi
+if grep -q '"invariant": "opaque-comparison"' "$T16_OUT" && grep -q '"invariant": null' "$T16_OUT"; then
+  report PASS "trace-ck03: invariant + guard skips map into skips[] with reasons"
+else
+  report FAIL "trace-ck03: invariant + guard skips map into skips[] with reasons"
+fi
+if grep -q '"checked": 3' "$T16_OUT" && grep -q '"skipped": 2' "$T16_OUT"; then
+  report PASS "trace-ck03: coverage counts invariants (3 checked, 2 skipped)"
+else
+  report FAIL "trace-ck03: coverage counts invariants (3 checked, 2 skipped)"
+fi
+rc=0; python3 "$CHECK" --trace "$TS_FIX/trace-strict-conformance.yaml" "$TS_FIX/violating.trace.json" --json > "$T16_OUT" 2>&1 || rc=$?
+if [ "$rc" -eq 1 ] && grep -q '"status": "fail"' "$T16_OUT"; then
+  report PASS "trace-ck03: violating trace emits fail document (exit 1)"
+else
+  report FAIL "trace-ck03: violating trace emits fail document (exit 1)" "exit=$rc"
+fi
+# All 10 violation fields present with correct derivations (★★ → error + escalate)
+if grep -q '"invariant": "count-within-max"' "$T16_OUT" \
+   && grep -q '"confidence": "★★"' "$T16_OUT" \
+   && grep -q '"severity": "error"' "$T16_OUT" \
+   && grep -q '"escalate": true' "$T16_OUT" \
+   && grep -q '"from_pattern": "pattern:conformance-fixture"' "$T16_OUT" \
+   && grep -q '"from_force": "conformance-fixture"' "$T16_OUT" \
+   && grep -q '"suggested_route": "fix-implementation"' "$T16_OUT" \
+   && grep -q '"contrast_pair"' "$T16_OUT" \
+   && grep -q '"expected": "Count never exceeds max' "$T16_OUT" \
+   && grep -q '"evidence"' "$T16_OUT"; then
+  report PASS "trace-ck03: violation carries all 10 fields (★★ derives error+escalate, provenance, contrast_pair)"
+else
+  report FAIL "trace-ck03: violation carries all 10 fields (★★ derives error+escalate, provenance, contrast_pair)"
+fi
+if grep -q '"invariant": "opaque-comparison"' "$T16_OUT" && grep -q '"remaining_delta": 1' "$T16_OUT"; then
+  report PASS "trace-ck03: fail document carries accumulated skips + remaining_delta"
+else
+  report FAIL "trace-ck03: fail document carries accumulated skips + remaining_delta"
+fi
+# Non-json output unchanged (bespoke replay shape, not the document)
+rc=0; python3 "$CHECK" --trace "$TS_FIX/trace-strict-conformance.yaml" "$TS_FIX/ok.trace.json" > "$T16_OUT" 2>&1 || rc=$?
+if grep -q '"assurance": "trace"' "$T16_OUT" && ! grep -q '"scope"' "$T16_OUT"; then
+  report PASS "trace-ck03: non-json output keeps the bespoke replay shape"
+else
+  report FAIL "trace-ck03: non-json output keeps the bespoke replay shape"
+fi
+rm -f "$T16_OUT"
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

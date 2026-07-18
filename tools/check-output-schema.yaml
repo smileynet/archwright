@@ -1,9 +1,24 @@
 # Check Output Schema (CK-03 contract)
 #
-# The document shape emitted by `archwright-check.py --json` and
+# The document shape emitted by `archwright-check.py --json`,
+# `archwright-check.py --trace <spec> <trace> --json` (ticket 016), and
 # `archwright-validate.py --json` (CK-21). Authoritative definition —
 # consumers: archwright-passup skill (routing), CK-14 SARIF mapping (future).
 # Producers MUST NOT add fields without updating this file.
+#
+# Trace mode notes (scope.mode: trace — producer: check_trace via
+# build_trace_document):
+# - coverage counts INVARIANTS declared checkable, not specs; a structural
+#   failure (protocol/transition/guard — no spec invariant) adds one to
+#   `checked` so passed+failed+skipped always sums to checked.
+# - violations[] carries at most one entry (trace replay stops at first
+#   failure); confidence comes from the violated invariant (spec-level
+#   fallback), provenance from the invariant's from_pattern/from_force
+#   (falling back to from_patterns[0] / protects_experience).
+# - untranslatable invariants/guards (ticket 015) map into skips[]
+#   (guard skips carry invariant: null).
+# - Without --json, trace mode emits the bespoke replay shape documented in
+#   trace-schema.ts (same exit codes).
 
 $schema: "http://json-schema.org/draft-07/schema#"
 title: Archwright check output document
@@ -56,11 +71,11 @@ properties:
         spec_path: {type: string}
         message: {type: string}
         suggested_route: {const: fix-check}
-  skips:                                           # check.py only (ticket 012) — SKIP-with-reason,
-    type: array                                    # never silent: pending adapters, vacuous absence
-    items:                                         # claims (0 files scanned), backend unavailable.
-      type: object                                 # A skip is a coverage statement, not a pass.
-      properties:
+  skips:                                           # check.py only (tickets 012/015/016) — SKIP-with-
+    type: array                                    # reason, never silent: pending adapters, vacuous
+    items:                                         # absence claims (0 files scanned), backend un-
+      type: object                                 # available, untranslatable trace predicates/guards.
+      properties:                                  # A skip is a coverage statement, not a pass.
         spec_id: {type: [string, "null"]}
         spec_path: {type: string}
         invariant: {type: [string, "null"]}

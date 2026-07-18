@@ -37,6 +37,16 @@
  * ({ spec_id, initial_state, events: [{ state, event, next_state, context }] })
  * that the validator never consumed. Removed 2026-07-18 after the shape drift
  * was caught while building the TypeScript trace emitter.
+ *
+ * OUTPUT MODES (ticket 016): the shapes below (TraceValidationResult) are the
+ * DEFAULT stdout output. With `--json`, the validator instead emits the CK-03
+ * document (tools/check-output-schema.yaml, scope.mode "trace") so
+ * archwright-passup routes trace violations uniformly with static ones:
+ * the violation becomes a violations[] entry (confidence from the violated
+ * invariant, severity derived, escalate on ★★, contrast_pair, provenance);
+ * invariants_skipped/guards_skipped map into skips[]; coverage counts
+ * invariants. Exit codes are identical in both modes (0 pass / 1 fail /
+ * 2 error). Use the default shape for replay detail, --json for routing.
  */
 
 /** One observed transition. */
@@ -53,8 +63,9 @@ export interface TraceEntry {
 export type Trace = readonly TraceEntry[];
 
 /**
- * Violation payload emitted by the validator on FAIL (single JSON object on
- * stdout with status "fail"). Field presence varies by violation type.
+ * Violation payload emitted by the validator on FAIL in DEFAULT mode (single
+ * JSON object on stdout with status "fail"; with --json the CK-03 document is
+ * emitted instead). Field presence varies by violation type.
  */
 export interface TraceViolation {
   /** "protocol" | "transition" | "guard" — invariant violations carry `invariant` instead. */
