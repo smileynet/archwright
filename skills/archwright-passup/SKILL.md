@@ -24,11 +24,17 @@ Structured violations from `python3 <archwright-repo>/tools/archwright-check.py 
   "from_pattern": "pattern:...", "from_force": "...",
   "suggested_route": "fix-implementation | fix-check | fix-spec",
   "contrast_pair": {"expected": "<the rule as the design states it>", "actual": "<the finding>"},
-  "evidence": ["file:line:text", ...]
+  "evidence": ["file:line:text", ...],
+  "fingerprints": ["<aw/v1 hash>_<n>", ...],
+  "baselined": false
 }
 ```
 
 Authoritative schema: `<archwright-repo>/tools/check-output-schema.yaml`. If handed prose instead of JSON, re-run the check with `--json` — this skill consumes the contract, not transcripts.
+
+**`fingerprints` are the violation's stable identity** (aw/v1, CK-07: content-hashed, line-number-independent, aligned 1:1 with `evidence[]`). Use them to recognize "same violation recurring across runs" vs genuinely new findings, and quote them when a human decides to accept debt — they are the keys for `.archwright-baseline.json` entries (which only humans create).
+
+**Baselined violations (`baselined: true`, present when a baseline is active)** arrive pre-classified as accepted debt: severity already dropped to `warning`, excluded from `remaining_delta` and the run's exit gate. Routing: a baselined ★/— violation is LOG-only (span digest, no action). A baselined ★★ still carries `escalate: true` — it maps onto the research gate's "Known + owner-accepted" row with the baseline entry itself as the citation: log it with the entry's `note`, no HITL stop — UNLESS it trips the hard floor (security-material-and-novel, contradicting a ratified resolution), which a baseline entry cannot waive.
 
 **Trace violations route identically to static ones** (scope.mode `trace`): the document carries at most one violation (replay stops at first failure), its `evidence` is the failing trace step (event/position/state) rather than file:line, and untranslatable predicates/guards arrive in `skips[]`. The lift chain is unchanged — invariant → from_pattern → force.
 

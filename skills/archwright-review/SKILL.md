@@ -190,7 +190,7 @@ For each violation, read `from_pattern` + `from_force`:
 | `archwright-check` | Structural (grep) checks | In archwright/tools/ |
 | `semgrep` | Structural (AST) checks | `pip install semgrep` or `pipx install semgrep` |
 | `archwright-check.py --trace` | Behavioral trace validation | In archwright/tools/ |
-| `archwright-check-compile` | Generate checks from intents | In archwright/tools/ |
+| `archwright-check-compile` | Generate checks from intents | In archwright/tools/ — invocation + the six intent patterns documented in `archwright-derive` §Check Method Guidance |
 
 ## Does NOT
 
