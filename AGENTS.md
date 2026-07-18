@@ -125,7 +125,7 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 |------|---------|
 | Validate pattern/spec | `python3 tools/archwright-validate.py [--json] <file>...` — validates all kinds incl. contract; emits non-fatal `WARN:` lines (e.g., missing `protects_experience`); `--json` emits the CK-03 document shape |
 | Validate links | `python3 tools/archwright-validate.py [--json] --links <dir>` |
-| Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json]` — exit 0 pass / 1 violations / 2 tool error; `--json` emits status/scope/violations (w/ provenance, severity, escalate, contrast_pair)/coverage/remaining_delta |
+| Check spec(s) | `python3 tools/archwright-check.py <spec>... [--json] [--baseline <file>] [--update-baseline]` — exit 0 pass / 1 violations / 2 tool error; `--json` emits status/scope/violations (w/ provenance, severity, escalate, contrast_pair, aw/v1 fingerprints)/coverage/remaining_delta. Baseline (CK-07/08): `.archwright-baseline.json` (auto-discovered up-tree or `--baseline`) suppresses known constraint/dependency violations to warnings (★★ keeps escalate; behavior/trace never suppressed); `--update-baseline` removes resolved entries, never adds (refuses on errored runs) |
 | Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>]` |
 | Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json> [--json]` — untranslatable predicates SKIP-with-reason (`invariants_skipped`/`guards_skipped` in output), never silent-pass (ticket 015); `--json` emits the CK-03 document (violations w/ full routing fields, skips[]) instead of the bespoke replay shape (ticket 016) |
 | Non-vacuity probe | `python3 tools/archwright-check.py --probe <behavior-spec.yaml>` — injects a false invariant; exit 0 = counterexample produced (good), 1 = vacuous model, 2 = not probeable |
@@ -134,9 +134,9 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 66 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests + pending-coverage (CK-06) + trace strict-mode (ticket 015) + trace CK-03 document (016) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) (SKIPs with reason if alloy6.jar, java, or node absent; green = 66/0/0 — **this row is the single source for the count; elsewhere say "suite green"**) |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 74 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests + pending-coverage (CK-06) + baseline fingerprints/suppression/ratchet (CK-07/08) + trace strict-mode (ticket 015) + trace CK-03 document (016) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) (SKIPs with reason if alloy6.jar, java, or node absent; green = 74/0/0 — **this row is the single source for the count; elsewhere say "suite green"**) |
 
-Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
+Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json`, `--baseline`, `--update-baseline` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`; baseline flags added CK-07/08, 2026-07-18).
 
 ## Dependency Rehydration
 
