@@ -19,6 +19,7 @@ import sys
 import os
 import re
 import fnmatch
+import hashlib
 import yaml
 import subprocess
 import json
@@ -28,6 +29,80 @@ sys.path.insert(0, str(Path(__file__).parent))
 from archwright_common import state_events
 
 SCRIPT_DIR = Path(__file__).parent
+
+# ---------------------------------------------------------------------------
+# Violation fingerprinting (R32, aw/v1) — CK-07/CK-08 baseline plumbing.
+# Identity = spec_id + invariant + normalized path + normalized evidence
+# content. Line numbers NEVER enter the hash (SARIF 2.1.0 Appendix B: inserting
+# lines above a result must not change its identity). Occurrence index among
+# identical tuples is appended AFTER hashing (semgrep convention) so sibling
+# duplicates stay visibly related. Algorithm changes bump the version tag —
+# entries with an unknown algo are unmatchable, never guessed at.
+# ---------------------------------------------------------------------------
+
+FINGERPRINT_ALGO = "aw/v1"
+BASELINE_FILENAME = ".archwright-baseline.json"
+_EVIDENCE_RX = re.compile(r"^(.*?):(\d+):(.*)$")
+_EVIDENCE_CAP = 100  # evidence[] and fingerprints[] stay aligned; both capped
+
+
+def _fingerprint_base(spec_id, invariant, path, content):
+    """aw/v1 fingerprint base: sha256 over NUL-joined identity inputs,
+    truncated to 64 bits (16 hex chars — GitHub's primaryLocationLineHash
+    width; collision space is per-project)."""
+    norm_content = " ".join((content or "").split())
+    basis = "\x00".join([spec_id or "", invariant or "", path or "", norm_content])
+    return hashlib.sha256(basis.encode("utf-8")).hexdigest()[:16]
+
+
+def _split_evidence(item):
+    """Decompose a 'path:line:content' evidence string into (path, content),
+    dropping the volatile line number. Items in another shape (script output,
+    Alloy counterexample lines) hash whole as content with an empty path."""
+    m = _EVIDENCE_RX.match(item)
+    if m:
+        return m.group(1), m.group(3)
+    return "", item
+
+
+def find_baseline(start_dirs, explicit=None):
+    """Locate .archwright-baseline.json: explicit flag wins; otherwise walk up
+    from each start dir. Returns a Path or None. No baseline = no suppression
+    (never silently create one — baseline entries are a human decision)."""
+    if explicit:
+        return Path(explicit)
+    seen = set()
+    for d in start_dirs:
+        d = Path(d).resolve()
+        if not d.is_dir():
+            d = d.parent
+        while d not in seen:
+            seen.add(d)
+            cand = d / BASELINE_FILENAME
+            if cand.is_file():
+                return cand
+            # Stop at the repo boundary — a baseline above the repo is never ours.
+            if (d / ".git").exists() or d.parent == d:
+                break
+            d = d.parent
+    return None
+
+
+def load_baseline(path):
+    """Parse the baseline file. Returns (data, matchable-fingerprint-set).
+    Entries with an unknown algo are retained in data but excluded from
+    matching (stale, never guessed). Raises ValueError on malformed JSON."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        raise ValueError(f"cannot read baseline {path}: {e}")
+    entries = data.get("entries", [])
+    if not isinstance(entries, list):
+        raise ValueError(f"baseline {path}: 'entries' must be a list")
+    fps = {e["fingerprint"] for e in entries
+           if isinstance(e, dict) and "fingerprint" in e
+           and e.get("algo", FINGERPRINT_ALGO) == FINGERPRINT_ALGO}
+    return data, fps
 
 
 def extract_frontmatter(path):
@@ -458,6 +533,7 @@ def _check_grep(check, spec_id, confidence, project_root):
                 "assurance": "conformance",
                 "message": f"Found {len(lines)} match(es) — expected none",
                 "violations": [l.strip() for l in lines[:5]],
+                "_all_matches": [l.strip() for l in lines],
                 "from_pattern": _first_pattern(check),
             }]
         else:
@@ -488,6 +564,7 @@ def _check_grep(check, spec_id, confidence, project_root):
                 "assurance": "conformance",
                 "message": f"Found {len(violations)} match(es) outside {only_in}",
                 "violations": [v.strip() for v in violations[:5]],
+                "_all_matches": [v.strip() for v in violations],
             }]
         else:
             return [{"invariant": spec_id, "status": "pass", "assurance": "conformance"}]
@@ -528,6 +605,7 @@ def _check_script(check, spec_id, confidence, project_root):
                 "invariant": spec_id, "status": "fail", "confidence": confidence,
                 "message": f"Script produced output — expected none",
                 "violations": output.split("\n")[:5],
+                "_all_matches": output.split("\n"),
             }]
         return [{"invariant": spec_id, "status": "pass"}]
     elif expect == "present":
@@ -1181,17 +1259,33 @@ def check_trace(spec_path, trace_path, json_output=False):
     return _emit(result, 0)
 
 
-def build_document(mode, target_root, per_file):
+def build_document(mode, target_root, per_file, baseline_fps=None, baseline_path=None,
+                   baseline_entries=0):
     """Build the CK-03 output document from per-file results.
 
     Schema: status, scope, violations[], coverage, remaining_delta.
     Each violation carries spec_id, invariant, confidence, severity, escalate,
-    from_pattern, from_force, suggested_route, contrast_pair, evidence.
+    from_pattern, from_force, suggested_route, contrast_pair, evidence, and
+    aw/v1 fingerprints (CK-07) aligned 1:1 with evidence[].
+
+    Baseline (CK-07): when baseline_fps is provided, a constraint/dependency
+    violation whose fingerprints are ALL baselined is suppressed — severity
+    drops to warning, baselined: true, but escalate is UNTOUCHED (a baselined
+    ★★ still routes to a human; the baseline is not a back door around C2).
+    Behavior/trace violations are never suppressed (design violations, not
+    adoptable debt). Document status and remaining_delta count only
+    non-baselined violations; coverage counts raw check outcomes.
     """
     violations = []
     errors = []
     skips = []
     coverage = {"checked": 0, "passed": 0, "failed": 0, "skipped": 0, "errors": 0, "pending": 0}
+    fp_counter = {}
+
+    def _next_fp(base):
+        n = fp_counter.get(base, 0)
+        fp_counter[base] = n + 1
+        return f"{base}_{n}"
 
     for spec_path, kind, results in per_file:
         coverage["checked"] += 1
@@ -1212,21 +1306,41 @@ def build_document(mode, target_root, per_file):
 
         for r in results:
             if r["status"] == "fail":
-                violations.append({
-                    "spec_id": r.get("spec_id"),
+                spec_id = r.get("spec_id")
+                invariant = r.get("invariant")
+                evidence = (r.get("_all_matches") or r.get("violations") or [])[:_EVIDENCE_CAP]
+                fingerprints = []
+                for item in evidence:
+                    p, c = _split_evidence(item)
+                    fingerprints.append(_next_fp(_fingerprint_base(spec_id, invariant, p, c)))
+                if not fingerprints:
+                    # No located evidence (e.g. expect: present found nothing) —
+                    # the absence itself is the violation; identity = spec+invariant.
+                    fingerprints = [_next_fp(_fingerprint_base(spec_id, invariant, "", ""))]
+                violation = {
+                    "spec_id": spec_id,
                     "spec_kind": kind,
                     "spec_path": str(spec_path),
-                    "invariant": r.get("invariant"),
+                    "invariant": invariant,
                     "confidence": r.get("confidence", "—"),
                     "severity": r.get("severity", "info"),
                     "escalate": r.get("escalate", False),
                     "message": r.get("message"),
-                    "evidence": r.get("violations", []),
+                    "evidence": evidence,
+                    "fingerprints": fingerprints,
                     "from_pattern": r.get("from_pattern"),
                     "from_force": r.get("from_force"),
                     "suggested_route": r.get("suggested_route"),
                     "contrast_pair": r.get("contrast_pair"),
-                })
+                }
+                if baseline_fps is not None:
+                    suppressible = kind in ("constraint", "dependency")
+                    if suppressible and all(fp in baseline_fps for fp in fingerprints):
+                        violation["baselined"] = True
+                        violation["severity"] = "warning"
+                    else:
+                        violation["baselined"] = False
+                violations.append(violation)
             elif r["status"] == "error":
                 errors.append({
                     "spec_id": r.get("spec_id"),
@@ -1246,14 +1360,15 @@ def build_document(mode, target_root, per_file):
                     "reason": r.get("message"),
                 })
 
+    new_violations = [v for v in violations if not v.get("baselined")]
     if errors:
         status = "error"
-    elif violations:
+    elif new_violations:
         status = "fail"
     else:
         status = "pass"
 
-    return {
+    doc = {
         "status": status,
         "scope": {"mode": mode, "specs_checked": coverage["checked"],
                   "target": str(target_root) if target_root else None},
@@ -1261,9 +1376,18 @@ def build_document(mode, target_root, per_file):
         "errors": errors,
         "skips": skips,
         "coverage": coverage,
-        # Baseline suppression arrives with CK-07; until then delta = all violations.
-        "remaining_delta": len(violations),
+        "fingerprint_algo": FINGERPRINT_ALGO,
+        # CK-07: violations remaining after baseline suppression — the number
+        # a fix loop is trying to drive to zero.
+        "remaining_delta": len(new_violations),
     }
+    if baseline_fps is not None:
+        doc["baseline"] = {
+            "path": str(baseline_path),
+            "entries": baseline_entries,
+            "suppressed": len(violations) - len(new_violations),
+        }
+    return doc
 
 
 def probe_behavior(spec_path):
@@ -1366,6 +1490,8 @@ def main():
     static_only = False
     json_output = False
     mode = "files"
+    baseline_arg = None
+    update_baseline = False
 
     # Parse args
     args = sys.argv[1:]
@@ -1392,6 +1518,12 @@ def main():
             i += 1
             if i < len(args):
                 target_root = Path(args[i]).resolve()
+        elif args[i] == "--baseline":
+            i += 1
+            if i < len(args):
+                baseline_arg = args[i]
+        elif args[i] == "--update-baseline":
+            update_baseline = True
         elif args[i] == "--json":
             json_output = True
         else:
@@ -1415,6 +1547,25 @@ def main():
     if target_root:
         os.environ["ARCHWRIGHT_PROJECT_ROOT"] = str(target_root)
 
+    # Baseline discovery (CK-07): explicit --baseline wins; otherwise walk up
+    # from the spec dirs. Missing = no suppression (never silently created).
+    baseline_path = find_baseline([f.parent for f in files], explicit=baseline_arg)
+    baseline_data, baseline_fps = None, None
+    if baseline_arg and (baseline_path is None or not baseline_path.is_file()):
+        print(f"ERROR: baseline file not found: {baseline_arg}", file=sys.stderr)
+        sys.exit(2)
+    if baseline_path:
+        try:
+            baseline_data, baseline_fps = load_baseline(baseline_path)
+        except ValueError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            sys.exit(2)
+    if update_baseline and baseline_path is None:
+        print(f"ERROR: --update-baseline requires an existing {BASELINE_FILENAME} — "
+              "baseline entries are created by humans, never by the tool (CK-08)",
+              file=sys.stderr)
+        sys.exit(2)
+
     per_file = []
     for f in files:
         kind, results = check_file(f)
@@ -1422,9 +1573,36 @@ def main():
         if not json_output:
             print(format_result(f, kind, results))
 
-    doc = build_document(mode, target_root, per_file)
+    doc = build_document(mode, target_root, per_file,
+                         baseline_fps=baseline_fps, baseline_path=baseline_path,
+                         baseline_entries=len(baseline_data.get("entries", [])) if baseline_data else 0)
+
+    # Baseline ratchet (CK-08): remove entries whose violations no longer
+    # reproduce; NEVER add (accepting new debt is a human decision). An errored
+    # run proves nothing about absence — refuse to shrink the baseline on it.
+    if update_baseline:
+        if doc["status"] == "error":
+            print("ERROR: run had tool errors — an errored run cannot prove a "
+                  "violation is gone; baseline not updated", file=sys.stderr)
+            sys.exit(2)
+        live_fps = {fp for v in doc["violations"] for fp in v.get("fingerprints", [])}
+        entries = baseline_data.get("entries", [])
+        kept = [e for e in entries
+                if isinstance(e, dict) and e.get("fingerprint") in live_fps]
+        removed = len(entries) - len(kept)
+        baseline_data["entries"] = kept
+        baseline_path.write_text(
+            json.dumps(baseline_data, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8")
+        print(f"baseline: removed {removed} resolved entr{'y' if removed == 1 else 'ies'}, "
+              f"kept {len(kept)} — entries only ever decrease (CK-08)", file=sys.stderr)
+
     if json_output:
         print(json.dumps(doc, indent=2, ensure_ascii=False))
+    elif baseline_fps is not None:
+        b = doc["baseline"]
+        print(f"  baseline: {b['suppressed']} violation(s) suppressed by {b['path']} "
+              f"({b['entries']} entries); remaining_delta={doc['remaining_delta']}")
 
     # Exit code contract (CK-04): 0 = pass, 1 = violations, 2 = tool error.
     sys.exit({"pass": 0, "fail": 1, "error": 2}[doc["status"]])

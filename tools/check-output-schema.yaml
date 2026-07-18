@@ -45,12 +45,22 @@ properties:
         spec_path: {type: string}
         invariant: {type: string}
         confidence: {enum: ["★★", "★", "—"]}
-        severity: {enum: [error, warning, info]}   # 1:1 derivation of confidence
-        escalate: {type: boolean}                  # true iff ★★ (C2) — HITL required
+        severity: {enum: [error, warning, info]}   # 1:1 derivation of confidence; baselined violations drop to warning (CK-07)
+        escalate: {type: boolean}                  # true iff ★★ (C2) — HITL required; UNTOUCHED by baselining (no back door around C2)
         message: {type: string}
         evidence:
-          type: array                              # "path:line:text" lines (project-relative POSIX)
+          type: array                              # "path:line:text" lines (project-relative POSIX), capped at 100
           items: {type: string}
+        fingerprints:
+          type: array                              # aw/v1 (R32), aligned 1:1 with evidence[]; sha256(spec_id,
+          items: {type: string}                    # invariant, path, normalized content)[:16] + "_<occurrence>".
+                                                   # Line numbers never hashed. ≥1 always (locationless fails
+                                                   # fingerprint spec+invariant alone).
+        baselined:
+          type: boolean                            # present only when a baseline file is active (CK-07). true =
+                                                   # ALL fingerprints matched .archwright-baseline.json entries;
+                                                   # suppressed from status/remaining_delta. Only constraint/
+                                                   # dependency violations are suppressible — behavior/trace never.
         from_pattern: {type: [string, "null"]}     # provenance (CK-09)
         from_force: {type: [string, "null"]}
         suggested_route: {enum: [fix-implementation, fix-check, fix-spec]}
@@ -90,5 +100,17 @@ properties:
       skipped: {type: integer}    # adapter/backend unavailable — coverage statement, not a pass
       errors: {type: integer}
       pending: {type: integer}    # target_status: pending specs — neither pass nor fail nor skipped (CK-06); reason still surfaces in skips[]
+  fingerprint_algo:
+    const: aw/v1                  # version tag for fingerprints[] (R32); algorithm changes bump this —
+                                  # a reader seeing an unknown version treats entries as unmatchable
+  baseline:                       # present only when .archwright-baseline.json was found/given (CK-07)
+    type: object
+    properties:
+      path: {type: string}
+      entries: {type: integer}    # entries in the baseline file
+      suppressed: {type: integer} # violations fully matched by the baseline this run
   remaining_delta:
-    type: integer                 # violations after baseline suppression (= all, until CK-07)
+    type: integer                 # violations AFTER baseline suppression (CK-07) — what a fix loop
+                                  # drives to zero. No baseline active = all violations.
+                                  # coverage.failed counts raw outcomes: a fully-baselined spec still
+                                  # counts failed (debt stays visible) while status/exit reflect gating.

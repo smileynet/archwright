@@ -464,6 +464,136 @@ fi
 unset ARCHWRIGHT_PROJECT_ROOT
 
 echo ""
+echo "=== Baseline: aw/v1 Fingerprints + Suppression + Ratchet (CK-07/CK-08) ==="
+# Own tiny target tree so line shifts never touch shared fixtures. Explicit
+# --baseline throughout for hermeticity (auto-discovery walk-up could catch a
+# stray file under /tmp).
+CK07_TREE="$FEAT_DIR/ck07-tree"
+mkdir -p "$CK07_TREE/src"
+printf 'import direct_db\nx = 1\n' > "$CK07_TREE/src/app.py"
+CK07_BL="$FEAT_DIR/ck07-baseline.json"
+cat > "$FEAT_DIR/ck07-star2.md" <<'EOF'
+---
+kind: constraint
+id: ck07-star2
+from_patterns: ["pattern:ball-possession"]
+confidence: "★★"
+check:
+  method: grep
+  target: "src"
+  pattern: "import direct_db"
+  expect: absent
+---
+# T
+## Rule
+No direct db imports.
+EOF
+
+# CK-07a: violations carry aw/v1 fingerprints aligned with evidence
+rc=0; CK07_OUT1=$(python3 "$CHECK" --json --target "$CK07_TREE" "$FEAT_DIR/ck07-star2.md" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] \
+   && echo "$CK07_OUT1" | grep -q '"fingerprint_algo": "aw/v1"' \
+   && echo "$CK07_OUT1" | grep -q '"fingerprints"'; then
+  report PASS "ck07: violations carry aw/v1 fingerprints"
+else
+  report FAIL "ck07: violations carry aw/v1 fingerprints" "exit=$rc"
+fi
+
+# CK-07b: fingerprints stable under line shift (content moves, identity doesn't)
+FP1=$(echo "$CK07_OUT1" | python3 -c "import json,sys; d=json.load(sys.stdin); print(sorted(fp for v in d['violations'] for fp in v['fingerprints']))" 2>/dev/null) || FP1="extract-failed-1"
+printf '# comment shifts everything down\n\nimport direct_db\nx = 1\n' > "$CK07_TREE/src/app.py"
+CK07_OUT2=$(python3 "$CHECK" --json --target "$CK07_TREE" "$FEAT_DIR/ck07-star2.md" 2>&1) || true
+FP2=$(echo "$CK07_OUT2" | python3 -c "import json,sys; d=json.load(sys.stdin); print(sorted(fp for v in d['violations'] for fp in v['fingerprints']))" 2>/dev/null) || FP2="extract-failed-2"
+if [ "$FP1" = "$FP2" ] && [ "$FP1" != "extract-failed-1" ]; then
+  report PASS "ck07: fingerprints stable under line shift (line numbers never hashed)"
+else
+  report FAIL "ck07: fingerprints stable under line shift (line numbers never hashed)" "$FP1 vs $FP2"
+fi
+
+# CK-07c: baselined violation suppressed — exit 0, warning severity, ★★ keeps escalate
+echo "$CK07_OUT2" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+entries = [{'fingerprint': fp, 'algo': 'aw/v1', 'spec_id': v['spec_id'], 'note': 'test debt'}
+           for v in d['violations'] for fp in v['fingerprints']]
+print(json.dumps({'entries': entries}))
+" > "$CK07_BL"
+rc=0; CK07_SUP=$(python3 "$CHECK" --json --target "$CK07_TREE" --baseline "$CK07_BL" "$FEAT_DIR/ck07-star2.md" 2>&1) || rc=$?
+if [ "$rc" -eq 0 ] \
+   && echo "$CK07_SUP" | grep -q '"status": "pass"' \
+   && echo "$CK07_SUP" | grep -q '"baselined": true' \
+   && echo "$CK07_SUP" | grep -q '"severity": "warning"' \
+   && echo "$CK07_SUP" | grep -q '"escalate": true' \
+   && echo "$CK07_SUP" | grep -q '"remaining_delta": 0'; then
+  report PASS "ck07: baselined violation = warning + exit 0; ★★ keeps escalate (no C2 back door)"
+else
+  report FAIL "ck07: baselined violation = warning + exit 0; ★★ keeps escalate (no C2 back door)" "exit=$rc"
+fi
+
+# CK-07d violating scenario (Extension Protocol rule 4): a NEW match alongside
+# baselined debt must FAIL — all-or-nothing suppression per violation.
+printf '# comment shifts everything down\n\nimport direct_db\nimport direct_db as second_new_debt\nx = 1\n' > "$CK07_TREE/src/app.py"
+rc=0; CK07_NEW=$(python3 "$CHECK" --json --target "$CK07_TREE" --baseline "$CK07_BL" "$FEAT_DIR/ck07-star2.md" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] \
+   && echo "$CK07_NEW" | grep -q '"status": "fail"' \
+   && echo "$CK07_NEW" | grep -q '"baselined": false' \
+   && echo "$CK07_NEW" | grep -q '"remaining_delta": 1'; then
+  report PASS "ck07: new violation is never masked by the baseline (fail, exit 1)"
+else
+  report FAIL "ck07: new violation is never masked by the baseline (fail, exit 1)" "exit=$rc"
+fi
+
+# CK-08a ratchet: entries whose violations no longer reproduce are removed;
+# the new violation is NOT added (count only ever decreases).
+printf 'x = 1\nimport direct_db as second_new_debt\n' > "$CK07_TREE/src/app.py"
+rc=0; python3 "$CHECK" --json --target "$CK07_TREE" --baseline "$CK07_BL" --update-baseline "$FEAT_DIR/ck07-star2.md" >/dev/null 2>&1 || rc=$?
+BL_COUNT=$(python3 -c "import json; print(len(json.load(open('$CK07_BL'))['entries']))" 2>/dev/null) || BL_COUNT="?"
+if [ "$rc" -eq 1 ] && [ "$BL_COUNT" = "0" ]; then
+  report PASS "ck08: ratchet removes resolved entries, never adds new ones (exit still 1)"
+else
+  report FAIL "ck08: ratchet removes resolved entries, never adds new ones (exit still 1)" "exit=$rc entries=$BL_COUNT"
+fi
+
+# CK-08b: --update-baseline refuses on an errored run (proves nothing about absence)
+echo '{"entries": [{"fingerprint": "deadbeefdeadbeef_0", "algo": "aw/v1"}]}' > "$CK07_BL"
+rc=0; python3 "$CHECK" --json --target "$CK07_TREE" --baseline "$CK07_BL" --update-baseline "$FEAT_DIR/bad-expect.md" >/dev/null 2>&1 || rc=$?
+BL_COUNT=$(python3 -c "import json; print(len(json.load(open('$CK07_BL'))['entries']))" 2>/dev/null) || BL_COUNT="?"
+if [ "$rc" -eq 2 ] && [ "$BL_COUNT" = "1" ]; then
+  report PASS "ck08: errored run refuses --update-baseline, file untouched (exit 2)"
+else
+  report FAIL "ck08: errored run refuses --update-baseline, file untouched (exit 2)" "exit=$rc entries=$BL_COUNT"
+fi
+
+# CK-08c: explicit --baseline pointing nowhere = tool error, not silent no-suppression
+rc=0; python3 "$CHECK" --json --baseline "$FEAT_DIR/does-not-exist.json" "$FEAT_DIR/ck07-star2.md" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 2 ]; then
+  report PASS "ck07: explicit missing baseline = tool error (exit 2)"
+else
+  report FAIL "ck07: explicit missing baseline = tool error (exit 2)" "exit=$rc"
+fi
+
+# CK-07e: behavior violations are NEVER suppressible — design violations, not
+# adoptable debt. Baseline the unguarded fixture's fingerprints; check must
+# still FAIL. Alloy-gated like the guard-conformance section.
+if [ -f "$GC_JAR" ] && command -v java >/dev/null 2>&1 && [ -f "$GUARD_SPECS/zone-progress-unguarded.yaml" ]; then
+  BEH_OUT=$(python3 "$CHECK" --json "$GUARD_SPECS/zone-progress-unguarded.yaml" 2>&1) || true
+  echo "$BEH_OUT" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+entries = [{'fingerprint': fp, 'algo': 'aw/v1'} for v in d['violations'] for fp in v['fingerprints']]
+print(json.dumps({'entries': entries}))
+" > "$CK07_BL"
+  rc=0; BEH_SUP=$(python3 "$CHECK" --json --baseline "$CK07_BL" "$GUARD_SPECS/zone-progress-unguarded.yaml" 2>&1) || rc=$?
+  if [ "$rc" -eq 1 ] && echo "$BEH_SUP" | grep -q '"baselined": false'; then
+    report PASS "ck07: behavior violations never suppressed by baseline (still fail)"
+  else
+    report FAIL "ck07: behavior violations never suppressed by baseline (still fail)" "exit=$rc"
+  fi
+else
+  report SKIP "ck07: behavior never-suppressed (alloy jar or java unavailable)"
+fi
+
+echo ""
 echo "=== Pattern Status: gated (ticket 011) ==="
 # gated = resolution ratified, activation gated on a named event. Requires
 # gated_on:; fog stays reserved for unresolved tension (never a ratified deferral).

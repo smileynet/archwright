@@ -1,6 +1,6 @@
 # PLAN: Live Design Checking for Lacrosse-Bosse-Platform
 
-> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) partially shipped — the DoD-5 chain (CK-03→04→05→09→10), CK-06, R32, and CK-21 are DONE (verified via the audit-plan close-out 2026-07-18 and the fixture suite); CK-01/02 descoped to validate.py. Open remainder: CK-07/08 (baseline — R32 done, CK-07 ready), CK-11–16 (ast-grep/SARIF), CK-17–19.**
+> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) mostly shipped — DoD-5 chain (CK-03→04→05→09→10), CK-21, and all of Phase 5b (CK-06/07/08 + R32 baseline/fingerprints) are DONE (fixture-suite-verified); CK-01/02 descoped to validate.py. Open remainder: CK-11–16 (ast-grep/SARIF — parked awaiting a field driver per Extension Protocol), CK-17–19 (agent interface).**
 > Loose ends: T7 trace emitter → converted to an Extension Protocol pending-registry row `gdscript.trace_emitter` (grill Q5, audit ticket C11 — the "~20 lines" claim becomes measured data on first real build); R18/S15 → C5, folded into C10's DynamoRush reconciliation pass (grill Q7). Phase 5 reconciled with the audit plan 2026-07-16 (absorbs B4/C1/C2) and re-reconciled 2026-07-17 (grill: CK-01/02 descoped to validate.py, CK-21 added, passup skill consumes CK-03 output — see the spec's "Grill reconciliation" section).
 
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
@@ -155,8 +155,8 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 | R32 | Research: violation fingerprinting | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — `aw/v1` scheme recommended, [research-r32-fingerprinting.md](research-r32-fingerprinting.md); CK-07 unblocked (one HITL policy question at pickup: ★★ vs baseline) |
 | CK-05 | Grep backend (ripgrep) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (python grep w/ include globs — tickets 005/006) |
 | CK-06 | target_status: pending handling | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — distinct `pending` status, disjoint coverage bucket, reason in skips[]; 3 suite checks |
-| CK-07 | Baseline file implementation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Ready (R32 done — use `aw/v1` fingerprint; HITL at pickup: whether baselined ★★ still escalates, recommended yes) |
-| CK-08 | Baseline ratchet enforcement | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-07 | Baseline file implementation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — `.archwright-baseline.json` w/ aw/v1 fingerprints; suppression = warning + baselined flag; ★★ keeps escalate; behavior/trace never suppressed (defaults ratified via proceed) |
+| CK-08 | Baseline ratchet enforcement | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — `--update-baseline` remove-only, refuses on errored runs and missing file; suite-verified |
 | CK-09 | Provenance in violation output | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (from_pattern/from_force + suggested_route) |
 | CK-10 | Contrast pair generation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (expected/actual in every violation) |
 | CK-21 | validate.py emits the CK-03 document (`--json`) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (added at 2026-07-17 grill) |
