@@ -18,6 +18,11 @@ check:
   method: grep  # grep | semgrep | script
   command: "grep -rn 'ComponentB' src/component_c/"
   expect: absent
+  # POLARITY (ticket 012): forbidden dependencies → expect:absent on the
+  # forbidden import/call pattern. Required dependencies ("A must go through
+  # B") → expect:present on the artifact, never absent-on-the-negation.
+  # Declarative target+pattern checks SKIP (not PASS) when 0 files were
+  # scanned; command: checks have no such guard — own your semantics.
 links:
   - target: "boundary:system-boundary"
     type: enforces

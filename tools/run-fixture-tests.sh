@@ -275,7 +275,8 @@ trap 'rm -rf "$FEAT_DIR"' EXIT
 export ARCHWRIGHT_PROJECT_ROOT="$(cd "$FIXTURE" && pwd)"
 
 # 005a: include glob scopes matching — 'extends' exists in .gd files, but scoped
-# to a glob matching nothing it must not match (expect: absent → PASS).
+# to a glob matching nothing it must not FAIL. Since ticket 012 this reports
+# skipped (vacuous absent: scanned nothing, proved nothing), still exit 0.
 cat > "$FEAT_DIR/incl-scope.md" <<'EOF'
 ---
 kind: constraint
@@ -293,10 +294,11 @@ check:
 ## Rule
 Include glob excludes all files.
 EOF
-if python3 "$CHECK" "$FEAT_DIR/incl-scope.md" >/dev/null 2>&1; then
-  report PASS "feature: include glob scopes out non-matching files"
+INCL_OUT=$(python3 "$CHECK" --json "$FEAT_DIR/incl-scope.md" 2>&1); rc=$?
+if [ "$rc" -eq 0 ] && echo "$INCL_OUT" | grep -q '"skipped": 1'; then
+  report PASS "feature: include glob matching nothing = vacuous SKIP, exit 0 (005a/012)"
 else
-  report FAIL "feature: include glob scopes out non-matching files"
+  report FAIL "feature: include glob matching nothing = vacuous SKIP, exit 0 (005a/012)" "exit=$rc"
 fi
 
 # 005b: include glob admits matching files (expect: present with *.gd → PASS).
@@ -395,6 +397,44 @@ else
 fi
 
 unset ARCHWRIGHT_PROJECT_ROOT
+
+echo ""
+echo "=== Vacuous Absence Guard (ticket 012) ==="
+# expect:absent over a target that scans zero files must SKIP-with-reason,
+# never PASS — while a real absent-check over real files still PASSes/FAILs.
+VA_DIR=$(mktemp -d)
+mkdir -p "$VA_DIR/proj/empty-dir"
+cat > "$VA_DIR/vacuous-absent.md" <<'EOF'
+---
+kind: constraint
+id: vacuous-absent
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "empty-dir"
+  pattern: "forbidden_thing"
+  expect: absent
+---
+# T
+## Rule
+Forbidden pattern must not appear (but the target scans zero files).
+EOF
+VA_OUT=$(python3 "$CHECK" --json --target "$VA_DIR/proj" "$VA_DIR/vacuous-absent.md" 2>&1); rc=$?
+if [ "$rc" -eq 0 ] && echo "$VA_OUT" | grep -q '"skipped": 1' && echo "$VA_OUT" | grep -qi "scanned nothing"; then
+  report PASS "vacuous-absent: empty target = SKIP with reason, exit 0"
+else
+  report FAIL "vacuous-absent: empty target = SKIP with reason, exit 0" "exit=$rc"
+fi
+# Non-vacuous control: same spec shape over a real file — violation still FAILs.
+printf 'ok line\nforbidden_thing here\n' > "$VA_DIR/proj/empty-dir/real.txt"
+rc=0; python3 "$CHECK" --target "$VA_DIR/proj" "$VA_DIR/vacuous-absent.md" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 1 ]; then
+  report PASS "vacuous-absent control: real violation still FAILs (exit 1)"
+else
+  report FAIL "vacuous-absent control: real violation still FAILs (exit 1)" "exit=$rc"
+fi
+rm -rf "$VA_DIR"
 
 echo ""
 echo "=== Trace Predicate Strict Mode (ticket 015) ==="

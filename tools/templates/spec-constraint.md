@@ -15,6 +15,14 @@ check:
                      # Scope to source extensions so docs/assets/configs don't drown
                      # the check in noise. Not valid with command: checks.
   expect: absent  # absent | present | only-in (only-in also requires only_in: <substring>)
+  # POLARITY (ticket 012): express positive conditions ("X must exist") as
+  # expect:present ON THE ARTIFACT — never as expect:absent on its negation.
+  # Use absent ONLY for forbidden-pattern greps ("X must never appear").
+  # A wrong polarity guess silently passes forever; the tool guards the worst
+  # case (absence claim over 0 scanned files = SKIP, not PASS) but cannot
+  # detect an inverted intent.
+  #   present example: pattern "class AccessibilityAssembly" on the owning file
+  #   absent example:  pattern "ball_holder\\s*=" outside the authority service
   # include_comments: true    # optional: match inside comments too (stripped by default)
 links:
   - target: "behavior:affected-component"
