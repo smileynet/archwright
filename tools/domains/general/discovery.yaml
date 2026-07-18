@@ -1,0 +1,37 @@
+# General Domain — Discovery Section (ticket 021, ADR 0011)
+# Fallback for projects matching neither game nor web. Core-5 categories only,
+# no extensions. The frame: goal → artifact → coverage.
+
+domain: general
+
+# No category extensions — core 5 only (scope, experience, structure, technical, meta).
+category_extensions: []
+
+frameworks:
+  - id: goal-artifact-coverage
+    name: "Goal → artifact → coverage"
+    source: "generalization of the game/web overlays; show-dont-interview stance (wizard_of_oz, 2026-07-18)"
+    use: "Name the user's goal, get to a concrete artifact fast (sketch, example, walkthrough), then walk coverage while looking at it."
+    opening_questions:
+      - "Who uses this, and what are they trying to accomplish?"
+      - "What would they SEE or HOLD when it's working? (sketch it within 2-3 questions)"
+      - "Walk through using it once, start to finish — what happens at each step?"
+    validate: "Every decision traces to the stated goal; the artifact is concrete enough that two people would build the same thing."
+
+coverage_gates:
+  - stage: the-goal
+    question: "What does the user accomplish, and how do they know it worked?"
+    advance_when: "Goal + success criteria stated in the user's words."
+  - stage: first-artifact
+    question: "What does the thing look like at its most important moment?"
+    advance_when: "A concrete sketch/example exists and the user confirmed direction."
+  - stage: the-walkthrough
+    question: "One complete use, start to finish — including where it goes wrong."
+    advance_when: "Happy path + at least one failure path walked."
+  - stage: boundaries
+    question: "What is explicitly OUT of this version?"
+    advance_when: "Scope decisions recorded; parked items listed."
+
+artifact_vocabulary:
+  wireframe: "ASCII sketch of the most important moment/view"
+  flow: "step sequence for one complete use"
