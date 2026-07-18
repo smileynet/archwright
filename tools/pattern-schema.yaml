@@ -35,9 +35,13 @@ properties:
 
   status:
     type: string
-    enum: [active, fog, deprecated]
+    enum: [active, fog, gated, deprecated]
     default: active
-    description: "active = formalized and checkable. fog = known gap, not yet resolved. deprecated = superseded."
+    description: "active = formalized and checkable. fog = known gap, not yet resolved (HITL-blocking — never repurpose for a ratified deferral). gated = resolution RATIFIED, activation gated on a named future event (requires gated_on). deprecated = superseded."
+
+  gated_on:
+    type: string
+    description: "Required when status is gated: the named event that unblocks activation (e.g. 'Unity 6 migration', 'spike XYZ verdict'). Ticket 011."
 
   context:
     type: array

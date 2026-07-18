@@ -399,6 +399,48 @@ fi
 unset ARCHWRIGHT_PROJECT_ROOT
 
 echo ""
+echo "=== Pattern Status: gated (ticket 011) ==="
+# gated = resolution ratified, activation gated on a named event. Requires
+# gated_on:; fog stays reserved for unresolved tension (never a ratified deferral).
+PS_DIR=$(mktemp -d)
+cat > "$PS_DIR/gated-ok.md" <<'EOF'
+---
+kind: pattern
+id: gated-ok
+name: "Gated OK"
+scale: loops-systems
+confidence: "★"
+status: gated
+gated_on: "Unity 6 migration"
+---
+# Gated OK
+EOF
+rc=0; python3 "$VALIDATE" "$PS_DIR/gated-ok.md" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ]; then
+  report PASS "pattern-status: gated with gated_on validates (exit 0)"
+else
+  report FAIL "pattern-status: gated with gated_on validates (exit 0)" "exit=$rc"
+fi
+cat > "$PS_DIR/gated-bad.md" <<'EOF'
+---
+kind: pattern
+id: gated-bad
+name: "Gated Bad"
+scale: loops-systems
+confidence: "★"
+status: gated
+---
+# Gated Bad
+EOF
+PS_OUT=""; rc=0; PS_OUT=$(python3 "$VALIDATE" "$PS_DIR/gated-bad.md" 2>&1) || rc=$?
+if [ "$rc" -ne 0 ] && echo "$PS_OUT" | grep -q "requires a gated_on"; then
+  report PASS "pattern-status: gated without gated_on rejected"
+else
+  report FAIL "pattern-status: gated without gated_on rejected" "exit=$rc"
+fi
+rm -rf "$PS_DIR"
+
+echo ""
 echo "=== from_model Resolution: Boundary Producers + Folds (ticket 013) ==="
 # Boundary entities named as producers in contract_candidates are valid
 # from_model targets; plain boundary entities and unknown ids still FAIL;
@@ -409,7 +451,7 @@ cat > "$FM_DIR/design/patterns/content-pipeline.md" <<'EOF'
 ---
 kind: pattern
 id: content-pipeline
-status: resolved
+status: active
 confidence: "★"
 ---
 # content-pipeline

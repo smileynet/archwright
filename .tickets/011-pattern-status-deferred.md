@@ -1,7 +1,7 @@
 ---
 id: 011
 title: "Pattern status vocabulary: add deferred/gated (fog is being repurposed)"
-status: open
+status: done
 blocked_by: []
 created: 2026-07-17
 ---
@@ -29,3 +29,16 @@ condition.
 - [ ] persistent-room-with-reset re-statused without its disclaimer paragraph
 - [ ] validate rejects `deferred` without `gated_on:`
 - [ ] fog definition unchanged; fixture suite gains one pass + one violating case
+
+## Close-out (2026-07-18)
+
+Ratified name: **`gated`** (operator, 2026-07-18) — "deferred" reads like a
+punt; "gated" states the semantics and pairs with the required `gated_on:`.
+Shipped: enum + gated_on requirement in `archwright-validate.py` (also rejects
+`gated_on:` on non-gated status, and now enforces the status enum at all —
+previously unvalidated); pattern-schema.yaml; pattern template; formalize
+skeleton; glossary + CONTEXT.md. Suite: gated-with-gated_on PASSes,
+gated-without-gated_on rejected. Fog definition unchanged. **AC 1 (ExposeAR
+`persistent-room-with-reset` re-status) defers to that lane** — the edit is:
+`status: gated` + `gated_on: "Unity 6 migration"` + delete the disclaimer
+paragraph.
