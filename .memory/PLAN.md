@@ -1,6 +1,6 @@
 # PLAN: Live Design Checking for Lacrosse-Bosse-Platform
 
-> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) partially shipped — the DoD-5 chain (CK-03→04→05→09→10), CK-06, and CK-21 are DONE (verified via the audit-plan close-out 2026-07-18 and the fixture suite); CK-01/02 descoped to validate.py. Open remainder: CK-07/08 (baseline — CK-07 blocked on R32), CK-11–16 (ast-grep/SARIF), CK-17–19.**
+> **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) partially shipped — the DoD-5 chain (CK-03→04→05→09→10), CK-06, R32, and CK-21 are DONE (verified via the audit-plan close-out 2026-07-18 and the fixture suite); CK-01/02 descoped to validate.py. Open remainder: CK-07/08 (baseline — R32 done, CK-07 ready), CK-11–16 (ast-grep/SARIF), CK-17–19.**
 > Loose ends: T7 trace emitter → converted to an Extension Protocol pending-registry row `gdscript.trace_emitter` (grill Q5, audit ticket C11 — the "~20 lines" claim becomes measured data on first real build); R18/S15 → C5, folded into C10's DynamoRush reconciliation pass (grill Q7). Phase 5 reconciled with the audit plan 2026-07-16 (absorbs B4/C1/C2) and re-reconciled 2026-07-17 (grill: CK-01/02 descoped to validate.py, CK-21 added, passup skill consumes CK-03 output — see the spec's "Grill reconciliation" section).
 
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
@@ -152,10 +152,10 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 | CK-02 | Link resolution check | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Descoped → validate.py `--links` (done) |
 | CK-03 | Structured JSON output (MCP-compatible) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (audit close 2026-07-18; trace mode via ticket 016) |
 | CK-04 | Exit code contract | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (0/1/2, suite-verified) |
-| R32 | Research: violation fingerprinting | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started (blocks CK-07) |
+| R32 | Research: violation fingerprinting | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — `aw/v1` scheme recommended, [research-r32-fingerprinting.md](research-r32-fingerprinting.md); CK-07 unblocked (one HITL policy question at pickup: ★★ vs baseline) |
 | CK-05 | Grep backend (ripgrep) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (python grep w/ include globs — tickets 005/006) |
 | CK-06 | target_status: pending handling | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — distinct `pending` status, disjoint coverage bucket, reason in skips[]; 3 suite checks |
-| CK-07 | Baseline file implementation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| CK-07 | Baseline file implementation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Ready (R32 done — use `aw/v1` fingerprint; HITL at pickup: whether baselined ★★ still escalates, recommended yes) |
 | CK-08 | Baseline ratchet enforcement | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
 | CK-09 | Provenance in violation output | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (from_pattern/from_force + suggested_route) |
 | CK-10 | Contrast pair generation | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (expected/actual in every violation) |
@@ -189,7 +189,7 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 | R18 | Growth rules / change propagation | [growth-rules.md](specs/growth-rules.md) § Research: R18 | Drafted |
 | R30 | ast-grep GDScript integration (Windows) | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
 | R31 | Minimum viable SARIF for GitHub | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
-| R32 | Violation fingerprinting strategy | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Not started |
+| R32 | Violation fingerprinting strategy | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Done (2026-07-18) — [research-r32-fingerprinting.md](research-r32-fingerprinting.md) |
 | R33 | MCP tool exposure | [polyglot-check-tooling](specs/polyglot-check-tooling.md) | Deferred |
 
 Both research topics are resolved to draft level. Implementation will validate or revise.
