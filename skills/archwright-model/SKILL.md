@@ -74,6 +74,8 @@ domain_vocabulary:
 
 Formalized patterns (from `archwright-formalize`) with their resolutions and `resolves_into` declarations.
 
+**Discovery model seeds (ADR 0011):** if `design/discovery/*/model-seed.md` exists, consume it BEFORE modeling from scratch — its flow edges, per-screen/actor state, and emitted events are approved decisions, each citing a ledger anchor (`<artifact-id>#D{NNN}`). Carry those citations into the model (they are the provenance the conservation principle checks: seed elements you don't adopt need a stated reason). The seed's compiled Not-Resolved-Here TODOs are this phase's work list — states, edge cases, and transitions discovery deliberately left open.
+
 ### 3. Identify actors from patterns
 
 For each pattern, ask:
