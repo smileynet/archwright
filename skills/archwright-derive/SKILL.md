@@ -205,6 +205,19 @@ When writing the `check` block, prefer structural checks over text grep:
 
 **When using grep:** scope with `include:` (glob or list, e.g. `include: "*.cs"`) so patterns don't match unrelated file types — a field run matched 897 lines repo-wide without it. Multiple roots go in a YAML list (`target: [src/, config/]`); matches are unioned, and any missing entry is a loud tool error. Comment lines are stripped by default (opt back in with `include_comments: true`). Note that `import type` in TypeScript is compile-time-only and should NOT be flagged as a runtime import.
 
+**Compiling check blocks from intent (optional shortcut):** For the six recurring intent shapes, `node <archwright-repo>/tools/archwright-check-compile.mjs <intent.yaml> --project-root <path>` generates the check block mechanically:
+
+| Intent pattern | Rule it expresses |
+|----------------|-------------------|
+| `single_writer` | Only X writes field Y |
+| `no_import` | A must not import from B |
+| `no_mutation` | A must not call mutation methods |
+| `no_reference` | A must not reference B |
+| `must_use` | A must contain concept X |
+| `no_literal` | No plaintext X anywhere in scope |
+
+Output is a YAML `check:` block to paste into the spec — it is a starting point, not a verdict: still apply the Pre-Commit Verification steps below (target exists, polarity rule, known-bad test), then `archwright-validate.py` + `archwright-check.py --static`. Intents outside these six: write the check block by hand per the table above.
+
 ## Does NOT
 
 - Write patterns (receives them from `archwright-formalize`)
@@ -233,7 +246,7 @@ check:
   expect: present
 ```
 
-This makes it explicit which specs are checkable NOW vs which activate later — preventing false "N/A" results that hide real issues. Related guard (ticket 012): declarative absence checks that scan 0 files (empty dir, include glob matching nothing) SKIP-with-reason rather than vacuously pass — `target_status: pending` covers not-yet-existing targets, the vacuous guard covers exists-but-empty; between them, an absence check that proved nothing can no longer read as green.
+This makes it explicit which specs are checkable NOW vs which activate later — preventing false "N/A" results that hide real issues. The check tool reports these as `coverage.pending` (CK-06): a disjoint bucket, neither pass nor fail nor skipped, labeled `○ PENDING` in human output with the reason in `skips[]`. Related guard (ticket 012): declarative absence checks that scan 0 files (empty dir, include glob matching nothing) SKIP-with-reason rather than vacuously pass — `target_status: pending` covers not-yet-existing targets, the vacuous guard covers exists-but-empty; between them, an absence check that proved nothing can no longer read as green.
 
 **Common pitfall:** File/directory names in the target project may differ from spec names (e.g., `practice_setup/` vs `setup/`). Always verify.
 

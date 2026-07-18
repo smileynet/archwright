@@ -7,6 +7,13 @@ Usage:
   archwright-check --static <dir> [--target <root>]   Check constraint/dependency specs only
   archwright-check --trace <spec.yaml> <trace.json> [--json]   Validate a trace against a behavior spec (--json: CK-03 document)
   archwright-check --probe <spec.yaml>           Non-vacuity probe: a false invariant MUST FAIL
+  ... [--baseline <file>]                        Explicit baseline (else .archwright-baseline.json auto-discovered up to the git root)
+  ... [--update-baseline]                        Ratchet (CK-08): remove entries that no longer reproduce; NEVER adds
+
+Baseline (CK-07): suppresses fully-fingerprint-matched constraint/dependency
+violations to warnings (baselined: true). A baselined ★★ keeps escalate: true;
+behavior/trace violations are never suppressed. remaining_delta counts
+violations after suppression.
 
 Dispatches by spec kind:
   behavior    → compile to Alloy, run model checker (if alloy6.jar available)

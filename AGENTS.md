@@ -39,7 +39,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 ├── tools/                         # Mechanical operations
 │   ├── archwright-validate.py     # Schema + link validation for patterns/specs
 │   ├── archwright-forces-gen.py   # Force inventory YAML → design/forces/*.md (mechanical projection)
-│   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static
+│   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static; baseline suppression + ratchet (CK-07/08)
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
 │   ├── run-fixture-tests.sh       # Full check suite vs tests/fixtures/ (lacrosse-bosse + guarded-counter + trace-strict)
@@ -47,7 +47,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation
 │   ├── contract-schema.yaml       # JSON Schema for contract specs (from_model, events)
-│   ├── check-output-schema.yaml   # CK-03 output contract (check/validate --json shape, incl. skips[] coverage reasons)
+│   ├── check-output-schema.yaml   # CK-03 output contract (check/validate --json shape: skips[] coverage reasons, aw/v1 fingerprints, baselined flag)
 │   ├── trace-schema.ts            # Trace types (input: bare array of {event, state, clock}; result: invariants_skipped/guards_skipped per ticket 015)
 │   ├── templates/                 # Document templates
 │   │   ├── pattern.md             # New pattern template
