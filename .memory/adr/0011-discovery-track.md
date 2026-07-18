@@ -2,7 +2,7 @@
 
 **Status:** Accepted (2026-07-18) — ratified via grill (`.memory/grill/discovery-track/`, 6 questions decided)
 **Refines:** ADR 0007 (the HITL/flow-through partition this ADR names as two tracks). Extends the pipeline upstream of `resolve`; changes nothing downstream of it.
-**Source:** Operator directive 2026-07-18 ("a design pipeline… vs a pure archwright pipeline that is largely mechanical"), research synthesis (`.scratch/research/`, 4 tracks), wizard_of_oz corpus review, operator's field-proven UI session prompts. Plan: `.scratch/discovery-track-plan.md`.
+**Source:** Operator directive 2026-07-18 ("a design pipeline… vs a pure archwright pipeline that is largely mechanical"), research synthesis (`.memory/research-discovery-*.md`, 4 tracks), wizard_of_oz corpus review, operator's field-proven UI session prompts. Plan: `.memory/specs/discovery-track.md`.
 
 ## Context
 
@@ -34,11 +34,11 @@ A working prototype exists: wizard_of_oz (`~/code/wizard_of_oz`) — a shipped, 
 
 ## Consequences
 
-- New skill family starting with `archwright-discover-ui` (operator's UI workflow, upgraded); specs + task graph in `.scratch/discovery-track-plan.md` (T0–T7).
+- New skill family starting with `archwright-discover-ui` (operator's UI workflow, upgraded); specs + task graph in `.memory/specs/discovery-track.md` (T0–T7).
 - `steering/archwright-conventions.md` gains a Discovery Track section (seam contract, gate list, queue discipline); glossary gains *discovery track, seam contract, decision ledger, artifact gap*.
 - wizard_of_oz session export becomes the first `from_woz:` behavior-spec seed path — conformance corpus: the salvage-run session (Extension Protocol applies: violating scenario required).
 - Recording overhead: the facilitator does double bookkeeping (conversation outward, ledger inward) — accepted; wizard_of_oz field sessions show it sustains. Watch in the first field run.
-- `.scratch/pipeline-split-proposal.md` is superseded by this ADR once accepted.
+- The interim pipeline-split proposal (scratch, 2026-07-18) is superseded by and folded into this ADR.
 
 ## Rejected Alternatives
 

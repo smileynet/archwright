@@ -168,3 +168,4 @@ CK-03 → CK-05 → CK-07 → CK-17 → CK-19
 - MCP server (future enhancement, tracked as R33)
 - Auto-fix capabilities (tool reports, agent/human decides fix)
 - Custom rule DSL (specs ARE the rules — no separate language needed)
+- Commit-binding of check evidence (EDA signoff precedent) — tracked as ticket 018 (`.tickets/018-commit-binding-evidence.md`, from discovery-track grill Q6)
