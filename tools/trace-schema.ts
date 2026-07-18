@@ -1,57 +1,86 @@
 /**
- * archwright-trace: Minimal trace event schema for behavior spec validation.
- * 
- * Traces record state transitions observed during test execution.
- * A validator walks the trace against a behavior spec's FSM and reports
- * any event that violates the spec's declared transitions or invariants.
- * 
+ * archwright-trace: Trace shape for behavior spec validation.
+ *
+ * CONSUMER-AUTHORITATIVE: this file documents exactly what
+ * `archwright-check.py --trace <spec.yaml> <trace.json>` consumes
+ * (function `check_trace`, verified 2026-07-18). If the validator and this
+ * file ever disagree, the validator wins — fix this file.
+ *
+ * A trace is a BARE JSON ARRAY of entries (no envelope object):
+ *
+ *   [
+ *     { "event": "INITIAL", "state": { "current_players": 0, "max_players": 3 }, "clock": 0 },
+ *     { "event": "JOIN",    "state": { "current_players": 1, "max_players": 3 }, "clock": 1 },
+ *     ...
+ *   ]
+ *
+ * Protocol:
+ * - The FIRST entry must have event "INITIAL" with the initial variable snapshot.
+ * - `state` is the FULL context-variable snapshot AFTER the event (not a delta).
+ *   Guards are evaluated against the PREVIOUS entry's snapshot; invariants
+ *   against the current one. Variable names use the spec's snake_case
+ *   `context.variables` keys. Include any extra variables that the spec's
+ *   invariant predicates reference (e.g. a `status` string), even if they are
+ *   not declared in `context.variables`.
+ * - `clock` is a monotonically increasing ordinal (the emitter uses the entry
+ *   index). The validator reads it for violation reporting, defaulting to the
+ *   array index when absent.
+ * - Events not observed are simply not recorded: an operation the system
+ *   REJECTED (guard held) must NOT appear in the trace.
+ *
  * Design principles:
- * - Minimal: only state + event + context updates (TLA+ paper finding)
+ * - Minimal: full-snapshot entries, no transition metadata (TLA+ paper finding)
  * - Language-agnostic: JSON format, any test framework can emit
- * - Partial: not every spec variable needs a value in every event
+ * - Reference emitter: tools/stacks/typescript/trace_emitter/traceRecorder.ts
+ *
+ * History: an earlier revision of this file described an envelope shape
+ * ({ spec_id, initial_state, events: [{ state, event, next_state, context }] })
+ * that the validator never consumed. Removed 2026-07-18 after the shape drift
+ * was caught while building the TypeScript trace emitter.
  */
 
-export interface TraceEvent {
-  /** Current state BEFORE this event */
-  readonly state: string;
-  /** Event that occurred */
+/** One observed transition. */
+export interface TraceEntry {
+  /** Event name, matching the spec's transition events. First entry: "INITIAL". */
   readonly event: string;
-  /** State AFTER this event (the transition target) */
-  readonly next_state: string;
-  /** Context variable updates (only changed values, not full snapshot) */
-  readonly context?: Record<string, unknown>;
-  /** Timestamp (optional, for ordering verification) */
-  readonly ts?: number;
+  /** FULL context-variable snapshot after this event. */
+  readonly state: Record<string, unknown>;
+  /** Monotonic ordinal for ordering/reporting (defaults to array index). */
+  readonly clock?: number;
 }
 
-export interface Trace {
-  /** Which behavior spec this trace validates against */
-  readonly spec_id: string;
-  /** The initial state declared by the spec */
-  readonly initial_state: string;
-  /** Ordered sequence of observed events */
-  readonly events: readonly TraceEvent[];
-  /** Test/scenario that produced this trace */
-  readonly source?: string;
-}
+/** The trace file content: a bare array. */
+export type Trace = readonly TraceEntry[];
 
+/**
+ * Violation payload emitted by the validator on FAIL (single JSON object on
+ * stdout with status "fail"). Field presence varies by violation type.
+ */
 export interface TraceViolation {
-  /** Index in the events array where the violation occurred */
-  readonly event_index: number;
-  /** The event that violated the spec */
-  readonly event: TraceEvent;
-  /** What the spec says should be possible from this state */
-  readonly allowed_events: string[];
-  /** Type of violation */
-  readonly kind: "invalid_transition" | "invalid_target" | "invariant_violated" | "unknown_state";
-  /** Human-readable explanation */
+  /** "protocol" | "transition" | "guard" — invariant violations carry `invariant` instead. */
+  readonly type?: "protocol" | "transition" | "guard";
+  /** Violated invariant id (invariant violations). */
+  readonly invariant?: string;
+  /** Index in the trace array where the violation occurred. */
+  readonly position: number;
+  readonly clock: number;
+  readonly event?: string;
+  readonly state?: Record<string, unknown>;
+  readonly prev_state?: Record<string, unknown>;
+  readonly current_spec_state?: string;
+  readonly valid_events?: string[];
+  readonly expected?: string;
   readonly message: string;
 }
 
 export interface TraceValidationResult {
-  readonly spec_id: string;
-  readonly status: "pass" | "fail";
-  readonly violations: readonly TraceViolation[];
-  readonly events_checked: number;
-  readonly trace_source?: string;
+  readonly status: "pass" | "fail" | "error";
+  readonly assurance: "trace";
+  readonly spec_id?: string;
+  readonly violation?: TraceViolation;
+  readonly provenance?: { readonly from_force?: string; readonly from_pattern?: string };
+  readonly steps_checked?: number;
+  readonly final_state?: string;
+  readonly invariants_checked?: string[];
+  readonly message?: string;
 }

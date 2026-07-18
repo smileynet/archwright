@@ -135,6 +135,8 @@ actor:
 
 **Event payload notation:** The `{ field, field }` shorthand in `accepts_events`/`emits_events` is a sketch — it names what the event carries without full typing. The **authoritative typed payload** (types, nullability, required/optional) lives in contract specs produced by `archwright-contract`. The model identifies WHICH events exist and WHO produces/consumes them; the contract phase specifies WHAT they carry in detail.
 
+**Planned vs existing:** When modeling a system that is partly designed-but-unbuilt (ratified decisions, no code), mark unimplemented actors `(planned)` in their `name` and state in the model doc what is checkable TODAY vs what activates later. Downstream spec projections against planned actors carry `target_status: pending` (note it in the model's `spec_projections` entries so derive inherits it). Modeling ahead of code is correct — the specs become acceptance criteria — but an unmarked planned actor produces false "N/A" check results that hide real gaps (field-validated: DynamoRush tutorial area, 16 pending vs 4 active checks, zero false results).
+
 **user_facing_invariants** are REQUIRED. They describe what the user experiences when the technical invariant holds. If you can't write one, the invariant may not serve a user desire.
 
 ### 5. Classify boundary entities

@@ -61,6 +61,13 @@ These directories are the archwright output. The `.memory/` directory in the tar
 Operator policy (grill Q06, 2026-07-17), applies to ALL pipeline runs:
 
 1. **Scope by size.** Default: full project / all areas in one run. **Large projects and monorepos** (workspace layouts, multiple apps/packages, or a source corpus far beyond survey sizing guidance) are the exception: break into AREAS, run the full pipeline per area, then an **all-up reconciliation pass** — dedupe forces across areas, surface cross-area tensions, unify models. Area partitioning is for scale, never the norm.
+
+   **Reconciliation deliverables** (first field run: DynamoRush area 4, 2026-07-18 — promote to a skill if a second run needs it):
+   - **Dedupe verdicts.** Compare force statements across areas; prefer FAMILIES over merges — forces with the same principle but different who/object/check-target stay separate with the family documented (merging blurs provenance and check targets). Areas that reused earlier ids via `shared_product_forces` create no dupes by construction.
+   - **Cross-model seam table.** One row per producer/consumer seam crossing area models: contract involved, verdict (fold / extension / compatible / content-not-code-reuse), and any pattern edits made (scope notes, `completed_by` links).
+   - **Experience ownership.** An experience id defined in 2+ models gets ONE owning model; others annotate theirs as a restatement.
+   - **`design/models/system-overview.md`** — system composition diagram, the seam table, force families, and any cross-area spine invariant.
+   - Verification: `--links` must pass after edits; full static batch re-run with any pre-existing deliberate FAILs called out as unchanged.
 2. **Artifacts are live documents in the primary repo/branch space.** Commit `design/` output branch-agnostically to the CURRENT project branch unless the user specifies otherwise. No special design branches by default.
 
 ## Extension Protocol
