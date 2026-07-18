@@ -103,14 +103,27 @@ fi
 mkdir -p "$SKILLS_DST"
 [ -n "$STEERING_DST" ] && mkdir -p "$STEERING_DST"
 
-# Deploy skills
+# Deploy skills.
+# Global kiro deploys SYMLINK instead of copy: other deployers prune unmanaged
+# COPIES from ~/.kiro/skills (crew-research init.sh deleted all 13 archwright
+# skills on 2026-07-18; its prune — and doctor — treat symlinks as explicitly
+# owned and keep them). Symlinks also keep deployed skills live with the repo.
+# Generated references (domains/stacks/glossary below) then materialize into
+# the repo source tree through the link — those paths are gitignored.
+# Project deploys and other tools keep copies (a machine-local absolute
+# symlink inside a shared project repo would break collaborators).
 if [ -d "$SKILLS_SRC" ]; then
   for skill_dir in "$SKILLS_SRC"/archwright-*/; do
     [ -d "$skill_dir" ] || continue
     name=$(basename "$skill_dir")
     rm -rf "$SKILLS_DST/$name"
-    cp -r "$skill_dir" "$SKILLS_DST/$name"
-    echo "  ✓ skill: $name"
+    if [ "$TOOL" = "kiro" ] && [ -z "$TARGET" ]; then
+      ln -s "$SKILLS_SRC/$name" "$SKILLS_DST/$name"
+      echo "  ✓ skill (symlink): $name"
+    else
+      cp -r "$skill_dir" "$SKILLS_DST/$name"
+      echo "  ✓ skill: $name"
+    fi
   done
 fi
 
