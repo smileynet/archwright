@@ -27,7 +27,7 @@ mise run test
 # Deploy the skills + steering to your agent tool
 mise run deploy-skills                          # kiro (default)
 bash tools/deploy-skills.sh --tool claude       # or claude | codex | agy
-# ✓ skill: archwright-survey … Done.
+# ✓ skill (symlink): archwright-survey … Done.
 ```
 
 Then, in any project, ask your agent to **"survey this project"**. The pipeline runs from there:
