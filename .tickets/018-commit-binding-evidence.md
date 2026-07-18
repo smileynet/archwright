@@ -9,7 +9,7 @@ blocked_by: []
 
 ## Context
 
-Grill discovery-track Q6 (2026-07-18, `.memory/grill/discovery-track/Q06-lec-equivalent-commit-binding.md`) deferred this to its own ticket. EDA precedent: signoff evidence binds to a frozen commit hash; ANY change invalidates it (`.scratch/research/eda-mde-phase-split.md`). Archwright check evidence (evidence ledger events, baseline entries, span digests) currently carries timestamps but no code-state identity — a pass recorded at commit A silently "vouches" for commit B.
+Grill discovery-track Q6 (2026-07-18, `.memory/grill/discovery-track/Q06-lec-equivalent-commit-binding.md`) deferred this to its own ticket. EDA precedent: signoff evidence binds to a frozen commit hash; ANY change invalidates it (`.memory/research-discovery-eda-mde.md`). Archwright check evidence (evidence ledger events, baseline entries, span digests) currently carries timestamps but no code-state identity — a pass recorded at commit A silently "vouches" for commit B.
 
 ## What to build
 

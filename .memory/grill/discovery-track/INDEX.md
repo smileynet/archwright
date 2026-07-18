@@ -2,7 +2,7 @@
 
 **Started:** 2026-07-18
 **Topic:** Ratify ADR 0011 (discovery track) — 6 open questions with recommended dispositions
-**Inputs:** `.memory/adr/0011-discovery-track.md` (proposed), `.scratch/discovery-track-plan.md`, `.scratch/research/` (4 files), `~/code/wizard_of_oz` design corpus
+**Inputs:** `.memory/adr/0011-discovery-track.md` (proposed), `.memory/specs/discovery-track.md`, `.memory/research-discovery-*.md` (4 files), `~/code/wizard_of_oz` design corpus
 
 ## Questions
 

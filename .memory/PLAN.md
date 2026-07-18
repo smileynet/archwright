@@ -1,6 +1,7 @@
 # PLAN: Live Design Checking for Lacrosse-Bosse-Platform
 
 > **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) shipped except the parked tail — DoD-5 chain (CK-03→04→05→09→10), CK-21, all of Phase 5b (CK-06/07/08 + R32 baseline/fingerprints), CK-17/18 (skill invocation contract + repair-loop convergence), CK-19 (changed-only scoping), and the ADR-0009 evidence ledger (ticket 017) are DONE (fixture-suite-verified); CK-01/02 descoped to validate.py. Open remainder: CK-11–16 (ast-grep/SARIF — parked awaiting a field driver per Extension Protocol).**
+> **Phase 6 (Discovery Track) OPEN (2026-07-18): ADR 0011 accepted via grill (6 Qs, `.memory/grill/discovery-track/`); spec `.memory/specs/discovery-track.md`; tickets 019–026 (frontier: 019/020/021 unblocked, parallel). Plus ticket 018 (commit-binding of check evidence — verification-track, independent). Target: the operator's game project (not LBP — first non-LBP phase).**
 > Loose ends: T7 trace emitter → converted to an Extension Protocol pending-registry row `gdscript.trace_emitter` (grill Q5, audit ticket C11 — the "~20 lines" claim becomes measured data on first real build); R18/S15 → C5, folded into C10's DynamoRush reconciliation pass (grill Q7). Phase 5 reconciled with the audit plan 2026-07-16 (absorbs B4/C1/C2) and re-reconciled 2026-07-17 (grill: CK-01/02 descoped to validate.py, CK-21 added, passup skill consumes CK-03 output — see the spec's "Grill reconciliation" section).
 
 **Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
@@ -290,3 +291,23 @@ Each layer catches different bugs. Each has different portability costs:
 | SGE (Grabowski 2026) | Growth rules, context assembly formula | .scratch/research/spec-growth-engine.md |
 | MonPoly | Online MFOTL monitoring for data-rich events | ETH Zurich (zisc.ethz.ch) |
 | Copilot/RTLola | Stream-based monitoring, language-agnostic design | NASA, CISPA/Saarland |
+
+---
+
+## Phase 6: Discovery Track (ADR 0011) — OPEN 2026-07-18
+
+Authoritative detail: `.memory/specs/discovery-track.md` (tasks T1–T8) + tickets 019–026. Decisions: ADR 0011 + `.memory/grill/discovery-track/`.
+
+```
+Phase 6: Discovery Track
+├── 019 T1 facilitation-stance import (wizard_of_oz patterns)   [unblocked]
+├── 020 T2 decision-ledger template (seam contract)             [unblocked]
+├── 021 T3 overlay discovery: sections (game/web/general)       [unblocked]
+├── 022 T4 archwright-discover-ui skill + templates             (019,020,021)
+├── 023 T5 field run: operator's game project                   (022)
+├── 024 T6 docs sync: steering/AGENTS/audit scope               (022)
+├── 025 T7b woz-export consumer (exporter T7a in wizard_of_oz)  (020)
+└── 026 T8 conservation-check validator rule                    (020,022)
+```
+
+Cross-repo: T7a exporter ticketed in `~/code/wizard_of_oz/.tickets/001`. Independent: ticket 018 (commit-binding, verification track).

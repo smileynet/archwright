@@ -68,7 +68,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   └── typescript/                # trace_emitter ★★ (conformance in suite + field-proven on DynamoRush); ast_grammar/check_patterns pending
 ├── .memory/
 │   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
-│   ├── PLAN.md                    # Phases 0–4 historical; Phase 5 partially shipped (DoD-5 chain CK-03→04→05→09→10 + CK-21 done; open: CK-06/07/08, 11–19 — see specs/polyglot-check-tooling.md)
+│   ├── PLAN.md                    # Authoritative work status — read its STATUS header; do not duplicate plan state here or elsewhere
 │   ├── specs/                     # Specs for plan deliverables (incl. Phase 5)
 │   ├── audit/                     # Audit reports (tools, skills, claims)
 │   ├── grill/                     # Grill session decision records (INDEX.md + Q-files per topic)
@@ -202,6 +202,7 @@ Notes:
 - Contract phase solely owns contract specs (C7, ratified 2026-07-16) — model emits contract *candidates* (identity/direction, no payloads); one spec per event type, with a one-protocol/one-authority-actor cluster exception; `from_model:` provenance required
 - Design artifacts are live documents in the target project — committed to the current branch (no special design branches); large projects/monorepos get per-area pipeline runs + an all-up reconciliation pass (grill Q06)
 - Coverage gaps follow the Extension Protocol (ADR 0008): pending-with-reason, new instances flow through, new kinds need ADR + HITL; adapter status in `tools/stacks/REGISTRY.yaml` is computed by the fixture suite, never hand-declared
+- Discovery track (ADR 0011, `.memory/adr/0011-discovery-track.md`) — HITL-dense discovery work feeds the mechanical pipeline at the `resolve` seam via decision ledgers; see the ADR for the seam contract and grill verdicts
 - The agent IS the system; tools are mechanical servants
 - Subagents extract (read files → structured output); main agent synthesizes (dedup, cluster, merge)
 
