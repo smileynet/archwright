@@ -833,32 +833,149 @@ def translate_predicate(pred, state, current_spec_state=None):
     return Untranslatable(f"unsupported predicate construct: '{pred}'")
 
 
-def check_trace(spec_path, trace_path):
-    """Validate a JSON trace against a behavior spec."""
+def build_trace_document(spec_path, payload, data=None, active_invariants=None):
+    """Ticket 016: map a trace result payload into the CK-03 document shape
+    (check-output-schema.yaml) so archwright-passup routes trace violations
+    uniformly with static ones.
+
+    Coverage counts INVARIANTS declared checkable (not specs); a structural
+    failure (protocol/transition/guard — no spec invariant) adds one to
+    `checked` so passed+failed+skipped always sums to checked.
+    """
+    status = payload["status"]
+    data = data or {}
+    spec_id = payload.get("spec_id") or data.get("id")
+    active_ids = [inv["id"] for inv in (active_invariants or [])]
+
+    skips = []
+    for s in payload.get("invariants_skipped", []):
+        skips.append({"spec_id": spec_id, "spec_path": str(spec_path),
+                      "invariant": s["id"], "reason": s["reason"]})
+    for g in payload.get("guards_skipped", []):
+        skips.append({
+            "spec_id": spec_id, "spec_path": str(spec_path), "invariant": None,
+            "reason": (f"guard '{g['predicate']}' untranslatable at position "
+                       f"{g['position']} (event '{g['event']}'): {g['reason']}"),
+        })
+
+    violations, errors = [], []
+    structural = 0
+    if status == "fail":
+        v = payload["violation"]
+        spec_inv = next((i for i in (data.get("invariants") or [])
+                         if i.get("id") == v.get("invariant")), None)
+        if spec_inv is None:
+            structural = 1
+        conf = (spec_inv or {}).get("confidence") or data.get("confidence", "—")
+        prov = payload.get("provenance") or {}
+        from_patterns = data.get("from_patterns") or []
+        from_pattern = (prov.get("from_pattern")
+                        or (from_patterns[0] if from_patterns else None))
+        from_force = (prov.get("from_force") or data.get("from_force")
+                      or data.get("protects_experience"))
+        if spec_inv:
+            expected = _expected_for({"invariant": spec_inv["id"]}, data, spec_path)
+        elif v.get("type") == "transition":
+            expected = (f"an event in {v.get('valid_events')} from state "
+                        f"'{v.get('current_spec_state')}'")
+        elif v.get("type") == "guard":
+            expected = (f"a guard-satisfying transition for event '{v.get('event')}' "
+                        f"in state '{v.get('current_spec_state')}'")
+        else:  # protocol
+            expected = "first trace event 'INITIAL'"
+        actual = (f"event '{v.get('event')}' at trace position {v['position']} "
+                  f"(clock {v['clock']})")
+        if v.get("state") is not None:
+            actual += f" with state {json.dumps(v['state'], sort_keys=True)}"
+        violations.append({
+            "spec_id": spec_id,
+            "spec_kind": "behavior",
+            "spec_path": str(spec_path),
+            "invariant": v.get("invariant") or f"trace-{v.get('type', 'invariant')}",
+            "confidence": conf,
+            "severity": _SEVERITY.get(conf, "info"),
+            "escalate": conf == "★★",
+            "message": v["message"],
+            "evidence": [actual],
+            "from_pattern": from_pattern,
+            "from_force": from_force,
+            "suggested_route": "fix-implementation",
+            "contrast_pair": {"expected": expected, "actual": actual},
+        })
+    elif status == "error":
+        errors.append({"spec_id": spec_id, "spec_path": str(spec_path),
+                       "message": payload.get("message", ""),
+                       "suggested_route": "fix-check"})
+
+    skipped = len(payload.get("invariants_skipped", []))
+    checked = len(active_ids) + structural
+    failed = 1 if status == "fail" else 0
+    coverage = {
+        "checked": checked,
+        "passed": 0 if status == "error" else max(0, checked - skipped - failed),
+        "failed": failed,
+        "skipped": skipped,
+        "errors": 1 if status == "error" else 0,
+        "pending": 0,
+    }
+
+    if status == "error":
+        doc_status = "error"
+    elif violations:
+        doc_status = "fail"
+    else:
+        doc_status = "pass"
+
+    return {
+        "status": doc_status,
+        "scope": {"mode": "trace", "specs_checked": 1, "target": None},
+        "violations": violations,
+        "errors": errors,
+        "skips": skips,
+        "coverage": coverage,
+        "remaining_delta": len(violations),
+    }
+
+
+def check_trace(spec_path, trace_path, json_output=False):
+    """Validate a JSON trace against a behavior spec.
+
+    Output contract (ticket 016): the bespoke replay shape (trace-schema.ts)
+    by default; with json_output=True, the CK-03 document (check-output-schema
+    .yaml) so archwright-passup routes trace violations uniformly with static
+    ones. Exit codes unchanged: 0 pass / 1 fail / 2 error.
+    """
     spec_path = Path(spec_path)
     trace_path = Path(trace_path)
-    
+
+    data = None
+    active_invariants = []
+
+    def _emit(payload, code):
+        if json_output:
+            doc = build_trace_document(spec_path, payload, data, active_invariants)
+            print(json.dumps(doc, indent=2, ensure_ascii=False))
+        else:
+            print(json.dumps(payload))
+        return code
+
     # Load spec
     if spec_path.suffix in (".yaml", ".yml"):
         data = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
     else:
-        print(json.dumps({"status": "error", "message": "Trace checking requires a YAML behavior spec"}))
-        return 2
-    
+        return _emit({"status": "error", "message": "Trace checking requires a YAML behavior spec"}, 2)
+
     if data.get("kind") != "behavior":
-        print(json.dumps({"status": "error", "message": f"Expected kind: behavior, got: {data.get('kind')}"}))
-        return 2
-    
+        return _emit({"status": "error", "message": f"Expected kind: behavior, got: {data.get('kind')}"}, 2)
+
     # Load trace
     try:
         trace = json.loads(trace_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as e:
-        print(json.dumps({"status": "error", "message": f"Failed to parse trace: {e}"}))
-        return 2
-    
+        return _emit({"status": "error", "message": f"Failed to parse trace: {e}"}, 2)
+
     if not isinstance(trace, list) or len(trace) == 0:
-        print(json.dumps({"status": "error", "message": "Trace must be a non-empty JSON array"}))
-        return 2
+        return _emit({"status": "error", "message": "Trace must be a non-empty JSON array"}, 2)
     
     # Extract spec components
     states = data.get("states", {})
@@ -879,14 +996,13 @@ def check_trace(spec_path, trace_path):
     guards_skipped = []      # [{position, event, predicate, reason}]
 
     def _fail(payload):
-        """Print a fail result carrying any skips accumulated before the failure
+        """Emit a fail result carrying any skips accumulated before the failure
         point — a failing trace must not hide coverage gaps a passing one reports."""
         payload["invariants_skipped"] = [{"id": k, "reason": v}
                                          for k, v in skipped_invariants.items()]
         if guards_skipped:
             payload["guards_skipped"] = guards_skipped
-        print(json.dumps(payload))
-        return 1
+        return _emit(payload, 1)
     
     for i, entry in enumerate(trace):
         event = entry.get("event", "")
@@ -1059,8 +1175,7 @@ def check_trace(spec_path, trace_path):
     }
     if guards_skipped:
         result["guards_skipped"] = guards_skipped
-    print(json.dumps(result))
-    return 0
+    return _emit(result, 0)
 
 
 def build_document(mode, target_root, per_file):
@@ -1222,12 +1337,15 @@ def main():
         print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] | --trace <spec> <trace> | --probe <spec>")
         sys.exit(2)
 
-    # Handle --trace mode early (different flow)
+    # Handle --trace mode early (different flow). --json (anywhere after
+    # --trace) switches output to the CK-03 document shape (ticket 016).
     if sys.argv[1] == "--trace":
-        if len(sys.argv) < 4:
-            print(json.dumps({"status": "error", "message": "Usage: archwright-check --trace <spec.yaml> <trace.json>"}))
+        trace_args = [a for a in sys.argv[2:] if a != "--json"]
+        trace_json = "--json" in sys.argv[2:]
+        if len(trace_args) < 2:
+            print(json.dumps({"status": "error", "message": "Usage: archwright-check --trace <spec.yaml> <trace.json> [--json]"}))
             sys.exit(2)
-        sys.exit(check_trace(sys.argv[2], sys.argv[3]))
+        sys.exit(check_trace(trace_args[0], trace_args[1], json_output=trace_json))
 
     # Handle --probe mode early (different flow)
     if sys.argv[1] == "--probe":

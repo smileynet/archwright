@@ -15,7 +15,7 @@ The pipeline's upward arc. Check verifies and emits structured violations; this 
 
 ## Input
 
-Structured violations from `python3 <archwright-repo>/tools/archwright-check.py <specs>... --json` (or `archwright-validate.py --json`). Each violation carries:
+Structured violations from `python3 <archwright-repo>/tools/archwright-check.py <specs>... --json` (or `archwright-validate.py --json`, or `archwright-check.py --trace <spec.yaml> <trace.json> --json` for trace validation — ticket 016). Each violation carries:
 
 ```json
 {
@@ -29,6 +29,8 @@ Structured violations from `python3 <archwright-repo>/tools/archwright-check.py 
 ```
 
 Authoritative schema: `<archwright-repo>/tools/check-output-schema.yaml`. If handed prose instead of JSON, re-run the check with `--json` — this skill consumes the contract, not transcripts.
+
+**Trace violations route identically to static ones** (scope.mode `trace`): the document carries at most one violation (replay stops at first failure), its `evidence` is the failing trace step (event/position/state) rather than file:line, and untranslatable predicates/guards arrive in `skips[]`. The lift chain is unchanged — invariant → from_pattern → force.
 
 **`skips[]` are NOT routed.** The document may carry a `skips` array ({spec_id, spec_path, invariant, reason}) — pending adapters, untranslatable predicates, vacuous absence claims. A skip is a coverage statement, not a fault: there is nothing to lift and no level to route it to. Surface skips in the span digest so the human sees the coverage gap, and treat a GROWING skip list of one kind as an Extension Protocol signal (a missing adapter or translator capability wants building — pending-with-reason, research, conformance-at-birth).
 
