@@ -5,3 +5,10 @@
 .references/
 __pycache__/
 .scratch/
+
+# Generated at deploy time by tools/deploy-skills.sh (sources of truth:
+# tools/domains/, tools/stacks/REGISTRY.yaml, docs/glossary.md). With global
+# kiro symlink deploys these materialize into the source tree through the link.
+skills/archwright-survey/references/domains/
+skills/archwright-survey/references/stacks/
+skills/archwright-survey/references/glossary.md
