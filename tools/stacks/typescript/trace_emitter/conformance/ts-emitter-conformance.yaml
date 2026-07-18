@@ -1,0 +1,64 @@
+# Conformance spec for the TS trace emitter — a session-like guarded counter.
+# Mirrors DynamoRush session-lifecycle shape (guard on JOIN, capacity invariant).
+kind: behavior
+id: ts-emitter-conformance
+from_patterns:
+  - "pattern:conformance-fixture"
+
+protects_experience: "conformance-fixture"
+user_story: "The emitter's output validates against a real behavior spec — and a buggy run is caught."
+
+context:
+  variables:
+    current_players:
+      type: int
+      initial: 0
+    max_players:
+      type: int
+      initial: 3
+
+initial: waiting
+
+states:
+  waiting:
+    type: atomic
+    "on":
+      JOIN:
+        target: waiting
+        guard:
+          predicate: "current_players < max_players"
+        assign:
+          current_players: "current_players + 1"
+      START:
+        target: active
+        guard:
+          predicate: "current_players > 0"
+
+  active:
+    type: atomic
+    "on":
+      COMPLETE:
+        target: completed
+
+  completed:
+    type: atomic
+    "on": {}
+
+invariants:
+  - id: capacity-never-exceeded
+    type: temporal
+    predicate: "always (current_players <= max_players)"
+    confidence: "★★"
+    description: "Seat count never exceeds capacity"
+
+check:
+  trace:
+    events: [JOIN, START, COMPLETE]
+    state_vars: [current_players, max_players]
+    invariants: [capacity-never-exceeded]
+
+abstraction_notes:
+  included: [guarded join, capacity invariant]
+  excluded: [everything else — this is an emitter conformance fixture]
+  justification: "Minimal machine exercising guard evaluation + invariant checking on emitted traces."
+  scope_limit: "Trace check only."
