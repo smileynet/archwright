@@ -1,0 +1,78 @@
+# Game Domain — Discovery Section (ticket 021, ADR 0011)
+# Question frameworks + coverage gates for discovery-track sessions in game projects.
+# Distilled from wizard_of_oz references (cited snapshot 2026-07-18, grill Q1 —
+# wizard_of_oz/.kiro/skills/{brainstorm,simulate}/references/). The deep tables
+# (genre loop examples, aesthetic pairings, full gate matrices) live there; this
+# overlay carries what a discovery session needs inline.
+
+domain: game
+
+# Ledger category extensions (grill Q2): valid categories = core 5 ∪ these.
+category_extensions:
+  - mechanic      # rules and player verbs
+  - feedback      # what the player sees/hears in response
+  - progression   # what escalates, persists, unlocks
+  - economy       # resources earned/spent
+  - content       # levels, items, variation between cycles
+  - narrative     # story told or discovered
+
+frameworks:
+  - id: mda
+    name: "MDA — brainstorm from aesthetics backward"
+    source: "Hunicke, LeBlanc, Zubek (2004); wizard_of_oz mda-framework.md (2026-07-18)"
+    use: "Players experience Aesthetics → Mechanics; designers build the reverse. Start from the feeling."
+    opening_questions:
+      - "What 1-2 feelings should the player have?"  # offer the 8: sensation, fantasy, narrative, challenge, fellowship, discovery, expression, submission
+      - "What player behaviors would produce those feelings?"
+      - "What rules enable those behaviors?"
+    validate: "Does the mechanic → dynamic → aesthetic chain hold?"
+
+  - id: core-loop
+    name: "Core loop articulation"
+    source: "wizard_of_oz core-loops.md (2026-07-18)"
+    use: "Action → Challenge → Reward → Reinvestment; one cycle in 1-5 minutes; escalating."
+    opening_questions:
+      - "What is the ONE thing the player does most often?"
+      - "What makes that action non-trivial?"
+      - "What does the player get for succeeding?"
+      - "How does that reward make the next action different or better?"
+    validate: "State the loop in one sentence: 'Player [verbs] to [goal], earning [reward] that enables [reinvestment].'"
+    red_flags: ["cycle > 10 min", "reward doesn't feed the action", "action not fun without reward", "no escalation"]
+
+  - id: mlp-scope
+    name: "MLP 3-feature rule"
+    source: "wizard_of_oz mlp-scoping.md (2026-07-18)"
+    use: "Minimum LOVABLE product — games must be fun, not just viable. ONE core mechanic + at most 2 supporting features; everything else cut or parked."
+    opening_questions:
+      - "What is the ONE mechanic that IS the game — fun in isolation?"
+      - "Which at-most-2 supporting features make it deeper (not wider)?"
+      - "What are you assuming this game needs that it might not?"
+    scope_checks:
+      - "If I remove this feature, is the core loop still fun? If yes → remove."
+      - "Does this serve the core loop, or is it adjacent? Adjacent → cut/park."
+      - "Adding it because it's fun, or because 'games like this have it'? Convention ≠ necessity."
+
+# Coverage gates: staged goals a session walks (proposals, never forced — see
+# facilitation stance). Generic diminishing-returns heuristics live in the skill;
+# these are the game-native stages (wizard_of_oz beat-pacing.md, 2026-07-18).
+coverage_gates:
+  - stage: first-contact
+    question: "What does the player experience in the first 30 seconds?"
+    advance_when: "First 30 seconds are concrete enough to wireframe."
+  - stage: learning-the-verb
+    question: "How does the player discover what they can do — and what can go wrong while learning?"
+    advance_when: "Core verb named, teaching method decided, first feedback loop described."
+  - stage: core-loop-in-motion
+    question: "What does minute 5-15 feel like? What varies between cycles?"
+    advance_when: "Loop stated in one sentence with concrete variation between cycles."
+  - stage: rising-stakes
+    question: "What escalates, what's at risk, and where is mastery tested?"
+    advance_when: "At least one escalation axis defined with concrete examples."
+  - stage: session-end
+    question: "Why does the player stop — and why do they come back?"
+    advance_when: "Session boundaries and retention hook defined."
+
+artifact_vocabulary:
+  wireframe: "ASCII sketch of what the player SEES at a moment of play (@ player, # wall, . floor — legend grows per session)"
+  flow: "screen/state sequence through one loop cycle"
+  simulation: "played-through moment: agent describes, user decides (WoZ)"

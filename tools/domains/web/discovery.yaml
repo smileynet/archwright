@@ -1,0 +1,67 @@
+# Web Domain — Discovery Section (ticket 021, ADR 0011)
+# Question frameworks + coverage gates for discovery-track sessions in web/app
+# projects. Researched 2026-07-18 (Extension Protocol: 2+ sources per framework).
+
+domain: web
+
+# Ledger category extensions (grill Q2): valid categories = core 5 ∪ these.
+category_extensions:
+  - flow          # navigation, routing, journey steps
+  - data          # what's shown, entered, stored per screen
+  - access        # who can see/do what (auth, roles, permissions)
+  - feedback      # loading, success, error, empty states
+  - integration   # external systems, APIs, notifications
+
+frameworks:
+  - id: jtbd
+    name: "Jobs-to-be-Done — start from the job, not the feature"
+    source: "Christensen (milkshake study); job-statement structure per Salesforce Trailhead 'JTBD for designers' (performer, job, circumstances, needs); productplan.com JTBD guide (2025)"
+    use: "Users hire the product to get a job done. Anchor discovery on job statements, not feature lists."
+    opening_questions:
+      - "When [circumstance], who is trying to get what done?"  # job statement: performer + job + circumstance + need
+      - "What are they using today to do this job? What's frustrating about it?"
+      - "How do they know the job is DONE — what does success look like, in their words?"
+    validate: "Each screen/feature traces to a job statement; a feature serving no job is parked."
+
+  - id: red-routes
+    name: "Red routes / critical user journeys — prioritize the vital paths"
+    source: "red-route usability (thedecisionlab.com; dzone.com 2018 — London red routes analogy); Critical User Journeys technique (Google, via uxtweak.com 2025)"
+    use: "The few journeys that make or break the product. Prioritize by TWO criteria: how many users × how often. A red route failing = the whole experience feels broken."
+    opening_questions:
+      - "What task will the MOST users do MOST often?"
+      - "Walk me through it: from where they start to how they know they're done."
+      - "If only ONE journey could be flawless, which one?"
+    validate: "Red routes named and wireframed end-to-end before any secondary screen."
+
+  - id: screen-inventory
+    name: "Screen inventory + information architecture"
+    source: "IA as a product-discovery step (upsilonit.com 2024); user journey map → red route → wireframe sequence (setdesign, Medium 2021)"
+    use: "Enumerate screens/views from the red routes; group by IA before detailing any one screen."
+    opening_questions:
+      - "What screens does the red route touch, in order?"
+      - "What does the user need to SEE and DO on each?"
+      - "How does the user get anywhere else — what's the navigation model?"
+    validate: "Every red-route step maps to a screen; every screen belongs to a route or is explicitly secondary."
+
+# Coverage gates: staged goals a session walks (proposals, never forced).
+coverage_gates:
+  - stage: the-job
+    question: "Who hires this product, for what job, under what circumstances?"
+    advance_when: "Job statements written in the user's words; success criteria stated."
+  - stage: red-routes
+    question: "Which journeys are vital, and what do they look like end-to-end?"
+    advance_when: "1-3 red routes named, prioritized by users x frequency, walkable start to finish."
+  - stage: screens-and-data
+    question: "What screens exist, and what data does each show, take, and store?"
+    advance_when: "Screen inventory covers the red routes; data per screen sketched."
+  - stage: states-and-access
+    question: "What happens when things are empty, loading, failing — and who is allowed to do what?"
+    advance_when: "Error/empty/loading states decided for red-route screens; access rules stated."
+  - stage: return-visit
+    question: "What brings the user back, and what greets them when they return?"
+    advance_when: "Returning-user entry point and notification/retention decisions made."
+
+artifact_vocabulary:
+  wireframe: "ASCII sketch of one screen state (boxes, nav, form fields, primary action)"
+  flow: "screen sequence for one red route, including error/empty branches"
+  journey_map: "red route annotated with the user's goal and friction at each step"

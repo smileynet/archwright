@@ -1,7 +1,7 @@
 ---
 id: 021
 title: "Domain overlay discovery: sections (game port, web research, general)"
-status: open
+status: done
 blocked_by: []
 ---
 
