@@ -396,6 +396,71 @@ else
   report FAIL "feature: unknown expect value = tool error (exit 2)" "exit was $rc"
 fi
 
+# CK-06: target_status: pending → coverage.pending (disjoint bucket), never
+# pass/fail/skipped; reason still surfaces in skips[]; human output says PENDING.
+cat > "$FEAT_DIR/ck06-pending.md" <<'EOF'
+---
+kind: constraint
+id: ck06-pending
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "not/built/yet"
+  pattern: "foo"
+  expect: present
+  target_status: pending
+---
+# T
+## Rule
+Target not built yet.
+EOF
+rc=0; CK06_OUT=$(python3 "$CHECK" --json "$FEAT_DIR/ck06-pending.md" 2>&1) || rc=$?
+if [ "$rc" -eq 0 ] \
+   && echo "$CK06_OUT" | grep -q '"pending": 1' \
+   && echo "$CK06_OUT" | grep -q '"skipped": 0' \
+   && echo "$CK06_OUT" | grep -q '"target_status: pending'; then
+  report PASS "ck06: pending spec = coverage.pending 1 / skipped 0, reason in skips[], exit 0"
+else
+  report FAIL "ck06: pending spec = coverage.pending 1 / skipped 0, reason in skips[], exit 0" "exit=$rc"
+fi
+
+CK06_HUMAN=$(python3 "$CHECK" "$FEAT_DIR/ck06-pending.md" 2>&1) || true
+if echo "$CK06_HUMAN" | grep -q "PENDING: ck06-pending.md"; then
+  report PASS "ck06: human output labels pending spec PENDING (not SKIP)"
+else
+  report FAIL "ck06: human output labels pending spec PENDING (not SKIP)"
+fi
+
+# CK-06 violating scenario (Extension Protocol rule 4): a pending spec must not
+# mask a real failure batched alongside it — document still FAILs, exit 1,
+# coverage buckets stay disjoint (checked = failed + pending here).
+cat > "$FEAT_DIR/ck06-failing.md" <<'EOF'
+---
+kind: constraint
+id: ck06-failing
+from_patterns: ["pattern:ball-possession"]
+confidence: "★★"
+check:
+  method: grep
+  target: "client/src"
+  pattern: "extends"
+  expect: absent
+---
+# T
+## Rule
+No extends (deliberately violated by fixture code).
+EOF
+rc=0; CK06_MIX=$(python3 "$CHECK" --json "$FEAT_DIR/ck06-pending.md" "$FEAT_DIR/ck06-failing.md" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] \
+   && echo "$CK06_MIX" | grep -q '"status": "fail"' \
+   && echo "$CK06_MIX" | grep -q '"pending": 1' \
+   && echo "$CK06_MIX" | grep -q '"failed": 1'; then
+  report PASS "ck06: pending never masks a batched FAIL (status fail, exit 1, buckets disjoint)"
+else
+  report FAIL "ck06: pending never masks a batched FAIL (status fail, exit 1, buckets disjoint)" "exit=$rc"
+fi
+
 unset ARCHWRIGHT_PROJECT_ROOT
 
 echo ""

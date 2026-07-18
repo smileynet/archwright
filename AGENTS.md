@@ -134,7 +134,7 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 63 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests + trace strict-mode (ticket 015) + trace CK-03 document (016) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) (SKIPs with reason if alloy6.jar, java, or node absent; green = 63/0/0 — **this row is the single source for the count; elsewhere say "suite green"**) |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 66 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests + pending-coverage (CK-06) + trace strict-mode (ticket 015) + trace CK-03 document (016) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) (SKIPs with reason if alloy6.jar, java, or node absent; green = 66/0/0 — **this row is the single source for the count; elsewhere say "suite green"**) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`).
 
@@ -169,7 +169,7 @@ Notes:
 - `archwright-check.py` locates the jar via `ARCHWRIGHT_ALLOY_JAR`, then script-relative `.references/alloy6.jar`, then the legacy `~/code/archwright/` path. Behavior checks report SKIP (exit 0) when it's absent — a coverage gap, not a pass.
 - Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
 - Windows: bare `python3` resolves to a broken MS Store stub, and mise's python ships only `python.exe` — use `mise exec -- python` or `mise run` tasks (`run-fixture-tests.sh` has its own python3→python guard). Without mise, real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` and `PYTHONIOENCODING=utf-8` must be set manually (★ output vs cp1252 console).
-- After ANY merge from upstream: `mise run test` (suite green) + `mise run deploy-skills` (upstream may have edited skills — deployed copies go stale silently).
+- After ANY merge from upstream: `mise run test` (suite green). Kiro-global skills are symlinked into this repo (since 5d450bf) and track edits automatically — re-run `mise run deploy-skills` only for newly added skills or when deploying to other tools (claude/codex/agy), whose copies go stale silently.
 - After rehydrating the jar, run `mise run test` — the behavior + guard-conformance skips become active checks (green = 0 failed, 0 skipped; count in Commands table).
 
 ## Workflows

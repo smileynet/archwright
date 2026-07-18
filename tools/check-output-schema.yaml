@@ -83,12 +83,12 @@ properties:
   coverage:
     type: object
     required: [checked, passed, failed, skipped, errors, pending]
-    properties:
+    properties:                     # buckets are disjoint: passed+failed+skipped+errors+pending = checked (CK-06)
       checked: {type: integer}
       passed: {type: integer}
       failed: {type: integer}
       skipped: {type: integer}    # adapter/backend unavailable — coverage statement, not a pass
       errors: {type: integer}
-      pending: {type: integer}    # target_status: pending specs
+      pending: {type: integer}    # target_status: pending specs — neither pass nor fail nor skipped (CK-06); reason still surfaces in skips[]
   remaining_delta:
     type: integer                 # violations after baseline suppression (= all, until CK-07)

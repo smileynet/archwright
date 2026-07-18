@@ -221,11 +221,12 @@ def check_conformance(data, spec_path):
     confidence = data.get("confidence", "—")
 
     # Specs whose check target doesn't exist yet (system not implemented) declare
-    # target_status: pending — report as skipped, not failed (see archwright-derive skill).
+    # target_status: pending — a distinct status (CK-06): reported as
+    # coverage.pending, never pass or fail (see archwright-derive skill).
     if check.get("target_status") == "pending":
         return [{
             "invariant": spec_id,
-            "status": "skipped",
+            "status": "pending",
             "confidence": confidence,
             "message": "target_status: pending — check target not yet implemented; activates when it exists",
         }]
@@ -618,8 +619,9 @@ def format_result(spec_path, kind, results):
 
     has_fail = any(r["status"] == "fail" for r in results)
     has_error = any(r["status"] == "error" for r in results)
-    all_skip = all(r["status"] == "skipped" for r in results)
-    skips = [r for r in results if r["status"] == "skipped"]
+    all_skip = all(r["status"] in ("skipped", "pending") for r in results)
+    has_pending = any(r["status"] == "pending" for r in results)
+    skips = [r for r in results if r["status"] in ("skipped", "pending")]
 
     if has_fail or has_error:
         lines.append(f"  ✗ FAIL: {path.name} (kind: {kind})")
@@ -635,7 +637,8 @@ def format_result(spec_path, kind, results):
                 for v in r.get("violations", []):
                     lines.append(f"      {v}")
     elif all_skip:
-        lines.append(f"  ○ SKIP: {path.name} (kind: {kind})")
+        label = "PENDING" if has_pending else "SKIP"
+        lines.append(f"  ○ {label}: {path.name} (kind: {kind})")
         for r in results:
             lines.append(f"    {r.get('message', '')}")
     else:
@@ -1197,10 +1200,13 @@ def build_document(mode, target_root, per_file):
             coverage["failed"] += 1
         elif "error" in statuses:
             coverage["errors"] += 1
-        elif statuses == {"skipped"}:
-            coverage["skipped"] += 1
-            if any("pending" in r.get("message", "") for r in results):
+        elif statuses <= {"skipped", "pending"}:
+            # CK-06: target_status: pending is its own disjoint bucket —
+            # neither pass nor fail nor skipped. Buckets sum to checked.
+            if "pending" in statuses:
                 coverage["pending"] += 1
+            else:
+                coverage["skipped"] += 1
         else:
             coverage["passed"] += 1
 
@@ -1228,10 +1234,11 @@ def build_document(mode, target_root, per_file):
                     "message": r.get("message"),
                     "suggested_route": r.get("suggested_route", "fix-check"),
                 })
-            elif r["status"] == "skipped":
+            elif r["status"] in ("skipped", "pending"):
                 # Skips carry their reason into the document (Extension Protocol
                 # rule 1: SKIP-with-reason, never silent) — a skip is a coverage
-                # statement, not a pass.
+                # statement, not a pass. Pending targets (CK-06) are counted in
+                # coverage.pending but surface their reason here too.
                 skips.append({
                     "spec_id": r.get("spec_id"),
                     "spec_path": str(spec_path),
