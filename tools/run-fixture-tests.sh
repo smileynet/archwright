@@ -294,7 +294,7 @@ check:
 ## Rule
 Include glob excludes all files.
 EOF
-INCL_OUT=$(python3 "$CHECK" --json "$FEAT_DIR/incl-scope.md" 2>&1); rc=$?
+rc=0; INCL_OUT=$(python3 "$CHECK" --json "$FEAT_DIR/incl-scope.md" 2>&1) || rc=$?
 if [ "$rc" -eq 0 ] && echo "$INCL_OUT" | grep -q '"skipped": 1'; then
   report PASS "feature: include glob matching nothing = vacuous SKIP, exit 0 (005a/012)"
 else
@@ -399,6 +399,111 @@ fi
 unset ARCHWRIGHT_PROJECT_ROOT
 
 echo ""
+echo "=== from_model Resolution: Boundary Producers + Folds (ticket 013) ==="
+# Boundary entities named as producers in contract_candidates are valid
+# from_model targets; plain boundary entities and unknown ids still FAIL;
+# folded candidates follow the fold for coverage.
+FM_DIR=$(mktemp -d)
+mkdir -p "$FM_DIR/design/models" "$FM_DIR/design/specs" "$FM_DIR/design/patterns"
+cat > "$FM_DIR/design/patterns/content-pipeline.md" <<'EOF'
+---
+kind: pattern
+id: content-pipeline
+status: resolved
+confidence: "★"
+---
+# content-pipeline
+EOF
+cat > "$FM_DIR/design/models/actors.yaml" <<'EOF'
+actors:
+  - id: session-host
+    name: Session Host
+boundary_entities:
+  - {id: content-authority, name: "puzzles.yaml", classification: configuration-authority, why: "authored reference"}
+  - {id: plain-helper, name: "util.ts", classification: boundary-service, why: "no contracts"}
+contract_candidates:
+  - {event: puzzle-definition, producer: content-authority, consumers: [session-host]}
+  - {event: placement-command, producer: session-host, consumers: [renderer]}
+  - {event: placement-verdict, producer: session-host, consumers: [renderer], folded_into: placement-command}
+EOF
+cat > "$FM_DIR/design/specs/puzzle-definition.yaml" <<'EOF'
+kind: contract
+id: puzzle-definition
+from_patterns: ["pattern:content-pipeline"]
+confidence: "★"
+from_model: "model:content-authority"
+events:
+  puzzle-definition:
+    producer: content-authority
+    consumers: [session-host]
+    stability: internal
+    payload:
+      fields:
+        - {name: pid, type: string, required: true}
+EOF
+cat > "$FM_DIR/design/specs/placement-command.yaml" <<'EOF'
+kind: contract
+id: placement-command
+from_patterns: ["pattern:content-pipeline"]
+confidence: "★"
+from_model: "model:session-host"
+events:
+  placement-command:
+    producer: session-host
+    consumers: [renderer]
+    stability: internal
+    payload:
+      fields:
+        - {name: pos, type: string, required: true}
+EOF
+rc=0; python3 "$VALIDATE" --links "$FM_DIR/design" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ]; then
+  report PASS "from_model: producer boundary entity + folded candidate resolve (exit 0)"
+else
+  report FAIL "from_model: producer boundary entity + folded candidate resolve (exit 0)" "exit=$rc"
+fi
+# Violating: plain boundary entity (not a producer) must FAIL with the precise message.
+sed -i.bak 's/model:content-authority/model:plain-helper/' "$FM_DIR/design/specs/puzzle-definition.yaml"
+rc=0; FM_OUT=$(python3 "$VALIDATE" --links "$FM_DIR/design" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] && echo "$FM_OUT" | grep -q "not a contract producer"; then
+  report PASS "from_model: plain boundary entity FAILs with producer-rule message"
+else
+  report FAIL "from_model: plain boundary entity FAILs with producer-rule message" "exit=$rc"
+fi
+# Violating: nonexistent id must still FAIL (no vacuous acceptance).
+sed -i.bak 's/model:plain-helper/model:ghost-entity/' "$FM_DIR/design/specs/puzzle-definition.yaml"
+rc=0; python3 "$VALIDATE" --links "$FM_DIR/design" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 1 ]; then
+  report PASS "from_model: nonexistent id still FAILs (exit 1)"
+else
+  report FAIL "from_model: nonexistent id still FAILs (exit 1)" "exit=$rc"
+fi
+sed -i.bak 's/model:ghost-entity/model:content-authority/' "$FM_DIR/design/specs/puzzle-definition.yaml"
+# Violating: folded candidate with its OWN spec = double ownership, must FAIL.
+cat > "$FM_DIR/design/specs/placement-verdict.yaml" <<'EOF'
+kind: contract
+id: placement-verdict
+from_patterns: ["pattern:content-pipeline"]
+confidence: "★"
+from_model: "model:session-host"
+events:
+  placement-verdict:
+    producer: session-host
+    consumers: [renderer]
+    stability: internal
+    payload:
+      fields:
+        - {name: ok, type: boolean, required: true}
+EOF
+rc=0; FM_OUT=$(python3 "$VALIDATE" --links "$FM_DIR/design" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] && echo "$FM_OUT" | grep -q "ALSO directly covered"; then
+  report PASS "from_model: folded candidate with own spec FAILs (double ownership)"
+else
+  report FAIL "from_model: folded candidate with own spec FAILs (double ownership)" "exit=$rc"
+fi
+rm -rf "$FM_DIR"
+
+echo ""
 echo "=== Vacuous Absence Guard (ticket 012) ==="
 # expect:absent over a target that scans zero files must SKIP-with-reason,
 # never PASS — while a real absent-check over real files still PASSes/FAILs.
@@ -420,7 +525,7 @@ check:
 ## Rule
 Forbidden pattern must not appear (but the target scans zero files).
 EOF
-VA_OUT=$(python3 "$CHECK" --json --target "$VA_DIR/proj" "$VA_DIR/vacuous-absent.md" 2>&1); rc=$?
+rc=0; VA_OUT=$(python3 "$CHECK" --json --target "$VA_DIR/proj" "$VA_DIR/vacuous-absent.md" 2>&1) || rc=$?
 if [ "$rc" -eq 0 ] && echo "$VA_OUT" | grep -q '"skipped": 1' && echo "$VA_OUT" | grep -qi "scanned nothing"; then
   report PASS "vacuous-absent: empty target = SKIP with reason, exit 0"
 else

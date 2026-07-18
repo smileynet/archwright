@@ -246,7 +246,9 @@ contract_candidates:
 
 `archwright-contract` formalizes each candidate into a contract spec (typed payloads, stability, persistence), carrying `from_model:` provenance back to this entry. The `{ field }` shorthand in `emits_events` remains a sketch (see step 4) — the contract phase owns the authoritative shape.
 
-**Name candidates per event leg — never per cluster.** A protocol cluster (e.g., createSurface/updateComponents/updateDataModel) lists ONE candidate per message leg; the C7 cluster exception merges the SPECS (one contract spec may cover all legs), never the candidate identities. Coverage validation joins on event names — a cluster-named candidate matches nothing and reports as uncovered (field-verified).
+**Name candidates per event leg — never per cluster.** A protocol cluster (e.g., createSurface/updateComponents/updateDataModel) lists ONE candidate per message leg; the C7 cluster exception merges the SPECS (one contract spec may cover all legs), never the candidate identities. Coverage validation joins on event names — a cluster-named candidate matches nothing and reports as uncovered (field-verified). When a candidate's payload will ride inside a sibling event's cluster spec, annotate it `folded_into: <owning-event>` — the link validator then follows the fold for coverage (ticket 013).
+
+**Boundary entities as producers:** a boundary entity (e.g., a configuration-authority) may be named as a candidate's `producer:` — that makes it a valid `from_model:` target for the resulting contract spec. Boundary entities that produce no candidates are not valid `from_model` targets.
 
 ## Rendering Guidance
 

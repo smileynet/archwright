@@ -1,7 +1,7 @@
 ---
 id: 013
 title: "validate-links: accept boundary entities as from_model contract producers (C9)"
-status: open
+status: done
 blocked_by: []
 created: 2026-07-17
 ---
@@ -35,3 +35,16 @@ expressed without a false FAIL.
 - [ ] A from_model ref to a nonexistent id still FAILs (no vacuous acceptance)
 - [ ] Fixture suite gains a violating scenario that FAILs (conformance-at-birth rule)
 - [ ] Folded-candidate convention documented or annotated
+
+## Close-out (2026-07-18)
+
+Shipped: producer boundary entities resolve as `from_model` targets; plain
+boundary entities FAIL with a precise producer-rule message (decision: an
+element that produces nothing has no contract-provenance role); `folded_into:`
+annotation supported on candidates (coverage follows the fold; fold + own spec
+= double-ownership error; unknown fold target = error). 4 golden checks in the
+suite reproduce the exact ExposeAR shape (configuration-authority producing
+puzzle-definition) — AC 1 verified structurally. **ExposeAR itself is not
+cloned in this lane** — its `--links` run will pass without spec edits on the
+next check in that lane; flag there if it doesn't. Conventions documented in
+contract + model skills.
