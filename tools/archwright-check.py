@@ -877,6 +877,16 @@ def check_trace(spec_path, trace_path):
     # skipped for the rest of the trace and excluded from invariants_checked.
     skipped_invariants = {}  # id -> reason
     guards_skipped = []      # [{position, event, predicate, reason}]
+
+    def _fail(payload):
+        """Print a fail result carrying any skips accumulated before the failure
+        point — a failing trace must not hide coverage gaps a passing one reports."""
+        payload["invariants_skipped"] = [{"id": k, "reason": v}
+                                         for k, v in skipped_invariants.items()]
+        if guards_skipped:
+            payload["guards_skipped"] = guards_skipped
+        print(json.dumps(payload))
+        return 1
     
     for i, entry in enumerate(trace):
         event = entry.get("event", "")
@@ -886,7 +896,7 @@ def check_trace(spec_path, trace_path):
         # First entry: validate initial state
         if i == 0:
             if event != "INITIAL":
-                print(json.dumps({
+                return _fail({
                     "status": "fail",
                     "assurance": "trace",
                     "spec_id": data["id"],
@@ -896,8 +906,7 @@ def check_trace(spec_path, trace_path):
                         "clock": clock,
                         "message": f"First trace event must be INITIAL, got '{event}'"
                     }
-                }))
-                return 1
+                })
             # Check invariants at initial state
             for inv in active_invariants:
                 res = translate_predicate(inv["predicate"], state_snapshot, current_state)
@@ -905,7 +914,7 @@ def check_trace(spec_path, trace_path):
                     skipped_invariants.setdefault(inv["id"], res.reason)
                     continue
                 if not res:
-                    print(json.dumps({
+                    return _fail({
                         "status": "fail",
                         "assurance": "trace",
                         "spec_id": data["id"],
@@ -922,8 +931,7 @@ def check_trace(spec_path, trace_path):
                             "from_force": inv.get("from_force"),
                             "from_pattern": inv.get("from_pattern")
                         }
-                    }))
-                    return 1
+                    })
             continue
         
         # Find valid transition from current state
@@ -932,7 +940,7 @@ def check_trace(spec_path, trace_path):
         
         if event not in transitions:
             valid_events = list(transitions.keys())
-            print(json.dumps({
+            return _fail({
                 "status": "fail",
                 "assurance": "trace",
                 "spec_id": data["id"],
@@ -951,8 +959,7 @@ def check_trace(spec_path, trace_path):
                     "from_force": current_state_def.get("from_force"),
                     "from_pattern": current_state_def.get("from_pattern")
                 }
-            }))
-            return 1
+            })
         
         transition = transitions[event]
         
@@ -992,7 +999,7 @@ def check_trace(spec_path, trace_path):
             break
         
         if not transition_taken:
-            print(json.dumps({
+            return _fail({
                 "status": "fail",
                 "assurance": "trace",
                 "spec_id": data["id"],
@@ -1006,8 +1013,7 @@ def check_trace(spec_path, trace_path):
                     "current_spec_state": current_state,
                     "message": f"All guards failed for event '{event}' in state '{current_state}'"
                 }
-            }))
-            return 1
+            })
         
         # Check invariants after transition
         for inv in active_invariants:
@@ -1018,7 +1024,7 @@ def check_trace(spec_path, trace_path):
                 skipped_invariants.setdefault(inv["id"], res.reason)
                 continue
             if not res:
-                print(json.dumps({
+                return _fail({
                     "status": "fail",
                     "assurance": "trace",
                     "spec_id": data["id"],
@@ -1036,8 +1042,7 @@ def check_trace(spec_path, trace_path):
                         "from_force": inv.get("from_force"),
                         "from_pattern": inv.get("from_pattern")
                     }
-                }))
-                return 1
+                })
     
     # All steps passed (exit 0 even with skips — consistent with behavior-check
     # SKIPs: a skip is a coverage statement, not a pass; JSON makes it visible)

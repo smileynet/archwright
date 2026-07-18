@@ -611,11 +611,16 @@ if grep -q '"guards_skipped"' "$TS_OUT" && grep -q '"final_state": "running"' "$
 else
   report FAIL "trace-strict: untranslatable guard = transition accepted with skip note"
 fi
-rc=0; python3 "$CHECK" --trace "$TS_FIX/trace-strict-conformance.yaml" "$TS_FIX/violating.trace.json" >/dev/null 2>&1 || rc=$?
+rc=0; python3 "$CHECK" --trace "$TS_FIX/trace-strict-conformance.yaml" "$TS_FIX/violating.trace.json" > "$TS_OUT" 2>&1 || rc=$?
 if [ "$rc" -eq 1 ]; then
   report PASS "trace-strict: translatable violation still FAILs (exit 1)"
 else
   report FAIL "trace-strict: translatable violation still FAILs (exit 1)" "exit=$rc"
+fi
+if grep -q '"status": "fail"' "$TS_OUT" && grep -q '"invariants_skipped": \[{"id": "opaque-comparison"' "$TS_OUT"; then
+  report PASS "trace-strict: fail output carries accumulated skips (no hidden coverage gaps)"
+else
+  report FAIL "trace-strict: fail output carries accumulated skips (no hidden coverage gaps)"
 fi
 rm -f "$TS_OUT"
 

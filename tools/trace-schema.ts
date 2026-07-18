@@ -86,8 +86,10 @@ export interface TraceValidationResult {
   /**
    * Invariants NOT evaluated because their predicate is untranslatable
    * (ticket 015 — SKIP-with-reason, never silent-pass). Always present on
-   * pass results; empty when everything translated. A pass with skips still
-   * exits 0, but the skipped list is a coverage statement, not a pass.
+   * pass results AND fail results (a failing trace must not hide coverage
+   * gaps accumulated before the failure point); empty when everything
+   * translated. A pass with skips still exits 0, but the skipped list is a
+   * coverage statement, not a pass.
    */
   readonly invariants_skipped?: ReadonlyArray<{ readonly id: string; readonly reason: string }>;
   /**

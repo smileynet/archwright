@@ -30,6 +30,8 @@ Structured violations from `python3 <archwright-repo>/tools/archwright-check.py 
 
 Authoritative schema: `<archwright-repo>/tools/check-output-schema.yaml`. If handed prose instead of JSON, re-run the check with `--json` — this skill consumes the contract, not transcripts.
 
+**`skips[]` are NOT routed.** The document may carry a `skips` array ({spec_id, spec_path, invariant, reason}) — pending adapters, untranslatable predicates, vacuous absence claims. A skip is a coverage statement, not a fault: there is nothing to lift and no level to route it to. Surface skips in the span digest so the human sees the coverage gap, and treat a GROWING skip list of one kind as an Extension Protocol signal (a missing adapter or translator capability wants building — pending-with-reason, research, conformance-at-birth).
+
 ## Process
 
 ### 1. Triage: the CEGAR fork (spurious vs. real)
