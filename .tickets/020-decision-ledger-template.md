@@ -1,7 +1,7 @@
 ---
 id: 020
 title: "Generic decision-ledger template (seam contract)"
-status: open
+status: done
 blocked_by: []
 ---
 
