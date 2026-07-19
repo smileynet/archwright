@@ -1,8 +1,8 @@
-# Tracer Bullet Plan: lacrosse-bosse → archwright
+# Tracer Bullet Plan: fieldball-coach → archwright
 
 ## Goal
 
-Prove archwright works end-to-end on real data: encode existing lacrosse-bosse-platform decisions as patterns + specs, build the first validation tool, run checks, demonstrate violation detection.
+Prove archwright works end-to-end on real data: encode existing fieldball-coach-platform decisions as patterns + specs, build the first validation tool, run checks, demonstrate violation detection.
 
 ## Decisions to Encode
 
@@ -25,7 +25,7 @@ Together they prove: behavior model checking (Alloy), codebase conformance (grep
 
 ### Phase 1: Encode Patterns (3 files)
 
-Write pattern markdown documents in `design/patterns/` within a tracer-bullet workspace (either in this repo under `.scratch/tracer/` or in the lacrosse-bosse-platform repo).
+Write pattern markdown documents in `design/patterns/` within a tracer-bullet workspace (either in this repo under `.scratch/tracer/` or in the fieldball-coach-platform repo).
 
 **Deliverables:**
 ```
@@ -101,13 +101,13 @@ Take `ball-state-lifecycle.yaml` and:
 
 ### Phase 5: Run Conformance Check (constraint specs)
 
-Take the constraint specs and run their `check` field against the lacrosse-bosse-platform codebase:
+Take the constraint specs and run their `check` field against the fieldball-coach-platform codebase:
 
 ```bash
 # Simulated — check if the rule holds
-grep -rn "ball_holder\s*=" ~/code/lacrosse-bosse-platform/client/src/
-grep "autoload/" ~/code/lacrosse-bosse-platform/project.godot
-grep -rn "PlayResolver" ~/code/lacrosse-bosse-platform/client/src/execution/
+grep -rn "ball_holder\s*=" ~/code/fieldball-coach-platform/client/src/
+grep "autoload/" ~/code/fieldball-coach-platform/project.godot
+grep -rn "PlayResolver" ~/code/fieldball-coach-platform/client/src/execution/
 ```
 
 **Acceptance:** Each check produces pass/fail. At least one demonstrates a real finding (either a clean pass confirming the constraint holds, or a violation showing where it's broken).
@@ -137,7 +137,7 @@ The tracer bullet is complete when:
 - [ ] 6-7 specs exist, all passing schema validation
 - [ ] Link validation confirms all references resolve
 - [ ] Alloy finds a counterexample when a violation is introduced
-- [ ] At least 1 conformance check runs against actual lacrosse-bosse code
+- [ ] At least 1 conformance check runs against actual fieldball-coach code
 - [ ] The full loop is demonstrated: pattern → spec → check → violation → provenance trace back to pattern
 
 ## Estimated Effort

@@ -3,7 +3,7 @@ kind: force
 id: ball-always-somewhere
 polarity: desire
 evidence_level: L2
-source: "domain rule (lacrosse) + LBP grill sessions"
+source: "domain rule (fieldball) + FBC grill sessions"
 ---
 
 # Ball Always Somewhere

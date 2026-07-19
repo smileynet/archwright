@@ -2,7 +2,7 @@
 
 This document traces one design decision through every artifact archwright produces, showing how they link together to form a verifiable chain.
 
-We'll follow **decision #15** from lacrosse-bosse-platform: "BallStateService as run-scoped source of truth."
+We'll follow **decision #15** from fieldball-coach-platform: "BallStateService as run-scoped source of truth."
 
 ---
 

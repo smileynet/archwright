@@ -11,14 +11,14 @@ created: 2026-07-17
 
 ## Resolution (2026-07-17)
 
-Skill-text half shipped — rule-of-two satisfied (applied 3× in the DynamoRush
+Skill-text half shipped — rule-of-two satisfied (applied 3× in the TileRush
 C10 run: ledger grep-window fix, corp-token fix, generator-path fix — each
 verdict flip independently confirmed before recording). `archwright-check`
 "Interpret results" gains: "Changed verdicts are unverified until independently
 reproduced." The tool-side verdict-flip flag stays with CK-07 baseline work
 (needs a baseline to diff against), as the ticket anticipated.
 
-Feature suggestion from the ExposeAR field run (2026-07-17) — process
+Feature suggestion from the DemoAR field run (2026-07-17) — process
 non-disruptively; the underlying bug is already fixed, this is about the practice
 that caught it.
 

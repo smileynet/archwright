@@ -8,7 +8,7 @@ created: 2026-07-17
 
 # `include:` glob scoping for python-grep checks
 
-Field-driven (ExposeAR run, lessons.md 2026-07-16 #5): a `tls-only` constraint matched
+Field-driven (DemoAR run, lessons.md 2026-07-16 #5): a `tls-only` constraint matched
 897 lines repo-wide because there is no way to scope a grep check to `*.cs`. The
 check backend needs per-spec file scoping.
 
@@ -39,7 +39,7 @@ Merged with the concurrent session's independent implementation (same day, same 
 - `include:` + `command:` is a loud tool error (declarative checks only).
 - BONUS FIX folded in: comment stripping used to truncate lines at the first comment
   token, false-passing any pattern containing the token (`"http://` contains `//`) —
-  ExposeAR `tls-only` PASSed over two real plain-HTTP URLs. Replaced with positional
+  DemoAR `tls-only` PASSed over two real plain-HTTP URLs. Replaced with positional
   matching (match counts iff it starts before the token). Fixture canaries:
   `no-shell-exec` (include filtering) + `endpoint-pinned` (positional comments).
 - Combined suite baseline: 31/0/0 (fixture additions + feature tests).

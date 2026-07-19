@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Wire archwright's static checking as a merge-blocking gate in lacrosse-bosse-platform. Prove that spec-code drift is catchable at commit time.
+Wire archwright's static checking as a merge-blocking gate in fieldball-coach-platform. Prove that spec-code drift is catchable at commit time.
 
 ## Spike: S13
 
@@ -32,7 +32,7 @@ A commit that introduces a constraint violation is automatically blocked by a pr
 
 ### T1: PATH Accessibility
 
-Add to lacrosse-bosse-platform's `mise.toml`:
+Add to fieldball-coach-platform's `mise.toml`:
 
 ```toml
 [env]
@@ -79,7 +79,7 @@ Decision: use `.pre-commit-config.yaml` with `pre-commit` framework (standard, s
 
 ### C1: Commit `design/` Directory
 
-The `design/` directory already exists in LBP with 3 patterns + 6 specs. It needs to be committed (currently tracked but specs may need updating to reflect slice 1 completion).
+The `design/` directory already exists in FBC with 3 patterns + 6 specs. It needs to be committed (currently tracked but specs may need updating to reflect slice 1 completion).
 
 Before committing, verify:
 - All 4 constraint specs pass against current code
@@ -88,7 +88,7 @@ Before committing, verify:
 
 ## Validation Criteria
 
-- [ ] `archwright-check --static design/ --target .` passes on clean LBP checkout
+- [ ] `archwright-check --static design/ --target .` passes on clean FBC checkout
 - [ ] Introducing a known violation → exit 1 with correct spec identified
 - [ ] Pre-commit hook blocks the bad commit
 - [ ] Removing the violation → hook passes

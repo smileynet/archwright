@@ -169,7 +169,7 @@ Prove selective re-checking works: a change in `src/ball/` triggers ball-related
 Specs declare scope as directory prefixes: `["src/ball/", "src/execution/"]`. A change to any file in that directory triggers the spec's checks.
 
 Rationale:
-- Directory boundaries in LBP already correspond to architectural boundaries (ball/, execution/, fielder/, play_data/)
+- Directory boundaries in FBC already correspond to architectural boundaries (ball/, execution/, fielder/, play_data/)
 - Easy to maintain (handful of paths per spec)
 - False-positive rate is low (a change in `src/ball/` probably IS relevant to ball-state-lifecycle)
 - False-negative risk is low (components don't typically reach across directory boundaries without explicit imports, which dependency specs catch)

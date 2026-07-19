@@ -111,7 +111,7 @@ For glob targets (e.g., `"src/**/*.gd"`), expand before checking.
 
 ### Performance
 
-Target: all constraint checks complete in <5s for a typical project. Current LBP fixture (4 constraints) completes in <100ms via the existing `run-fixture-tests` script, so this is achievable.
+Target: all constraint checks complete in <5s for a typical project. Current FBC fixture (4 constraints) completes in <100ms via the existing `run-fixture-tests` script, so this is achievable.
 
 ## Validation Criteria
 

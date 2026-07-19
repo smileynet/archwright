@@ -6,7 +6,7 @@
 
 ## Context
 
-ADR 0007 made every ★★ event an unconditional HITL stop. Field evidence (ExposeAR run, 2026-07-17) showed this over-fires: a ★★ `no-tracked-secrets` violation blocked on an icon PNG named `Res_Credentials_48_Dark.png` — the contrast pair already contained everything needed to classify it as check noise. Bare-violation escalations spend the human's attention on dispositions the agent could research.
+ADR 0007 made every ★★ event an unconditional HITL stop. Field evidence (DemoAR run, 2026-07-17) showed this over-fires: a ★★ `no-tracked-secrets` violation blocked on an icon PNG named `Res_Credentials_48_Dark.png` — the contrast pair already contained everything needed to classify it as check noise. Bare-violation escalations spend the human's attention on dispositions the agent could research.
 
 The confidence stopping rule (finding 8) says high confidence escalates MORE — that remains true. What changes is the QUALITY of the escalation: research is preparation for the human's decision, not a substitute for it.
 

@@ -28,7 +28,7 @@ What automated coverage exists for the 6 remaining tools, what `run-fixture-test
 
 | # | Addition | Method | Effort |
 |---|----------|--------|--------|
-| 1 | **Violation fixture branch**: add `tests/fixtures/lacrosse-bosse-violations/` overlay (2 files: a rogue `ball_holder =` write + an `[autoload]` project.godot) + suite section asserting FAIL with expected count | Automates the B7 negative test | 45m |
+| 1 | **Violation fixture branch**: add `tests/fixtures/fieldball-coach-violations/` overlay (2 files: a rogue `ball_holder =` write + an `[autoload]` project.godot) + suite section asserting FAIL with expected count | Automates the B7 negative test | 45m |
 | 2 | **Bad-spec fixtures**: `tests/fixtures/bad-specs/` (unknown kind, bad confidence, unknown `expect`, broken link) + suite section asserting validate/check reject each with exit 1 (and exit 2 for tool errors once implemented) | Locks in A1/F3 fix when Phase 5 CK-05 lands | 45m |
 | 3 | **Trace coverage**: commit `trace-ok.json` + `trace-violation.json` under the fixture; suite section runs `--trace` asserting pass and fail respectively | Covers the only verified-but-untested working mode | 30m |
 | 4 | **Alloy compile smoke**: suite section runs compile-alloy, asserts `.als` generated + nonzero, deletes it | 10m |

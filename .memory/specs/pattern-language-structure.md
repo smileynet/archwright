@@ -308,7 +308,7 @@ Rename in existing patterns:
 ## Validation Criteria
 
 - [ ] Pattern schema updated with new fields
-- [ ] Existing 3 patterns in LBP renamed with band prefixes and updated to new template
+- [ ] Existing 3 patterns in FBC renamed with band prefixes and updated to new template
 - [ ] INDEX.md created showing the network
 - [ ] LANGUAGE.md created showing the project's pattern subset
 - [ ] `archwright-validate` accepts the new fields

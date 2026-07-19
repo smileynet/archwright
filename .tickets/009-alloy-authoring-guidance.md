@@ -11,7 +11,7 @@ created: 2026-07-17
 
 ## Resolution (2026-07-17)
 
-Both halves shipped — rule-of-two satisfied by the DynamoRush C10 run (second
+Both halves shipped — rule-of-two satisfied by the TileRush C10 run (second
 field project needing both disciplines):
 1. **Guidance:** `archwright-derive` step 4 gains an "Authoring alloy: expressions"
    subsection (safety skeletons for unprovable liveness; document-why on every
@@ -21,12 +21,12 @@ field project needing both disciplines):
    Conformance corpus in the suite: live model → exit 0; unsatisfiable-guard
    machine → vacuity exit 1 (also exercises ticket 008's guard compilation).
 
-Feature suggestion from the ExposeAR field run (2026-07-17, digest "Behavior model
+Feature suggestion from the DemoAR field run (2026-07-17, digest "Behavior model
 checks ACTIVE") — process non-disruptively; no urgency, no current breakage.
 
 ## Observation
 
-Authoring `alloy:` expressions for ExposeAR's 3 behavior specs surfaced two reusable
+Authoring `alloy:` expressions for DemoAR's 3 behavior specs surfaced two reusable
 disciplines that currently live only in that project's digest and spec comments:
 
 1. **Safety-skeleton rendering.** Generated models permit stuttering and don't model
@@ -45,13 +45,13 @@ disciplines that currently live only in that project's digest and spec comments:
 ## Suggested exploration
 
 - Would a short "Authoring alloy: expressions" subsection in `archwright-derive`
-  (behavior-spec steps) carry both disciplines? Worked example from ExposeAR available.
+  (behavior-spec steps) carry both disciplines? Worked example from DemoAR available.
 - Is the non-vacuity probe better as skill guidance or as tooling (e.g.
   `archwright-check.py --probe <spec>` auto-injecting the false invariant)? Rule-of-two
   suggests guidance first, tool when a second project needs it.
 
 ## Evidence
 
-- ExposeAR `design/specs/{spatial-session,placement-lifecycle,mentor-session}.yaml`
+- DemoAR `design/specs/{spatial-session,placement-lifecycle,mentor-session}.yaml`
   (rendered + documented-skip invariants), `.memory/archwright-digest.md` 2026-07-17
 - Non-vacuity verified: injected false invariant → counterexample at trace length 2

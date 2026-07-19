@@ -3,7 +3,7 @@
 Dogfood run of `archwright-audit` on archwright's own docs, extended with the capability-claims lens (**shipped** = tool does it, cited; **spike-only** = validated in .memory but not in tools; **aspirational** = docs only). Evidence base: `.memory/audit/tools.md` (A1, all tool behavior verified this session), `.memory/audit/skills.md` (A2).
 
 ## Summary
-- Documents scanned: 4 (docs/brief.md, README.md, AGENTS.md, tests/fixtures/lacrosse-bosse/README.md) + .memory/PLAN.md (historical)
+- Documents scanned: 4 (docs/brief.md, README.md, AGENTS.md, tests/fixtures/fieldball-coach/README.md) + .memory/PLAN.md (historical)
 - Claims verified: 18
 - Contradictions: 2 damn lies, 3 lies, 3 planned-as-current
 - AGENTS.md: clean post-D1 (fixed this session, commit 41a0ebd)
@@ -12,7 +12,7 @@ Dogfood run of `archwright-audit` on archwright's own docs, extended with the ca
 
 | # | File:Line | Claim | Truth | Harm if followed | Fix |
 |---|-----------|-------|-------|-----------------|-----|
-| DL1 | tests/fixtures/lacrosse-bosse/README.md | Documents `design/` with 3 patterns + 6 specs; "Running: ./tools/run-fixture-tests.sh — All 14 checks should pass" | No `design/` dir exists in the fixture; script dies silently exit 1 (A1/F1) | Developer trusts fixture as reference implementation of the artifact layout; debugging the silent script death costs real time | **code-fix**: restore fixture design/ artifacts + repair script (new ticket B7) |
+| DL1 | tests/fixtures/fieldball-coach/README.md | Documents `design/` with 3 patterns + 6 specs; "Running: ./tools/run-fixture-tests.sh — All 14 checks should pass" | No `design/` dir exists in the fixture; script dies silently exit 1 (A1/F1) | Developer trusts fixture as reference implementation of the artifact layout; debugging the silent script death costs real time | **code-fix**: restore fixture design/ artifacts + repair script (new ticket B7) |
 | DL2 | skills + steering (5 locations, pre-A2) | `archwright-check --structural` / `--design` invocations | Flags don't exist (A1/F8) | Agent-facing instructions that fail when followed | **FIXED** (A2, commit 0751144) |
 
 ## Lies (wrong but truth discoverable in minutes)
@@ -42,7 +42,7 @@ Dogfood run of `archwright-audit` on archwright's own docs, extended with the ca
 | Schema + link validation | **SHIPPED** | A1: multi-error reporting, broken-link detection |
 | Skills-as-methodology, 12-skill pipeline | **SHIPPED** | deploy verified to project dir (A1) |
 | Alloy counterexamples <500ms / "94ms" (README) | **SPIKE-ONLY** | `.memory/validation-spikes.md`; not reproducible in-repo (no jar) |
-| "Static checks block commits" (README status) | **SPIKE-ONLY / EXTERNAL** | S13 PROVEN in LBP target repo; nothing in this repo demonstrates it |
+| "Static checks block commits" (README status) | **SPIKE-ONLY / EXTERNAL** | S13 PROVEN in FBC target repo; nothing in this repo demonstrates it |
 | Contrast pair generation (README spike list) | **SPIKE-ONLY** | `valid_events` primitive shipped; rendering not (P2) |
 | Full provenance routing violation→pattern→force (brief §Step 5) | **ASPIRATIONAL** | `from_force: null` in actual output; no fix direction; no escalate flag (L3) |
 | Confidence promote/demote (brief) | **ASPIRATIONAL** | No tooling (P1) |

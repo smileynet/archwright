@@ -32,7 +32,7 @@
 
 ### S9. Abstraction Quality Test
 
-**Goal:** Take a REAL lacrosse-bosse subsystem (practice execution — 28 decisions, multiple components) and attempt to model it in Alloy at a useful abstraction level. Measure: how many states? How long to check? What properties survive the abstraction?
+**Goal:** Take a REAL fieldball-coach subsystem (practice execution — 28 decisions, multiple components) and attempt to model it in Alloy at a useful abstraction level. Measure: how many states? How long to check? What properties survive the abstraction?
 
 **Pass:** Model has <1000 states, checks in <10s, catches a known design constraint (e.g., "executor never resolves").
 **Fail:** Model exceeds practical scope OR loses the property we care about during abstraction.

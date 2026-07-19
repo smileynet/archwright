@@ -16,7 +16,7 @@ Date: 2026-07-18. Point-in-time assessment at e72382d (suite green). Scratch not
 
 | # | Goal | Verdict | Evidence |
 |---|------|---------|----------|
-| 1 | Intent visibility | ✅ Met | survey → forces → formalize pipeline; force files as provenance root; field-proven (DynamoRush) |
+| 1 | Intent visibility | ✅ Met | survey → forces → formalize pipeline; force files as provenance root; field-proven (TileRush) |
 | 2 | Doc/code conflicts | ✅ Met | `archwright-audit` (contradictions, stale refs, planned-as-current); `check` catches drift continuously; `passup` routes to owning level |
 | 3 | Planned vs implemented | ✅ Mostly | audit's planned-as-current + missing-coverage categories; SKIP-with-reason; baseline separates known debt from new (remaining_delta ratchet) |
 | 4 | Non-technical readability | ⚠️ Half | Strong for state machines + interfaces; weak for data models + invariant catalog (see below) |

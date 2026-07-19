@@ -1,6 +1,6 @@
-# Test Fixture: lacrosse-bosse
+# Test Fixture: fieldball-coach
 
-Sanitized reference files from lacrosse-bosse-platform that exercise all archwright checks.
+Sanitized reference files from fieldball-coach-platform that exercise all archwright checks.
 
 ## Structure
 

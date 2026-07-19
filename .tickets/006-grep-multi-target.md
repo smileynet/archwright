@@ -8,7 +8,7 @@ created: 2026-07-17
 
 # Multi-target support for grep checks (list-valued `target:`)
 
-Field-driven (ExposeAR run, lessons.md 2026-07-16 #5): specs in the field wrote
+Field-driven (DemoAR run, lessons.md 2026-07-16 #5): specs in the field wrote
 space-separated targets (`target: "a b c"`), which today errors as a single
 nonexistent path. A spec legitimately constrains several roots at once.
 

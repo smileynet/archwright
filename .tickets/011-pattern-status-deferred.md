@@ -8,7 +8,7 @@ created: 2026-07-17
 
 # Pattern status vocabulary: add `deferred`/`gated` status
 
-Field-driven (AwsArchVR phase-1 review 2026-07-17): ExposeAR pattern
+Field-driven (DemoVR phase-1 review 2026-07-17): DemoAR pattern
 `persistent-room-with-reset` carries `status: fog` for a gate-CONFIRMED scope
 deferral (anchor mechanism deferred to Unity 6), with an in-file disclaimer that
 this is NOT an unresolved tension. Fog means "unknown forces / unresolved tension
@@ -38,7 +38,7 @@ Shipped: enum + gated_on requirement in `archwright-validate.py` (also rejects
 `gated_on:` on non-gated status, and now enforces the status enum at all —
 previously unvalidated); pattern-schema.yaml; pattern template; formalize
 skeleton; glossary + CONTEXT.md. Suite: gated-with-gated_on PASSes,
-gated-without-gated_on rejected. Fog definition unchanged. **AC 1 (ExposeAR
+gated-without-gated_on rejected. Fog definition unchanged. **AC 1 (DemoAR
 `persistent-room-with-reset` re-status) defers to that lane** — the edit is:
 `status: gated` + `gated_on: "Unity 6 migration"` + delete the disclaimer
 paragraph.

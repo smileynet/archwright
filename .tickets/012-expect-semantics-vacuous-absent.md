@@ -8,7 +8,7 @@ created: 2026-07-17
 
 # Check schema: expect present/absent semantics ambiguous
 
-Field-driven (AwsArchVR phase-1 review 2026-07-17): two ExposeAR dependency specs
+Field-driven (DemoVR phase-1 review 2026-07-17): two DemoAR dependency specs
 written the same day by the same derive run use INVERTED expect semantics for
 structurally identical positive-condition checks (`owned-accessibility-assembly`
 vs `thin-orchestrator` — "this thing must exist" expressed once as
@@ -17,7 +17,7 @@ The schema permits both readings, so authors guess — and a wrong guess produce
 check that silently passes forever. Related silent-pass hazard from the same
 review: `expect: absent` against a not-yet-existing target directory vacuously
 PASSes when the spec activates (three inconsistent future-path variants across
-ExposeAR dependency specs would all "pass" on wrong paths).
+DemoAR dependency specs would all "pass" on wrong paths).
 
 ## What to build
 

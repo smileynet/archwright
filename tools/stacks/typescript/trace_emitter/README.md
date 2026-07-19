@@ -6,9 +6,9 @@ test execution and writes the JSON consumed by `archwright-check.py --trace`.
 **Status:** ★★ (see `../../REGISTRY.yaml`). Conformance: `conformance/` (scenario +
 spec; wired into `tools/run-fixture-tests.sh` § Stack Adapter Conformance).
 **Measured cost:** 75-LOC recorder, 63 ms scenario run, ~8 lines of test integration
-per spec (field data: DynamoRush, 2026-07-18).
+per spec (field data: TileRush, 2026-07-18).
 
-## Field Usage (validated on dynamodb-game-demo)
+## Field Usage (validated on tilerush-demo)
 
 1. **Copy the recorder into the target project's test helpers** (it has no
    dependencies beyond `node:fs`/`node:path`):
@@ -53,7 +53,7 @@ per spec (field data: DynamoRush, 2026-07-18).
   the implementation.
 - **Rejected operations don't appear.** A guard that held = no transition = no
   entry. (Recording a rejected op as if it happened is how you fake a violation.)
-- Worked example: `dynamodb-game-demo/test/archwright-traces.test.ts` (session +
+- Worked example: `tilerush-demo/test/archwright-traces.test.ts` (session +
   quest lifecycles, real DDB Local operations).
 
 ## Shape Reference

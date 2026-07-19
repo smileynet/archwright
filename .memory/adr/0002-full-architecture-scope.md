@@ -5,7 +5,7 @@
 
 ## Context
 
-The original working doc positioned state machines as the compilation target. But real architecture decisions (from lacrosse-bosse: "no autoloads", "executor never resolves", "single writer for ball state") aren't state machines — they're constraints on code structure, dependency rules, and data contracts.
+The original working doc positioned state machines as the compilation target. But real architecture decisions (from fieldball-coach: "no autoloads", "executor never resolves", "single writer for ball state") aren't state machines — they're constraints on code structure, dependency rules, and data contracts.
 
 ## Decision
 

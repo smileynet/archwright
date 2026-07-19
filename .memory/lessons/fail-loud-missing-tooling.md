@@ -2,7 +2,7 @@
 
 One-line: absent `grep` made command-mode checks return empty stdout → false PASS on expect:absent.
 
-**Date:** 2026-07-16 · **Source:** ExposeAR pipeline run (Windows)
+**Date:** 2026-07-16 · **Source:** DemoAR pipeline run (Windows)
 
 The check tool trusted missing binaries: `grep` absent → empty output → "no
 matches" → PASS. Fixed: pure-Python grep for target+pattern mode, Git-bash for

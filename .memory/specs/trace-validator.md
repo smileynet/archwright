@@ -107,7 +107,7 @@ This enables the archwright correction loop: violation → responsible force →
 
 ## Spike: S14 Dependency
 
-This tool must exist before S14 (conformance test) can run. The spike validates that the tool catches a real violation in LBP's BallStateService.
+This tool must exist before S14 (conformance test) can run. The spike validates that the tool catches a real violation in FBC's BallStateService.
 
 ## Validation Criteria
 

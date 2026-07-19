@@ -1,5 +1,5 @@
 # Conformance spec for the TS trace emitter — a session-like guarded counter.
-# Mirrors DynamoRush session-lifecycle shape (guard on JOIN, capacity invariant).
+# Mirrors TileRush session-lifecycle shape (guard on JOIN, capacity invariant).
 kind: behavior
 id: ts-emitter-conformance
 from_patterns:

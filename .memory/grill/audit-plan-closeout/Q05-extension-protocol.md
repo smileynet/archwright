@@ -9,7 +9,7 @@ C4 asked "prove or descope the GDScript trace emitter." Operator reframed twice:
 
 ## Research
 
-In-repo: the meta-pattern already instantiated 4× unnamed (B1 overlays, detect-rule tuning, C8 forces, OQ#9 growth rule). T7 target project (lacrosse-bosse-platform) verified absent from this machine; "~20 lines" claim lives only in .memory/PLAN.md.
+In-repo: the meta-pattern already instantiated 4× unnamed (B1 overlays, detect-rule tuning, C8 forces, OQ#9 growth rule). T7 target project (fieldball-coach-platform) verified absent from this machine; "~20 lines" claim lives only in .memory/PLAN.md.
 
 Subagent research (4 tracks, 20+ sources, `.scratch/research/`):
 - **Maturity registries** (Rust tiers, K8s feature gates, BCD): tiers by guarantee; stepwise demotion; history retained; hand-declared status decays — compute it; YAGNI rule-of-two on registry machinery.

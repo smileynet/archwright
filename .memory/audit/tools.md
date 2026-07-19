@@ -1,6 +1,6 @@
 # A1 — Tool Functional Audit (2026-07-16)
 
-Method: every tool executed against `tests/fixtures/lacrosse-bosse` and synthetic good/bad inputs in `.scratch/a1/`. All claims below are backed by captured output from this session. Environment: Python 3.12.13 + PyYAML, Node v22.22.2, no `.references/alloy6.jar`.
+Method: every tool executed against `tests/fixtures/fieldball-coach` and synthetic good/bad inputs in `.scratch/a1/`. All claims below are backed by captured output from this session. Environment: Python 3.12.13 + PyYAML, Node v22.22.2, no `.references/alloy6.jar`.
 
 ## Verdict Summary
 

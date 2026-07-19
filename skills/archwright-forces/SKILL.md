@@ -51,7 +51,7 @@ For each capability/feature, identify:
 These are phrased as human needs:
 - "A player wants to practice running plays from any position to learn their responsibilities"
 - "A coach wants to express any play they can draw on a whiteboard"
-- "Practice should feel like real lacrosse, not a quiz or animation viewer"
+- "Practice should feel like real fieldball, not a quiz or animation viewer"
 
 #### Architectural forces (the HOW and WHAT)
 For each decision/requirement found, identify:
@@ -134,7 +134,7 @@ Present inferred product desires to the user grouped by confidence:
 
 ### Medium confidence (L4 — inferred from one source):
 - "A coach wants players to develop ambidextrous capability through randomized mirroring"
-  Evidence: issue #164 (random mirror); inferred from domain (lacrosse is both-handed)
+  Evidence: issue #164 (random mirror); inferred from domain (fieldball is both-handed)
   → Confirm / Reject / Reword?
 
 ### Low confidence (L5 — speculated):

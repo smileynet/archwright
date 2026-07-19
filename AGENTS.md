@@ -71,7 +71,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 ├── tools/stacks/                  # Stack adapters: per-language/engine mechanical components (ADR 0008)
 │   ├── REGISTRY.yaml              # Adapter kinds × status (pending/★/★★, computed) + since: history
 │   ├── gdscript/                  # All pending (T7 converted)
-│   └── typescript/                # trace_emitter ★★ (conformance in suite + field-proven on DynamoRush); ast_grammar/check_patterns pending
+│   └── typescript/                # trace_emitter ★★ (conformance in suite + field-proven on TileRush); ast_grammar/check_patterns pending
 ├── examples/                      # Lifecycle examples: ONE toy product (Snackbox) at three states (ticket 028)
 │   ├── README.md                  # Walkthrough incl. state-0 greenfield entry path
 │   ├── planned/                   # Full design/, no code — checks pending, behavior proven pre-code
@@ -205,7 +205,7 @@ Notes:
 1. **Extend the design language** — add findings to docs/, terms to `.memory/CONTEXT.md`
 2. **Explore an open question** — pick from docs/open-questions.md, research, produce ADR
 3. **Build tooling** — scripts in `tools/` for validation, compilation, checking
-4. **Tracer bullet** — encode lacrosse-bosse decisions as patterns + specs, verify
+4. **Tracer bullet** — encode fieldball-coach decisions as patterns + specs, verify
 5. **Pipeline on new project** — run full pipeline (survey→check) on a target project, producing patterns + models + specs in `design/`
 
 ## Key Constraints

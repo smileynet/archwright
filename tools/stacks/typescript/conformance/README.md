@@ -1,7 +1,7 @@
 # TypeScript Stack Adapters
 
 All adapters `pending` — see `../REGISTRY.yaml` for reasons and history.
-The trace emitter is scheduled: C10 (DynamoRush run) builds it as the first
+The trace emitter is scheduled: C10 (TileRush run) builds it as the first
 Extension Protocol adapter with measured cost.
 
 Layout when built (Extension Protocol rule 4 — conformance at birth):

@@ -2,7 +2,7 @@
 
 One-line: a path-format change silently broke only-in substring filters; only the suite caught it.
 
-**Date:** 2026-07-16 · **Source:** ExposeAR pipeline run
+**Date:** 2026-07-16 · **Source:** DemoAR pipeline run
 
 The python-grep rewrite emitted absolute Windows paths, breaking `only-in`
 matching (its filters compare raw substrings — output format is a contract).

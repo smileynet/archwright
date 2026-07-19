@@ -51,7 +51,7 @@ Method: structured extraction from all 12 SKILL.md files + 2 steering files (3 p
 | 21 | resolve: step-3 header says "For fully-resolved tensions: Research and present options" contradicting its own routing (fully-resolved → confirm + formalize) | **TICKET** (batch cleanup) |
 | 22 | model: process steps skip number 2; invokes `merman-cli`/`smcat` (absent from AGENTS.md Commands, availability unverified) | **TICKET** (batch cleanup; verify tools in A3) |
 | 23 | diagram: recommends note blocks for invariants, then forbids note blocks in Rendering Hygiene; Does-NOT forbids binary images while hygiene mandates render-to-PNG | **TICKET** (batch cleanup) |
-| 24 | model/contract embed LBP-specific worked examples (BallStateService, Godot) — fine as examples, but unlabeled as domain-specific | **ACCEPT** |
+| 24 | model/contract embed FBC-specific worked examples (BallStateService, Godot) — fine as examples, but unlabeled as domain-specific | **ACCEPT** |
 
 ## Recommended new tickets for audit-plan.md
 

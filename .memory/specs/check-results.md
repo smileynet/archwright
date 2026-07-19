@@ -141,4 +141,4 @@ check:
 
 - Consumed by: all check tools (trace-validator, static-check-batch, archwright-compile-alloy)
 - Updates: `tools/spec-schema.yaml`
-- Updates: fixture spec `tests/fixtures/lacrosse-bosse/design/specs/ball-state-lifecycle.yaml`
+- Updates: fixture spec `tests/fixtures/fieldball-coach/design/specs/ball-state-lifecycle.yaml`

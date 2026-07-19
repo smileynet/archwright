@@ -9,7 +9,7 @@ user_story: "When a practice run replays, it talks to the pinned TLS backend —
 check:
   method: grep
   target: "client/src/services/NetConfig.cs"
-  pattern: "\"https://api\\.lacrosse-bosse\\.example\""
+  pattern: "\"https://api\\.fieldball-coach\\.example\""
   expect: present
 links: []
 ---
@@ -41,5 +41,5 @@ var api = Environment.GetEnvironmentVariable("API_BASE");
 
 ```csharp
 // GOOD — pinned TLS endpoint:
-public const string ApiBase = "https://api.lacrosse-bosse.example";
+public const string ApiBase = "https://api.fieldball-coach.example";
 ```

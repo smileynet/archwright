@@ -1,13 +1,13 @@
-# PLAN: Live Design Checking for Lacrosse-Bosse-Platform
+# PLAN: Live Design Checking for Fieldball-Coach-Platform
 
 > **STATUS: Phases 0–4 COMPLETE (2026-07-16); Phase 5 (polyglot check tooling) shipped except the parked tail — DoD-5 chain (CK-03→04→05→09→10), CK-21, all of Phase 5b (CK-06/07/08 + R32 baseline/fingerprints), CK-17/18 (skill invocation contract + repair-loop convergence), CK-19 (changed-only scoping), and the ADR-0009 evidence ledger (ticket 017) are DONE (fixture-suite-verified); CK-01/02 descoped to validate.py. Open remainder: CK-11–16 (ast-grep/SARIF — parked awaiting a field driver per Extension Protocol).**
-> **Phase 6 (Discovery Track) OPEN (2026-07-18): ADR 0011 accepted via grill (6 Qs, `.memory/grill/discovery-track/`); spec `.memory/specs/discovery-track.md`; tickets 019–022, 024–028 DONE (026 conservation-check + 025 woz-export consumer + 028 lifecycle examples `examples/{planned,partial,complete}` shipped 2026-07-19). Remaining: 023 (field run — operator-driven) only. Ticket 018 (commit-binding of check evidence — verification-track) DONE 2026-07-19: code_state in check --json + evidence events, soft-decay staleness ratified as ADR 0009 amendment. Target: the operator's game project (not LBP — first non-LBP phase).**
-> Loose ends: T7 trace emitter → converted to an Extension Protocol pending-registry row `gdscript.trace_emitter` (grill Q5, audit ticket C11 — the "~20 lines" claim becomes measured data on first real build); R18/S15 → C5, folded into C10's DynamoRush reconciliation pass (grill Q7). Phase 5 reconciled with the audit plan 2026-07-16 (absorbs B4/C1/C2) and re-reconciled 2026-07-17 (grill: CK-01/02 descoped to validate.py, CK-21 added, passup skill consumes CK-03 output — see the spec's "Grill reconciliation" section).
+> **Phase 6 (Discovery Track) OPEN (2026-07-18): ADR 0011 accepted via grill (6 Qs, `.memory/grill/discovery-track/`); spec `.memory/specs/discovery-track.md`; tickets 019–022, 024–028 DONE (026 conservation-check + 025 woz-export consumer + 028 lifecycle examples `examples/{planned,partial,complete}` shipped 2026-07-19). Remaining: 023 (field run — operator-driven) only. Ticket 018 (commit-binding of check evidence — verification-track) DONE 2026-07-19: code_state in check --json + evidence events, soft-decay staleness ratified as ADR 0009 amendment. Target: the operator's game project (not FBC — first non-FBC phase).**
+> Loose ends: T7 trace emitter → converted to an Extension Protocol pending-registry row `gdscript.trace_emitter` (grill Q5, audit ticket C11 — the "~20 lines" claim becomes measured data on first real build); R18/S15 → C5, folded into C10's TileRush reconciliation pass (grill Q7). Phase 5 reconciled with the audit plan 2026-07-16 (absorbs B4/C1/C2) and re-reconciled 2026-07-17 (grill: CK-01/02 descoped to validate.py, CK-21 added, passup skill consumes CK-03 output — see the spec's "Grill reconciliation" section).
 
-**Goal:** Archwright checks LBP's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
+**Goal:** Archwright checks FBC's `design/` artifacts against real implementation code. Violations surface at commit time (static) and test time (trace). The correction loop (violation → spec → pattern → force) works in practice.
 
-**Target project:** `~/code/lacrosse-bosse-platform`
-**Status:** Phases 0–4 complete; live design checking operational against lacrosse-bosse-platform. Phase 5 pending.
+**Target project:** `~/code/fieldball-coach-platform`
+**Status:** Phases 0–4 complete; live design checking operational against fieldball-coach-platform. Phase 5 pending.
 
 ---
 
@@ -15,7 +15,7 @@
 
 ```
 Phase 0: Foundation ✅
-├── C1  Commit design/ in LBP
+├── C1  Commit design/ in FBC
 ├── T1  Make tools PATH-accessible (mise.toml)
 ├── U2  Add assurance field to check-results schema
 └── U3  Add abstraction_notes to spec-schema.yaml
@@ -98,7 +98,7 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 
 | ID | Task | Spec | Status |
 |----|------|------|--------|
-| C1 | Commit `design/` directory in LBP | [drift-gate](specs/drift-gate.md) | Ready (design/ exists, validated) |
+| C1 | Commit `design/` directory in FBC | [drift-gate](specs/drift-gate.md) | Ready (design/ exists, validated) |
 | T1 | Add archwright tools/ to PATH via mise.toml | [drift-gate](specs/drift-gate.md) | ✅ Done |
 | U2 | Add `assurance` field to result schema | [check-results](specs/check-results.md) | ✅ Done (in tool output) |
 | U3 | Add `abstraction_notes` to spec-schema.yaml | [check-results](specs/check-results.md) | ✅ Done |
@@ -112,7 +112,7 @@ C1 ──┬── T1 ── T5 ── T3 ── T4 ── S13
 | T4 | Structured JSON output (all tools) | [check-results](specs/check-results.md) | ✅ Done (trace mode outputs JSON) |
 | S13 | Pre-commit hook blocks violations | [drift-gate](specs/drift-gate.md) | ✅ PROVEN |
 
-**Milestone:** Constraint specs block bad commits in LBP.
+**Milestone:** Constraint specs block bad commits in FBC.
 
 ### Phase 2: Trace Layer Design (2 hours)
 
@@ -205,7 +205,7 @@ Both research topics are resolved to draft level. Implementation will validate o
 | S13 | Can static checks block commits? | [drift-gate.md](specs/drift-gate.md) | Yes (Phase 1 gate) |
 | S14 | Does trace validation catch real violations? | [conformance-test.md](specs/conformance-test.md) | Yes (Phase 3 gate) |
 | S15 | Does selective re-checking work? | [growth-rules.md](specs/growth-rules.md) | No (enhancement) |
-| S9 | Does Alloy scale for LBP execution model? | [next-work-proposals.md](next-work-proposals.md) | No (model layer is design-time) |
+| S9 | Does Alloy scale for FBC execution model? | [next-work-proposals.md](next-work-proposals.md) | No (model layer is design-time) |
 
 ---
 
@@ -244,8 +244,8 @@ Both research topics are resolved to draft level. Implementation will validate o
 
 ## Definition of Done
 
-1. `git commit` in LBP with a constraint violation → **blocked by pre-commit hook**
-2. `mise run test` in LBP with a behavior violation → **conformance test fails, reports spec/invariant/position**
+1. `git commit` in FBC with a constraint violation → **blocked by pre-commit hook**
+2. `mise run test` in FBC with a behavior violation → **conformance test fails, reports spec/invariant/position**
 3. Violation report includes **provenance** (pattern → force → invariant)
 4. Fix the violation → both static and trace checks pass
 5. Total check time <10s for typical commits

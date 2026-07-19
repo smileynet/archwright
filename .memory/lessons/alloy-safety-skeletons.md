@@ -2,7 +2,7 @@
 
 One-line: generated models stutter freely — raw liveness is unprovable, so check the successor/predecessor skeleton and prove the checker can fail before trusting PASS.
 
-**Date:** 2026-07-17 · **Source:** ExposeAR behavior specs (first field alloy authoring)
+**Date:** 2026-07-17 · **Source:** DemoAR behavior specs (first field alloy authoring)
 
 The compiler's models permit stuttering and don't model bool vars, var updates, or
 guard enforcement. Consequences for authoring `alloy:` expressions:
@@ -19,5 +19,5 @@ guard enforcement. Consequences for authoring `alloy:` expressions:
    (`always M.current = <Initial>`) and confirm a counterexample appears. Five PASSes
    mean nothing from a checker that cannot fail (see checkers-need-negative-tests).
 
-Worked example: ExposeAR `design/specs/{spatial-session,placement-lifecycle,mentor-session}.yaml`.
+Worked example: DemoAR `design/specs/{spatial-session,placement-lifecycle,mentor-session}.yaml`.
 Skill-text suggestion queued as ticket 009.

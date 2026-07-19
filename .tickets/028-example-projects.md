@@ -45,7 +45,7 @@ an empty dir; nothing to browse or mechanically assert; survey is skill-driven).
   `--links`) and checks (`--static`) with EXPECTED results asserted —
   including the partial state's deliberate FAILs (Extension Protocol rule 4:
   violating scenarios prevent vacuous checkers).
-- Existing fixtures (lacrosse-bosse, guarded-counter, discovery corpus) stay
+- Existing fixtures (fieldball-coach, guarded-counter, discovery corpus) stay
   as-is — they are targeted tool corpora, not lifecycle examples. Reuse
   content where it helps, don't consolidate.
 

@@ -3,7 +3,7 @@ kind: force
 id: predictable-practice-runs
 polarity: desire
 evidence_level: L2
-source: "LBP grill sessions (replay/review requirement)"
+source: "FBC grill sessions (replay/review requirement)"
 ---
 
 # Predictable Practice Runs
