@@ -12,3 +12,6 @@ __pycache__/
 skills/archwright-survey/references/domains/
 skills/archwright-survey/references/stacks/
 skills/archwright-survey/references/glossary.md
+
+# Machine-local real-name denylist for sanitize-check (real<->alias map lives in recall, never in the repo)
+.sanitization-denylist
