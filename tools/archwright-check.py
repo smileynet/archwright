@@ -2025,6 +2025,102 @@ def trace_coverage_report(specs_dir, traces_dir, json_output=False):
     return 0 if status == "pass" else 1
 
 
+def coverage_report(specs_dir, target_root=None, json_output=False):
+    """Report spec→implementation coverage: which specs have their check.target
+    present in the project and which are spec-ahead (target missing/empty).
+
+    This is informational — exit code is always 0 on success, 2 on error.
+    """
+    specs_path = Path(specs_dir)
+    if not specs_path.exists():
+        msg = f"Specs directory not found: {specs_path}"
+        if json_output:
+            print(json.dumps({"status": "error", "message": msg}))
+        else:
+            print(f"ERROR: {msg}", file=sys.stderr)
+        return 2
+
+    if target_root:
+        project_root = Path(target_root)
+    else:
+        project_root = _project_root_for(specs_path)
+
+    implemented = []
+    spec_ahead = []
+    no_target = []
+
+    all_files = sorted(list(specs_path.rglob("*.yaml")) + list(specs_path.rglob("*.md")))
+
+    for f in all_files:
+        try:
+            data = load_spec(f)
+        except Exception:
+            continue
+        if not data:
+            continue
+        kind = data.get("kind", "")
+        spec_id = data.get("id", "")
+        check = data.get("check", {})
+        target = check.get("target", "")
+
+        if not target:
+            no_target.append({"kind": kind, "id": spec_id})
+            continue
+
+        targets = target if isinstance(target, list) else [target]
+        any_exists = False
+        for t in targets:
+            tp = project_root / t
+            if tp.exists() and (tp.is_file() or (tp.is_dir() and any(tp.iterdir()))):
+                any_exists = True
+                break
+
+        entry = {"kind": kind, "id": spec_id, "target": target}
+        if any_exists:
+            implemented.append(entry)
+        else:
+            spec_ahead.append(entry)
+
+    total = len(implemented) + len(spec_ahead) + len(no_target)
+
+    if json_output:
+        doc = {
+            "status": "pass",
+            "scope": {"mode": "coverage", "specs_dir": str(specs_path),
+                      "target_root": str(project_root)},
+            "summary": {
+                "total": total,
+                "implemented": len(implemented),
+                "spec_ahead": len(spec_ahead),
+                "no_target": len(no_target),
+            },
+            "implemented": [f"{e['kind']}:{e['id']}" for e in implemented],
+            "spec_ahead": [f"{e['kind']}:{e['id']} (target: {e['target']})" for e in spec_ahead],
+            "no_target": [f"{e['kind']}:{e['id']}" for e in no_target],
+        }
+        print(json.dumps(doc, indent=2, ensure_ascii=False))
+    else:
+        print(f"# Spec Coverage Report: {specs_path}")
+        print(f"  Project root: {project_root}\n")
+        print(f"## Implemented ({len(implemented)})")
+        for e in implemented:
+            print(f"  ✓ {e['kind']}:{e['id']}")
+        print()
+        if spec_ahead:
+            print(f"## Spec-Ahead ({len(spec_ahead)})")
+            for e in spec_ahead:
+                print(f"  ⚠ {e['kind']}:{e['id']} (target: {e['target']})")
+            print()
+        if no_target:
+            print(f"## No Check Target ({len(no_target)})")
+            for e in no_target:
+                print(f"  ○ {e['kind']}:{e['id']}")
+            print()
+        print(f"## Summary: {len(implemented)}/{total} specs have matching implementation")
+
+    return 0
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] "
@@ -2073,6 +2169,19 @@ def main():
             sys.exit(2)
         tc_json = "--json" in sys.argv[4:]
         sys.exit(trace_coverage_report(sys.argv[2], sys.argv[3], json_output=tc_json))
+
+    # Handle --coverage mode early (different flow)
+    if sys.argv[1] == "--coverage":
+        if len(sys.argv) < 3:
+            print("Usage: archwright-check --coverage <specs-dir> [--target <root>] [--json]")
+            sys.exit(2)
+        cov_target = None
+        cov_json = "--json" in sys.argv[3:]
+        rest = [a for a in sys.argv[3:] if a != "--json"]
+        for idx, a in enumerate(rest):
+            if a == "--target" and idx + 1 < len(rest):
+                cov_target = rest[idx + 1]
+        sys.exit(coverage_report(sys.argv[2], target_root=cov_target, json_output=cov_json))
 
     files = []
     target_root = None
