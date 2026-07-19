@@ -1,7 +1,7 @@
 ---
 id: 032
 title: "Audit trace hardening fixes against upstream check_trace()"
-status: open
+status: done
 blocked_by: []
 ---
 
