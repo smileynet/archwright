@@ -46,7 +46,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static; baseline suppression + ratchet (CK-07/08); evidence ledger (ADR 0009)
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
-│   ├── run-fixture-tests.sh       # Full check suite vs tests/fixtures/ (lacrosse-bosse + guarded-counter + trace-strict)
+│   ├── run-fixture-tests.sh       # Full check suite over tests/fixtures/ corpora (count: Commands test row)
 │   ├── deploy-skills.sh           # Sync skills + steering + domain overlays + glossary to the target tool's discovery dirs (--tool kiro|claude|codex|agy, --project <path>)
 │   ├── pattern-schema.yaml        # JSON Schema for pattern validation
 │   ├── spec-schema.yaml           # JSON Schema for spec validation

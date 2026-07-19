@@ -9,6 +9,7 @@ Archwright is a design methodology embodied as agent skills. You express design 
 | When I'm... | I want to... | So I can... |
 |-------------|-------------|--------------|
 | Starting design work on a project | map what forces and decisions already exist | build on intent instead of re-deriving it |
+| Sketching screens or a game concept | capture each choice as it's made, with my reasoning verbatim | feed the session into the pipeline as resolved intent, not lore |
 | Facing a design decision | see the tension named, with researched options | decide with evidence, not vibes |
 | Done deciding | capture the resolution as a pattern | keep the "why" attached to the architecture |
 | Changing code | check it against the design's invariants | catch drift before it ships |
@@ -35,6 +36,8 @@ Then, in any project, ask your agent to **"survey this project"**. The pipeline 
 ```
 survey → forces → tensions → resolve → formalize → model → contract → derive → check
 ```
+
+Discovery work — UI wireframing sessions (`archwright-discover-ui`), wizard_of_oz game-design session imports (`archwright-woz-import`), design interrogations — runs as its own human-dense track alongside the pipeline. Sessions capture decisions in append-only ledgers with origin and verbatim rationale; approved decisions enter the pipeline at `resolve` as pre-resolved tensions, carrying their evidence with them. A conservation check verifies the seam mechanically: nothing invented (every output cites a decision), nothing lost (every decision is consumed or explicitly deferred).
 
 Design artifacts land in the target project under `design/` (forces, patterns, models, specs) — live documents on your current branch, each carrying provenance back to the forces that demanded it.
 
@@ -85,7 +88,7 @@ The model in one line:
 
 ## What's in the Box
 
-- **Skills** (`skills/`, deployed to your agent tool) — the design methodology: force identification, resolution, verification, correction
+- **Skills** (`skills/`, deployed to your agent tool) — the design methodology: force identification, resolution, verification, correction — plus discovery sessions (UI wireframing, WoZ session import) that capture design decisions at the source
 - **Tools** (`tools/`, invoked via interpreter or `mise run`) — mechanical operations: schema validation, spec → Alloy compilation, checking, trace validation
 - **Patterns** (in target project, `design/patterns/`) — captured design intent
 - **Models** (in target project, `design/models/`) — domain actors, state machines, event flows, composition
