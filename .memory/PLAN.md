@@ -312,3 +312,5 @@ Phase 6: Discovery Track
 ```
 
 Cross-repo: T7a exporter ticketed in `~/code/wizard_of_oz/.tickets/001`. Independent: ticket 018 (commit-binding, verification track); ticket 028 (sanitized example projects across the lifecycle spectrum — fixtures + browsable user docs, added 2026-07-19).
+
+**NEXT UP:** ticket 037 (deploy-skills.sh steering collision — stops silently overwriting crew-research's tier-owned `subagent-reliability.md`; discovered during crew-research's known-tool integration 2026-07-19, crew's copy authoritative until fixed).
