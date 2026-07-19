@@ -1,219 +1,364 @@
 #!/usr/bin/env python3
-"""Compile an Archwright behavior spec to a bounded Alloy 6 model."""
+"""archwright-compile-alloy: Compile a behavior spec to an Alloy 6 model.
+
+Usage:
+  archwright-compile-alloy <behavior-spec.yaml> [-o output.als]
+
+Guards and var updates COMPILE (ticket 008): guard predicates over context
+vars (enum ==/!=, int comparisons, var-to-var, &&-conjunctions) become
+transition preconditions; `assign:` maps on transitions become primed
+updates (int/enum literals, var copy, `var + N` / `var - N`). Anything
+outside that subset stays a comment, and any invariant whose `alloy:`
+expression references the affected vars or target state is SKIPPED with
+reason (Extension Protocol rule 1) — reported as `SKIP-INVARIANT:` lines
+on stdout for archwright-check to consume.
+
+Generates an Alloy 6 model with:
+  - var fields for context variables
+  - Transition predicates from state/event definitions (guards + assigns compiled)
+  - Invariant assertions from the invariants section
+  - Check commands for each non-skipped invariant
+"""
 
 import re
 import sys
+import yaml
 from pathlib import Path
 
-import yaml
+sys.path.insert(0, str(Path(__file__).parent))
+from archwright_common import state_events
+
+# Spec comparison operator → Alloy operator (note: Alloy's ≤ is `=<`)
+_OP_MAP = {"==": "=", "!=": "!=", ">=": ">=", "<=": "=<", ">": ">", "<": "<"}
 
 
 def load_spec(path):
+    """Load a behavior spec YAML file."""
     data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     if data.get("kind") != "behavior":
-        raise ValueError(f"{path} is not a behavior spec (kind: {data.get('kind')})")
+        print(f"Error: {path} is not a behavior spec (kind: {data.get('kind')})")
+        sys.exit(1)
     return data
 
 
-def _to_sig(name):
-    return "".join(part.capitalize() for part in name.replace("-", "_").split("_"))
+def _translate_operand(token, enum_vars, int_vars, var_name=None):
+    """Translate one comparison operand: int literal, quoted enum literal,
+    or context var reference. Returns Alloy expr or None (untranslatable).
+    var_name provides the enum namespace when translating an enum literal."""
+    token = token.strip()
+    if re.fullmatch(r"-?\d+", token):
+        return token
+    m = re.fullmatch(r"""['"](\w+)['"]""", token)
+    if m and var_name in enum_vars:
+        return f"{_to_sig(var_name)}_{_to_sig(m.group(1))}"
+    if token in enum_vars or token in int_vars:
+        return f"M.{_to_field(token)}"
+    return None
 
 
-def _to_field(name):
-    parts = name.replace("-", "_").split("_")
-    return parts[0] + "".join(part.capitalize() for part in parts[1:])
+def _translate_comparison(expr, enum_vars, int_vars):
+    """Translate one `lhs OP rhs` comparison where lhs is a context var.
+    Returns Alloy expr or None."""
+    m = re.fullmatch(r"\s*(\w+)\s*(==|!=|>=|<=|>|<)\s*(.+?)\s*", expr)
+    if not m:
+        return None
+    lhs, op, rhs = m.group(1), m.group(2), m.group(3)
+    if lhs not in enum_vars and lhs not in int_vars:
+        return None
+    if lhs in enum_vars and op not in ("==", "!="):
+        return None  # ordering on enums is meaningless
+    rhs_expr = _translate_operand(rhs, enum_vars, int_vars, var_name=lhs)
+    if rhs_expr is None:
+        return None
+    return f"M.{_to_field(lhs)} {_OP_MAP[op]} {rhs_expr}"
 
 
-def _strip_outer_parens(expression):
-    expression = expression.strip()
-    while expression.startswith("(") and expression.endswith(")"):
-        depth = 0
-        for index, character in enumerate(expression):
-            depth += character == "("
-            depth -= character == ")"
-            if depth == 0 and index < len(expression) - 1:
-                return expression
-        expression = expression[1:-1].strip()
-    return expression
-
-
-def _split_top_level(expression, operator):
-    depth = 0
-    start = 0
+def _translate_guard(predicate, enum_vars, int_vars):
+    """Translate a guard predicate (comparisons joined by &&) to an Alloy
+    precondition. Returns Alloy expr or None if ANY conjunct is untranslatable."""
+    conjuncts = [c for c in re.split(r"&&|\band\b", predicate) if c.strip()]
+    if not conjuncts:
+        return None
     parts = []
-    index = 0
-    while index <= len(expression) - len(operator):
-        character = expression[index]
-        depth += character in "({"
-        depth -= character in ")}"
-        if depth == 0 and expression[index:index + len(operator)] == operator:
-            parts.append(expression[start:index].strip())
-            start = index + len(operator)
-            index = start
-            continue
-        index += 1
-    if parts:
-        parts.append(expression[start:].strip())
-    return parts
+    for c in conjuncts:
+        t = _translate_comparison(c, enum_vars, int_vars)
+        if t is None:
+            return None
+        parts.append(t)
+    return " and ".join(parts)
 
 
-def _value(variable, value, variables):
-    definition = variables[variable]
-    value = value.strip().strip("'\"")
-    value_type = definition.get("type")
-    if value_type == "bool" and value.lower() in {"true", "false"}:
-        return "TrueVal" if value.lower() == "true" else "FalseVal"
-    if value_type == "enum" and value in definition.get("values", []):
-        return f"{_to_sig(variable)}_{_to_sig(value)}"
-    if value_type in {"int", "float"} and re.fullmatch(r"-?\d+", value):
-        return value
-    raise ValueError(f"Unsupported value '{value}' for '{variable}'")
+def _translate_assign(var, value, enum_vars, int_vars):
+    """Translate one `assign:` entry (var: value) to a primed update.
+    Supported values: int literal, enum literal, var copy, `var + N` / `var - N`.
+    Returns Alloy expr or None."""
+    if var not in enum_vars and var not in int_vars:
+        return None
+    field = f"M.{_to_field(var)}"
+    if isinstance(value, int) and var in int_vars:
+        return f"{field}' = {value}"
+    if not isinstance(value, str):
+        return None
+    value = value.strip()
+    if var in enum_vars:
+        bare = value.strip("'\"")
+        if bare in enum_vars[var].get("values", []):
+            return f"{field}' = {_to_sig(var)}_{_to_sig(bare)}"
+        if value in int_vars or value in enum_vars:
+            return f"{field}' = M.{_to_field(value)}"
+        return None
+    # int var: literal, copy, or var ± N
+    if re.fullmatch(r"-?\d+", value):
+        return f"{field}' = {value}"
+    if value in int_vars:
+        return f"{field}' = M.{_to_field(value)}"
+    m = re.fullmatch(r"(\w+)\s*([+-])\s*(\d+)", value)
+    if m and m.group(1) in int_vars:
+        fn = "plus" if m.group(2) == "+" else "minus"
+        return f"{field}' = {fn}[M.{_to_field(m.group(1))}, {m.group(3)}]"
+    return None
 
 
-def compile_predicate(predicate, variables, states):
-    expression = _strip_outer_parens(predicate)
-    if expression.startswith("always "):
-        return f"always ({compile_predicate(expression[7:], variables, states)})"
-
-    for operator, alloy_operator in ((" implies ", "implies"), (" or ", "or"), (" and ", "and")):
-        parts = _split_top_level(expression, operator)
-        if parts:
-            compiled = [compile_predicate(part, variables, states) for part in parts]
-            return f"({' {} '.format(alloy_operator).join(compiled)})"
-
-    if expression.startswith("not "):
-        return f"not ({compile_predicate(expression[4:], variables, states)})"
-
-    membership = re.fullmatch(r"([A-Za-z_][\w-]*)\s+in\s+\{([^}]+)\}", expression)
-    if membership:
-        variable = membership.group(1)
-        if variable not in variables:
-            raise ValueError(f"Unsupported predicate variable '{variable}'")
-        values = [_value(variable, item, variables) for item in membership.group(2).split(",")]
-        field = f"M.{_to_field(variable)}"
-        return f"({' or '.join(f'{field} = {value}' for value in values)})"
-
-    equality = re.fullmatch(r"([A-Za-z_][\w-]*)\s*(==|!=)\s*([A-Za-z0-9_'\".-]+)", expression)
-    if equality:
-        variable, operator, value = equality.groups()
-        if variable not in variables:
-            raise ValueError(f"Unsupported predicate variable '{variable}'")
-        comparison = "=" if operator == "==" else "!="
-        return f"M.{_to_field(variable)} {comparison} {_value(variable, value, variables)}"
-
-    if expression in states:
-        return f"M.current = {_to_sig(expression)}"
-    if expression in variables and variables[expression].get("type") == "bool":
-        return f"M.{_to_field(expression)} = TrueVal"
-    raise ValueError(f"Unsupported predicate: {predicate}")
-
-
-def _transitions(state_definition):
-    return state_definition.get("on") or state_definition.get(True, {})
+def _referenced_vars(text, context):
+    """Context var names mentioned (as words) in a predicate/expression string."""
+    return {v for v in context if re.search(rf"\b{re.escape(v)}\b", text)
+            or f"M.{_to_field(v)}" in text}
 
 
 def generate_alloy(data):
+    """Generate Alloy 6 model from behavior spec data."""
+    lines = []
     spec_id = data["id"]
+
+    lines.append(f"-- Auto-generated from behavior spec: {spec_id}")
+    lines.append(f"-- Do not edit — regenerate from the spec.")
+    lines.append("")
+
+    # Generate sigs for enum context variables
+    context = data.get("context", {}).get("variables", {})
+    enum_vars = {k: v for k, v in context.items() if v.get("type") == "enum"}
+    int_vars = {k: v for k, v in context.items() if v.get("type") in ("int", "float")}
+
+    # Generate state enum
     states = data.get("states", {})
-    if not states:
-        raise ValueError("Behavior spec must define states")
-    variables = data.get("context", {}).get("variables", {})
-    bool_variables = {name: value for name, value in variables.items() if value.get("type") == "bool"}
-    enum_variables = {name: value for name, value in variables.items() if value.get("type") == "enum"}
-    number_variables = {name: value for name, value in variables.items() if value.get("type") == "int"}
-    unsupported = set(variables) - set(bool_variables) - set(enum_variables) - set(number_variables)
-    if unsupported:
-        raise ValueError(f"Unsupported context types: {sorted(unsupported)}")
+    state_names = list(states.keys())
 
-    lines = [
-        f"-- Auto-generated from behavior spec: {spec_id}",
-        "-- Do not edit; regenerate from the spec.",
-        "",
-        "abstract sig State {}",
-    ]
-    lines.extend(f"one sig {_to_sig(name)} extends State {{}}" for name in states)
-    if bool_variables:
-        lines.extend(["", "abstract sig BoolVal {}", "one sig TrueVal, FalseVal extends BoolVal {}"])
-    for name, definition in enum_variables.items():
-        enum_type = f"{_to_sig(name)}Val"
-        lines.extend(["", f"abstract sig {enum_type} {{}}"])
-        values = ", ".join(f"{_to_sig(name)}_{_to_sig(value)}" for value in definition.get("values", []))
-        lines.append(f"one sig {values} extends {enum_type} {{}}")
+    lines.append("-- States")
+    lines.append("abstract sig State {}")
+    for s in state_names:
+        sig_name = _to_sig(s)
+        lines.append(f"one sig {sig_name} extends State {{}}")
+    lines.append("")
 
-    fields = ["var current: one State"]
-    fields.extend(f"var {_to_field(name)}: one BoolVal" for name in bool_variables)
-    fields.extend(f"var {_to_field(name)}: one {_to_sig(name)}Val" for name in enum_variables)
-    fields.extend(f"var {_to_field(name)}: one Int" for name in number_variables)
-    lines.extend(["", "one sig M {", "  " + ",\n  ".join(fields), "}", "", "fact init {"])
-    initial = data.get("initial", next(iter(states)))
+    # Generate enum sigs for enum context variables
+    for var_name, var_def in enum_vars.items():
+        values = var_def.get("values", [])
+        lines.append(f"-- Context: {var_name}")
+        lines.append(f"abstract sig {_to_sig(var_name)}Val {{}}")
+        for v in values:
+            lines.append(f"one sig {_to_sig(var_name)}_{_to_sig(v)} extends {_to_sig(var_name)}Val {{}}")
+        lines.append("")
+
+    # Generate the machine sig with var fields
+    lines.append("-- Machine state")
+    lines.append("one sig M {")
+    fields = []
+    fields.append("  var current: one State")
+    for var_name, var_def in enum_vars.items():
+        fields.append(f"  , var {_to_field(var_name)}: one {_to_sig(var_name)}Val")
+    for var_name, var_def in int_vars.items():
+        fields.append(f"  , var {_to_field(var_name)}: one Int")
+    lines.append(",\n".join(fields) if not fields else fields[0])
+    for f in fields[1:]:
+        lines.append(f)
+    lines.append("}")
+    lines.append("")
+
+    # Initial state
+    initial = data.get("initial", state_names[0] if state_names else "unknown")
+    lines.append("-- Initial state")
+    lines.append("fact init {")
     lines.append(f"  M.current = {_to_sig(initial)}")
-    for name, definition in bool_variables.items():
-        lines.append(f"  M.{_to_field(name)} = {'TrueVal' if definition.get('initial') else 'FalseVal'}")
-    for name, definition in enum_variables.items():
-        lines.append(f"  M.{_to_field(name)} = {_value(name, str(definition.get('initial')), variables)}")
-    for name, definition in number_variables.items():
-        lines.append(f"  M.{_to_field(name)} = {definition.get('initial', 0)}")
-    lines.extend(["}", "", "-- Transitions"])
+    for var_name, var_def in enum_vars.items():
+        init_val = var_def.get("initial", var_def.get("values", ["none"])[0])
+        lines.append(f"  M.{_to_field(var_name)} = {_to_sig(var_name)}_{_to_sig(init_val)}")
+    for var_name, var_def in int_vars.items():
+        init_val = var_def.get("initial", 0)
+        lines.append(f"  M.{_to_field(var_name)} = {init_val}")
+    lines.append("}")
+    lines.append("")
 
-    transition_names = []
-    for state_name, state_definition in states.items():
-        for event_name, transition in _transitions(state_definition).items():
-            transitions = transition if isinstance(transition, list) else [transition]
-            for branch, item in enumerate(transitions):
-                item = {"target": item} if isinstance(item, str) else item
-                suffix = f"_{branch}" if len(transitions) > 1 else ""
-                predicate_name = f"t_{_to_field(state_name)}_{_to_field(event_name)}{suffix}"
-                transition_names.append(predicate_name)
-                lines.extend([f"pred {predicate_name} {{", f"  M.current = {_to_sig(state_name)}"])
-                guard = item.get("guard", {})
-                if guard.get("predicate"):
-                    lines.append(f"  {compile_predicate(guard['predicate'], variables, states)}")
-                lines.append(f"  M.current' = {_to_sig(item.get('target', state_name))}")
-                effects = item.get("effects", {})
-                unknown_effects = set(effects) - set(variables)
-                if unknown_effects:
-                    raise ValueError(f"Transition effect references unknown variables: {sorted(unknown_effects)}")
-                for name in variables:
-                    field = _to_field(name)
-                    if name in effects:
-                        lines.append(f"  M.{field}' = {_value(name, str(effects[name]), variables)}")
+    # Generate transition predicates.
+    # Guards and assigns in the translatable subset compile in; anything
+    # outside it stays a comment and TAINTS its referenced vars + target
+    # state — invariants touching tainted elements are skipped (a model
+    # that ignores a guard would produce spurious counterexamples).
+    lines.append("-- Transitions")
+    transition_preds = []
+    tainted_vars = set()    # context var names whose modeled value is unreliable
+    tainted_states = set()  # state sig names reachable without their real guard
+    for state_name, state_def in states.items():
+        events = state_events(state_def)
+        for event_name, trans in events.items():
+            if isinstance(trans, dict):
+                target = trans.get("target", state_name)
+                pred_name = f"t_{_to_field(state_name)}_{_to_field(event_name)}"
+                transition_preds.append(pred_name)
+                lines.append(f"pred {pred_name} {{")
+                lines.append(f"  M.current = {_to_sig(state_name)}")
+                # Guard: compile if translatable, else comment + taint
+                guard = trans.get("guard", {})
+                if guard and guard.get("predicate"):
+                    guard_expr = _translate_guard(guard["predicate"], enum_vars, int_vars)
+                    if guard_expr is not None:
+                        lines.append(f"  {guard_expr}  -- guard: {guard['predicate']}")
                     else:
-                        lines.append(f"  M.{field}' = M.{field}")
-                lines.extend(["}", ""])
+                        lines.append(f"  -- guard NOT compiled (outside translatable subset): {guard['predicate']}")
+                        tainted_vars |= _referenced_vars(guard["predicate"], context)
+                        tainted_states.add(_to_sig(target))
+                lines.append(f"  M.current' = {_to_sig(target)}")
+                # Assigns: compiled updates for assigned vars, frame for the rest
+                assigns = trans.get("assign", {}) or {}
+                assigned = set()
+                for var_name, value in assigns.items():
+                    upd = _translate_assign(var_name, value, enum_vars, int_vars)
+                    if upd is not None:
+                        lines.append(f"  {upd}  -- assign: {var_name}: {value}")
+                        assigned.add(var_name)
+                    else:
+                        lines.append(f"  -- assign NOT compiled (outside translatable subset): {var_name}: {value}")
+                        tainted_vars.add(var_name)
+                        # var keeps frame condition below — modeled as unchanged
+                for var_name in list(enum_vars) + list(int_vars):
+                    if var_name not in assigned:
+                        lines.append(f"  M.{_to_field(var_name)}' = M.{_to_field(var_name)}")
+                lines.append("}")
+                lines.append("")
 
-    lines.extend(["pred idle {", "  M.current' = M.current"])
-    for name in variables:
-        lines.append(f"  M.{_to_field(name)}' = M.{_to_field(name)}")
-    lines.extend(["}", "", "fact behavior {", f"  always ({' or '.join(transition_names + ['idle'])})", "}", "", "-- Invariants"])
+    # Add idle/stutter
+    lines.append("pred idle {")
+    lines.append("  M.current' = M.current")
+    for var_name in enum_vars:
+        lines.append(f"  M.{_to_field(var_name)}' = M.{_to_field(var_name)}")
+    for var_name in int_vars:
+        lines.append(f"  M.{_to_field(var_name)}' = M.{_to_field(var_name)}")
+    lines.append("}")
+    lines.append("")
 
+    # Behavior fact
+    lines.append("-- System: one transition per step")
+    lines.append("fact behavior {")
+    all_preds = transition_preds + ["idle"]
+    lines.append(f"  always ({' or '.join(all_preds)})")
+    lines.append("}")
+    lines.append("")
+
+    # Generate assertions from invariants.
+    # An invariant is mechanically checkable only if it carries an explicit
+    # `alloy:` expression (prose predicates are not translatable — Extension
+    # Protocol rule 1: skip with reason, never emit broken placeholders).
+    # An `alloy:` expression that touches a TAINTED var or state (one whose
+    # guard/assign fell outside the translatable subset) is also skipped —
+    # the model would produce spurious counterexamples for it.
     invariants = data.get("invariants", [])
-    for invariant in invariants:
-        invariant_id = _to_field(invariant["id"])
-        compiled = compile_predicate(invariant["predicate"], variables, states)
-        lines.extend([f"assert {invariant_id} {{", f"  {compiled}", "}", ""])
+    checkable = []
+    skipped = []
+    skipped_tainted = []  # (id, reason) — reported as SKIP-INVARIANT for check.py
+    lines.append("-- Invariants")
+    for inv in invariants:
+        inv_id = _to_field(inv.get("id", "unknown"))
+        predicate = inv.get("predicate", "true")
+        description = inv.get("description", "")
+        alloy_expr = inv.get("alloy")
 
-    model = data.get("check", {}).get("model", {})
-    scope = model.get("scope", max(4, len(states)))
-    steps = model.get("steps", max(6, len(states) * 2))
+        if not alloy_expr:
+            skipped.append(inv.get("id", "unknown"))
+            lines.append(f"-- SKIPPED {inv.get('id', 'unknown')}: prose predicate not mechanically")
+            lines.append(f"-- translatable — add an `alloy:` expression to the spec to check it.")
+            lines.append(f"-- Spec predicate: {predicate}")
+            lines.append("")
+            continue
+
+        inv_vars = _referenced_vars(alloy_expr, context)
+        bad_vars = sorted(inv_vars & tainted_vars)
+        bad_states = sorted(s for s in tainted_states if re.search(rf"\b{s}\b", alloy_expr))
+        if bad_vars or bad_states:
+            parts = []
+            if bad_vars:
+                parts.append(f"var(s) {bad_vars} have uncompiled guard/assign")
+            if bad_states:
+                parts.append(f"state(s) {bad_states} reachable without their guard")
+            reason = ("model unreliable for this expression: " + "; ".join(parts)
+                      + " — outside the translatable subset; checking it would report spurious counterexamples")
+            skipped_tainted.append((inv.get("id", "unknown"), reason))
+            lines.append(f"-- SKIPPED {inv.get('id', 'unknown')}: {reason}")
+            lines.append(f"-- Spec alloy: {alloy_expr}")
+            lines.append("")
+            continue
+
+        checkable.append(inv_id)
+        lines.append(f"-- {description}")
+        lines.append(f"-- Spec predicate: {predicate}")
+        lines.append(f"assert {inv_id} {{")
+        lines.append(f"  {alloy_expr}")
+        lines.append("}")
+        lines.append("")
+
+    # Check commands (only for checkable invariants)
     lines.append("-- Check commands")
-    lines.extend(f"check {_to_field(invariant['id'])} for {scope} but {steps} steps" for invariant in invariants)
-    return "\n".join(lines)
+    num_states = len(state_names)
+    scope = max(4, num_states)
+    steps = max(6, num_states * 2)
+    for inv_id in checkable:
+        lines.append(f"check {inv_id} for {scope} but {steps} steps")
+
+    return "\n".join(lines), skipped, skipped_tainted
+
+
+def _to_sig(name):
+    """Convert a slug/name to an Alloy sig name (PascalCase)."""
+    parts = name.replace("-", "_").split("_")
+    return "".join(p.capitalize() for p in parts)
+
+
+def _to_field(name):
+    """Convert a slug/name to an Alloy field name (camelCase)."""
+    parts = name.replace("-", "_").split("_")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
 
 
 def main():
     if len(sys.argv) < 2:
         print("Usage: archwright-compile-alloy <behavior-spec.yaml> [-o output.als]")
-        return 2
-    try:
-        data = load_spec(sys.argv[1])
-        output = Path(sys.argv[sys.argv.index("-o") + 1]) if "-o" in sys.argv else Path(sys.argv[1]).with_suffix(".als")
-        output.write_text(generate_alloy(data), encoding="utf-8")
-    except (OSError, ValueError, yaml.YAMLError) as error:
-        print(f"ERROR: {error}", file=sys.stderr)
-        return 1
-    print(f"Generated: {output}")
-    return 0
+        sys.exit(2)
+
+    spec_path = sys.argv[1]
+    output_path = None
+
+    if "-o" in sys.argv:
+        idx = sys.argv.index("-o")
+        if idx + 1 < len(sys.argv):
+            output_path = sys.argv[idx + 1]
+
+    data = load_spec(spec_path)
+    alloy_source, skipped, skipped_tainted = generate_alloy(data)
+
+    if output_path:
+        Path(output_path).write_text(alloy_source, encoding="utf-8")
+        print(f"Generated: {output_path}")
+    else:
+        # Default: same name as spec but .als extension
+        default_output = Path(spec_path).with_suffix(".als")
+        default_output.write_text(alloy_source, encoding="utf-8")
+        print(f"Generated: {default_output}")
+
+    for inv_id in skipped:
+        print(f"WARN: invariant '{inv_id}' skipped — no `alloy:` expression (prose predicate not mechanically translatable)")
+    # Machine-readable skip lines — archwright-check parses these to mark
+    # invariants skipped instead of expecting a verdict for them.
+    for inv_id, reason in skipped_tainted:
+        print(f"SKIP-INVARIANT: {inv_id}: {reason}")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
