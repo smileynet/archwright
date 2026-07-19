@@ -105,6 +105,10 @@ _Avoid_: file+line as identity (churns on every edit above the match).
 The baseline's tool-owned sibling (`.archwright-evidence.json`, ADR 0009): check runs auto-append confidence evidence events — demotion-candidate (★★/★ FAIL, never baselined/—) and promotion-candidate (pass streak per `config.promotion_streak`, or a ★/— invariant passing a bounded check). Activation by existence (or `--evidence`); deduped; trace events carry `fingerprints: []`. The ledger never changes a confidence value — ratification is human, in the artifact, and ★★ moves always block for HITL.
 _Avoid_: tools editing artifact frontmatter (rejected alternative A — noisy diffs, self-review smell); treating a candidate event as a ratified confidence change.
 
+**Commit-binding (code_state)**:
+The git identity `{commit, dirty}` stamped on every check `--json` document and evidence-ledger event (ticket 018, EDA signoff precedent). Staleness is soft decay by affectedness, judged at consumption: evidence at commit C is fresh iff the spec + its `check.target` are unchanged since C (CK-19's predicate with `--base C`); `dirty: true` = unverifiable for signoff-grade claims. Git absent = null fields with reason, never a crash. Dedup identity excludes code_state (ADR 0009 amendment).
+_Avoid_: hard EDA-style invalidation (any change voids all evidence — kills pass streaks under normal commit cadence); mechanically deleting stale events (append-only stands).
+
 **Force file**:
 The durable per-force artifact (`design/forces/<id>.md`, kind: force) — the root of provenance. `serves:` and `from_force:` resolve against these once at least one exists.
 _Avoid_: calling the working YAML inventory (`.memory/archwright-forces-*.yaml`) "the forces" — that's extraction scaffolding.
