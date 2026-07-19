@@ -1,7 +1,7 @@
 ---
 id: 025
 title: "woz-export consumer: skill interpretation + category mapping"
-status: open
+status: done
 blocked_by: [020]
 ---
 

@@ -29,7 +29,8 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-audit/          # Audit docs for truth (surface contradictions)
 │   ├── archwright-passup/         # Lift check violations to owning level, route per confidence
 │   ├── archwright-diagram/        # Render models/patterns as Mermaid diagrams
-│   └── archwright-discover-ui/    # Discovery track: UI sessions — design system + wireframes + ledger (ADR 0011)
+│   ├── archwright-discover-ui/    # Discovery track: UI sessions — design system + wireframes + ledger (ADR 0011)
+│   └── archwright-woz-import/     # Discovery track: wizard_of_oz session import — tool conversion + interpretation (ticket 025)
 ├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
 │   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
 │   └── subagent-reliability.md    # Failure handling for parallel dispatch
@@ -40,6 +41,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 ├── tools/                         # Mechanical operations
 │   ├── archwright-validate.py     # Schema + link validation for patterns/specs
 │   ├── archwright-forces-gen.py   # Force inventory YAML → design/forces/*.md (mechanical projection)
+│   ├── archwright-import-woz.py   # woz-session/v1 JSON → discovery artifact (mechanical conversion; interpretation = archwright-woz-import skill)
 │   ├── archwright_common.py       # Shared spec-parsing helpers (state_events) — imported by check + compile-alloy; not a CLI
 │   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep), behavior (Alloy), --trace, --static; baseline suppression + ratchet (CK-07/08); evidence ledger (ADR 0009)
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
@@ -106,6 +108,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-diagram` — render models/patterns as Mermaid diagrams
 - `archwright-passup` — consume check violations, lift to the owning level, route per confidence (★★→HITL, ★→propose, —→auto-adjust)
 - `archwright-discover-ui` — discovery track: UI sessions producing ledger-backed decisions that graduate at the resolve seam (ADR 0011)
+- `archwright-woz-import` — discovery track: import wizard_of_oz session exports (tool converts, skill interprets — ticket 025)
 
 **Steering** (source in `steering/`, deployed to the tool's rules dir — kiro: `~/.kiro/steering/`, claude: `~/.claude/rules/`; codex/agy have no native equivalent — deploy prints wiring guidance):
 - `archwright-conventions.md` — pipeline phase discipline, quality gates
@@ -124,6 +127,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 | `archwright-check.py`, `archwright-validate.py`, `archwright-compile-alloy.py` (debug use) | `archwright-check` |
 | `archwright-check-compile.mjs`, `alloy:` expression authoring | `archwright-derive` |
 | `archwright-forces-gen.py` | `archwright-forces` |
+| `archwright-import-woz.py` | `archwright-woz-import` |
 | `run-fixture-tests.sh`, `deploy-skills.sh` | `.kiro/skills/repo-maintenance` — project-local, never deployed globally (2026-07-18; supersedes "no skill, this file is their home") |
 | `tools/templates/discovery-ledger.md`, `wireframe.md`, `design-system.md` (artifact contracts) | `archwright-discover-ui` |
 | `archwright_common.py` | none — shared module, not a CLI |
@@ -147,11 +151,12 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json> [--json]` — untranslatable predicates SKIP-with-reason (`invariants_skipped`/`guards_skipped` in output), never silent-pass (ticket 015); `--json` emits the CK-03 document (violations w/ full routing fields, skips[]) instead of the bespoke replay shape (ticket 016) |
 | Non-vacuity probe | `python3 tools/archwright-check.py --probe <behavior-spec.yaml>` — injects a false invariant; exit 0 = counterexample produced (good), 1 = vacuous model, 2 = not probeable |
 | Generate force files | `python3 tools/archwright-forces-gen.py <inventory.yaml> [-o <dir>]` — working inventory → design/forces/*.md |
+| Import WoZ session | `python3 tools/archwright-import-woz.py <export.json> [-o <design-dir>] [--force]` — woz-session/v1 JSON → `design/discovery/woz/` artifact (category mapping consumer-side; exit 1 = contract violation, 2 = usage/refusal) |
 | Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
 | Audit docs vs code | `archwright-audit` (skill-driven, not a script) |
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
-| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 104 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests + pending-coverage (CK-06) + baseline fingerprints/suppression/ratchet (CK-07/08) + evidence ledger (ADR 0009 / ticket 017) + commit-binding code_state (018) + changed-only scoping (CK-19) + trace strict-mode (ticket 015) + trace CK-03 document (016) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) + discovery schema/conservation (026) (SKIPs with reason if alloy6.jar, java, node, or git absent; green = 104/0/0 — **this row is the single source for the count; elsewhere say "suite green"**) |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 110 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts trace emitter) + check-tool feature tests + pending-coverage (CK-06) + baseline fingerprints/suppression/ratchet (CK-07/08) + evidence ledger (ADR 0009 / ticket 017) + commit-binding code_state (018) + changed-only scoping (CK-19) + trace strict-mode (ticket 015) + trace CK-03 document (016) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) + discovery schema/conservation (026) + woz-import conformance (025) (SKIPs with reason if alloy6.jar, java, node, or git absent; green = 110/0/0 — **this row is the single source for the count; elsewhere say "suite green"**) |
 
 Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json`, `--baseline`, `--update-baseline`, `--evidence`, `--changed-only`, `--base` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`; baseline flags added CK-07/08, `--evidence` ticket 017, `--changed-only`/`--base` CK-19, 2026-07-18).
 
