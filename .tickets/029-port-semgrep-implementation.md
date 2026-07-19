@@ -1,7 +1,7 @@
 ---
 id: 029
 title: "Port semgrep implementation into archwright-check.py"
-status: open
+status: done
 blocked_by: []
 ---
 
