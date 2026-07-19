@@ -178,6 +178,29 @@ List each as `"<kind>:<proposed-id>"` in the frontmatter.
 
 When formalizing from a tension map, close the loop before finishing: every tension in the map must have (a) a pattern, (b) an explicit fold note ("folds into pattern X — same resolution"), or (c) an explicit defer note with reason. Silent gaps hide easily in batches — a field run wrote 9 patterns for a 9-tension map and still missed one tension (two patterns had come from the same tension, one from an unopposed given); only a mechanical tension→pattern recount caught it.
 
+### 9. Skeleton spec gate
+
+After writing the pattern, derive ONE minimal skeleton spec — the simplest static check that validates the pattern's Resolution section. Run it immediately.
+
+**What a skeleton spec is:**
+- One constraint spec targeting the most obvious code location
+- Checks the pattern's PRIMARY invariant (the one thing that must be true)
+- Lives in `design/specs/skeletons/{pattern-id}.md`
+- Confidence: — (advisory, not committed)
+
+**Procedure:**
+1. From the pattern's Resolution section, identify the single most checkable commitment
+2. Write a constraint spec with `check.method: grep` targeting the relevant file/directory
+3. Run `python3 tools/archwright-check.py --static design/specs/skeletons/{pattern-id}.md --target .`
+4. If it passes → proceed to present the pattern. The architecture supports the resolution.
+5. If it fails → the pattern's assumptions are broken. Report the failure and route back to resolve.
+
+**Skeleton lifecycle:**
+- Skeletons are kept permanently as fast regression checks (<1s each)
+- They are NOT in pre-commit hooks (advisory, not gates)
+- When full derivation produces a comprehensive spec for the same invariant, the skeleton remains as a canary
+- Discard only if the full spec checks the exact same target with the same method (redundant)
+
 ## Does NOT
 
 - Extract forces (receives them from `archwright-forces`)
