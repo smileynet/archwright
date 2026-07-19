@@ -1,7 +1,7 @@
 ---
 kind: discovery
 id: wf-all-clear
-status: proposed
+status: approved
 area: ui
 serves: []
 ---
@@ -69,7 +69,7 @@ living in a separate list. The disclosure sections (what isn't verified, stabili
 stay on the surface below the diagram. Rendered as pre-generated inline SVG at
 report-build time — no client-side diagram library, preserving the zero-build
 single-file principle (P5). Alternatives: promise-grouped list (superseded — D004);
-diagram behind a tab (rejected — it IS the front door per D006).
+diagram behind a tab (rejected — it IS the front door per design-system#D006).
 
 ## Decisions
 
@@ -77,7 +77,7 @@ diagram behind a tab (rejected — it IS the front door per D006).
 - **Category:** structure
 - **Origin:** suggested
 - **Decision:** Passing rules roll up under the product goal they protect; the goal's own phrasing is the row title.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Flat rule list; grouping by spec kind; grouping by code area.
 
 ### D002 — "What isn't verified" disclosure is mandatory in all-clear

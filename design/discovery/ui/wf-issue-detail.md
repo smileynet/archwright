@@ -1,7 +1,7 @@
 ---
 kind: discovery
 id: wf-issue-detail
-status: proposed
+status: approved
 area: ui
 serves: []
 ---
@@ -68,14 +68,14 @@ Top-to-bottom mirrors the triage question order: what's wrong → where exactly 
 - **Category:** structure
 - **Origin:** suggested
 - **Decision:** The provenance chain renders as three plain lines — Because (the goal, quoting the force's desire), Decided (the design decision + date), So (what the check watches) — each linking to the underlying document.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Breadcrumb of artifact ids (jargon); omit chain from detail (loses the "is the rule right?" context).
 
 ### D002 — Escape hatch: reroute approval → decision
 - **Category:** structure
 - **Origin:** suggested
 - **Decision:** Every approval detail carries an "It's the rule" control that reclassifies the item as a decision (rule may be wrong), recording that reroute in the response file.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Freeform-only disagreement; requiring the user to leave the report and open a conversation.
 
 ### D003 — Action labels state intent: "Approve Fix" / "Review / Amend Rule"

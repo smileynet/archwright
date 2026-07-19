@@ -1,7 +1,7 @@
 ---
 kind: discovery
 id: wf-behavior-detail
-status: proposed
+status: approved
 area: ui
 serves: []
 ---
@@ -55,13 +55,13 @@ serves: []
 
 ## Layout Rationale
 
-Order mirrors D006's drill intent exactly: behavior first (prose + arrives-from/
+Order mirrors design-system#D006's drill intent exactly: behavior first (prose + arrives-from/
 leads-to in the diagram's vocabulary), then the rules guarding this step with
 their live status, then the goals this step protects, and only then — folded by
 default — the design story (tension, decision, rejected alternatives, date).
 The "possibly" in the user's drill description is honored by the fold: rationale
 is one click away but never in the reading path. Alternatives: rules-first
-(rejected — verification before comprehension inverts D006); rationale inline
+(rejected — verification before comprehension inverts design-system#D006); rationale inline
 (rejected — "possibly wanting to know" means opt-in).
 
 ## Decisions

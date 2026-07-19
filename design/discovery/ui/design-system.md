@@ -1,7 +1,7 @@
 ---
 kind: discovery
 id: design-system
-status: proposed
+status: approved
 area: ui
 serves: []
 ---
@@ -127,7 +127,11 @@ tokens:
 
 | Tension resolved | Ledger entry | Pattern (filled at graduation) |
 |------------------|--------------|-------------------------------|
-| human-readability vs machine-canonicality | design-system#D001 | — |
+| human-readability vs machine-canonicality | design-system#D001 | (formalize phase) |
+| accessibility-to-outsiders vs precision-for-experts | design-system#D002 | (formalize phase) |
+| agent autonomy vs human oversight (approvals/decisions/suggestions taxonomy) | design-system#D003, wf-all-clear#D003 | (formalize phase) |
+| interactivity vs zero-infrastructure distribution | design-system#D005 | (formalize phase) |
+| comprehension-first vs verification-first surface | design-system#D006 | (formalize phase) |
 
 ## Not Resolved Here
 
