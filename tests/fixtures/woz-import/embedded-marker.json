@@ -1,0 +1,74 @@
+{
+  "format": "woz-session/v1",
+  "source": "marker-quest-2026-07-19.md",
+  "gdd_companion": false,
+  "session": {
+    "id": "marker-quest-2026-07-19",
+    "title": "Marker Quest",
+    "status": "completed",
+    "phase": "complete",
+    "beat": "0",
+    "created": "2026-07-19T00:00:00Z",
+    "updated": "2026-07-19T00:30:00Z",
+    "decision_count": "3",
+    "elevator_pitch": "A fixture game whose export embeds SUPERSEDES markers in decision text.",
+    "core_loop": "Walk to item, grab it, return.",
+    "aesthetics": ["discovery"],
+    "mlp_features": ["one map"],
+    "target_audience": "conformance suites"
+  },
+  "decisions": [
+    {
+      "number": 1,
+      "title": "One-screen map",
+      "phase": "simulate",
+      "beat": 1,
+      "category": "scope",
+      "origin": "user",
+      "decision": "The whole game fits on one screen.",
+      "rationale": "\"Keep the fixture tiny.\"",
+      "alternatives": "Scrolling map; rejected as scope creep.",
+      "supersedes": null
+    },
+    {
+      "number": 3,
+      "title": "Grab is automatic on contact",
+      "phase": "simulate",
+      "beat": 2,
+      "category": "mechanic",
+      "origin": "user",
+      "decision": "SUPERSEDES D002. Walking over the item grabs it.",
+      "rationale": "\"No button needed, contact is enough.\"",
+      "alternatives": "Explicit grab button (D002); superseded.",
+      "supersedes": 2
+    }
+  ],
+  "superseded": [
+    {
+      "number": 2,
+      "title": "Explicit grab button",
+      "phase": "simulate",
+      "beat": 1,
+      "category": "mechanic",
+      "origin": "suggested",
+      "decision": "Player presses a button to grab the item.",
+      "rationale": "\"A button gives intent.\"",
+      "alternatives": "Auto-grab on contact.",
+      "supersedes": null,
+      "superseded_by": 3
+    }
+  ],
+  "simulation_log": [
+    {
+      "beat": 1,
+      "turn": 1,
+      "heading": "Beat 1: First Contact",
+      "text": "Player spawns by the door (see D001 for the one-screen framing).",
+      "wireframes": []
+    }
+  ],
+  "unresolved": {
+    "open_questions": [],
+    "parked": []
+  }
+}

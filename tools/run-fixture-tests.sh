@@ -1341,6 +1341,20 @@ if [ "$rc" -eq 1 ] && [ ! -d "$WOZ_TMP/d2" ]; then
 else
   report FAIL "woz-import: unknown category = exit 1 (contract drift, no partial output)" "exit=$rc"
 fi
+# Idempotent SUPERSEDES prepend: wizard_of_oz's canonical exports (salvage-run)
+# embed the marker in decision text; the importer must not double it, and must
+# still prepend when absent (mini-export path above proves that side). The
+# naive unconditional prepend produced "SUPERSEDES D002. SUPERSEDES D002."
+# (proven to FAIL pre-fix, 2026-07-19).
+WOZ_ART3="$WOZ_TMP/d3/discovery/woz/woz-marker-quest-2026-07-19.md"
+rc=0; python3 "$WOZ_TOOL" "$WOZ_FIX/embedded-marker.json" -o "$WOZ_TMP/d3" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ] \
+   && grep -q 'SUPERSEDES D002\. Walking over' "$WOZ_ART3" 2>/dev/null \
+   && ! grep -q 'SUPERSEDES D002\. SUPERSEDES D002\.' "$WOZ_ART3" 2>/dev/null; then
+  report PASS "woz-import: embedded SUPERSEDES marker not doubled (idempotent prepend)"
+else
+  report FAIL "woz-import: embedded SUPERSEDES marker not doubled (idempotent prepend)" "exit=$rc"
+fi
 # Snapshot discipline: existing import refuses without --force (exit 2), --force refreshes
 rc=0; python3 "$WOZ_TOOL" "$WOZ_FIX/mini-export.json" -o "$WOZ_TMP/design" >/dev/null 2>&1 || rc=$?
 rc2=0; python3 "$WOZ_TOOL" --force "$WOZ_FIX/mini-export.json" -o "$WOZ_TMP/design" >/dev/null 2>&1 || rc2=$?
