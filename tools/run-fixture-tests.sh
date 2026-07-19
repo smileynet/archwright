@@ -1273,6 +1273,65 @@ fi
 rm -rf "$DISC_TMP"
 
 echo ""
+echo "=== WoZ Import Conformance (ticket 025) ==="
+# archwright-import-woz.py: woz-session/v1 JSON → discovery artifact. Golden
+# corpus per Extension Protocol rule 4: passing minimal export + violating
+# cases (wrong format version, unknown category) that FAIL loudly with no
+# partial output. Fixture: tests/fixtures/woz-import/.
+WOZ_TOOL="$TOOLS/archwright-import-woz.py"
+WOZ_FIX="$TOOLS/../tests/fixtures/woz-import"
+WOZ_TMP=$(mktemp -d)
+WOZ_ART="$WOZ_TMP/design/discovery/woz/woz-mini-quest-2026-07-19.md"
+rc=0; python3 "$WOZ_TOOL" "$WOZ_FIX/mini-export.json" -o "$WOZ_TMP/design" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ] && python3 "$VALIDATE" "$WOZ_ART" >/dev/null 2>&1; then
+  report PASS "woz-import: mini export converts to a schema-valid discovery artifact"
+else
+  report FAIL "woz-import: mini export converts to a schema-valid discovery artifact" "exit=$rc"
+fi
+# Conservation semantics: active entries (D001/D003/D004) warn as unconsumed
+# (status proposed), the superseded entry (D002) is excluded, and fenced
+# sim-log D-mentions never count as consumption.
+rc=0; WOZ_OUT=$(python3 "$VALIDATE" --links "$WOZ_TMP/design" 2>&1) || rc=$?
+if [ "$rc" -eq 0 ] \
+   && echo "$WOZ_OUT" | grep -q "D001' is neither consumed" \
+   && echo "$WOZ_OUT" | grep -q "D004' is neither consumed" \
+   && ! echo "$WOZ_OUT" | grep -q "D002'"; then
+  report PASS "woz-import: SUPERSEDES excluded from conservation; fenced transcript mentions never consume"
+else
+  report FAIL "woz-import: SUPERSEDES excluded from conservation; fenced transcript mentions never consume" "exit=$rc"
+fi
+# Category mapping: woz 'aesthetic' → core 'experience'; no woz-only category survives
+if grep -q '\*\*Category:\*\* experience' "$WOZ_ART" 2>/dev/null \
+   && ! grep -q '\*\*Category:\*\* aesthetic' "$WOZ_ART" 2>/dev/null; then
+  report PASS "woz-import: category mapping aesthetic → experience (consumer-side, grill Q2)"
+else
+  report FAIL "woz-import: category mapping aesthetic → experience (consumer-side, grill Q2)"
+fi
+# Violating: unknown format version = exit 1, no output written
+rc=0; python3 "$WOZ_TOOL" "$WOZ_FIX/wrong-format.json" -o "$WOZ_TMP/d2" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 1 ] && [ ! -d "$WOZ_TMP/d2" ]; then
+  report PASS "woz-import: unknown format version = exit 1, no partial output"
+else
+  report FAIL "woz-import: unknown format version = exit 1, no partial output" "exit=$rc"
+fi
+# Violating: unknown category = exit 1 (contract drift surfaces loudly)
+rc=0; python3 "$WOZ_TOOL" "$WOZ_FIX/unknown-category.json" -o "$WOZ_TMP/d2" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 1 ] && [ ! -d "$WOZ_TMP/d2" ]; then
+  report PASS "woz-import: unknown category = exit 1 (contract drift, no partial output)"
+else
+  report FAIL "woz-import: unknown category = exit 1 (contract drift, no partial output)" "exit=$rc"
+fi
+# Snapshot discipline: existing import refuses without --force (exit 2), --force refreshes
+rc=0; python3 "$WOZ_TOOL" "$WOZ_FIX/mini-export.json" -o "$WOZ_TMP/design" >/dev/null 2>&1 || rc=$?
+rc2=0; python3 "$WOZ_TOOL" --force "$WOZ_FIX/mini-export.json" -o "$WOZ_TMP/design" >/dev/null 2>&1 || rc2=$?
+if [ "$rc" -eq 2 ] && [ "$rc2" -eq 0 ]; then
+  report PASS "woz-import: existing import refuses (exit 2); --force refreshes the snapshot"
+else
+  report FAIL "woz-import: existing import refuses (exit 2); --force refreshes the snapshot" "refusal=$rc force=$rc2"
+fi
+rm -rf "$WOZ_TMP"
+
+echo ""
 echo "=== Vacuous Absence Guard (ticket 012) ==="
 # expect:absent over a target that scans zero files must SKIP-with-reason,
 # never PASS — while a real absent-check over real files still PASSes/FAILs.
