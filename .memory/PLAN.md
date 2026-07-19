@@ -311,4 +311,4 @@ Phase 6: Discovery Track
 └── 027 seam integration: pipeline skills discovery-aware       [DONE 2026-07-18]
 ```
 
-Cross-repo: T7a exporter ticketed in `~/code/wizard_of_oz/.tickets/001`. Independent: ticket 018 (commit-binding, verification track).
+Cross-repo: T7a exporter ticketed in `~/code/wizard_of_oz/.tickets/001`. Independent: ticket 018 (commit-binding, verification track); ticket 028 (sanitized example projects across the lifecycle spectrum — fixtures + browsable user docs, added 2026-07-19).
