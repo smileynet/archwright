@@ -1,6 +1,6 @@
 ---
 name: repo-maintenance
-description: "Usage and output-interpretation contract for archwright's repo-internal scripts: run-fixture-tests.sh (fixture suite) and deploy-skills.sh (skill/steering deployment). Use when running the test suite, interpreting suite results, deploying skills to agent tools, or diagnosing deploy/suite anomalies in THIS repo. Trigger: run the suite, fixture tests, deploy skills, suite green, skipped checks, stale skills."
+description: "Usage and output-interpretation contract for archwright's repo-internal scripts: run-fixture-tests.sh (fixture suite) and deploy-skills.sh (skill/steering deployment). Use when running the test suite, interpreting suite results, deploying skills to agent tools, or diagnosing deploy/suite anomalies in THIS repo. Trigger: run the suite, fixture tests, deploy skills, suite green, skipped checks, stale skills, coverage audit, propose updates to skills/AGENTS/tools."
 metadata:
   type: process
   invocation: both
@@ -42,6 +42,16 @@ Project-local skill — never deployed globally. Owns the two repo-internal scri
 | `✓ domains / stacks / glossary` | Generated references — materialized copies even under symlink mode; re-run deploy after editing `tools/domains/`, `tools/stacks/REGISTRY.yaml`, or `docs/glossary.md` |
 
 **When to run:** after ADDING a new skill (symlinks exist per-skill — a new dir isn't linked yet), and after any edit when targeting claude/codex/agy. NOT needed for edits to already-symlinked kiro skills.
+
+## Coverage Audit (run when asked to "propose updates to skills/AGENTS/tools", or after shipping new tools/skills)
+
+Three checks; each caught real drift when first run (2026-07-18: missing script coverage; stale workflow line an hour later):
+
+1. **Tool→skill map completeness.** `ls tools/*.py tools/*.sh tools/*.mjs` vs the AGENTS.md ownership map. Every script needs an owning skill (usage + output-interpretation contract), a project-local owner (this skill), or an explicit "none" rationale (shared module). New templates/artifact contracts count — agents must know where their interpretation rules live.
+2. **AGENTS.md staleness against actual behavior.** Verify claims about deploy behavior, file locations, and workflows against the scripts themselves (grep the script, don't trust the doc). Known trap: symlink-vs-copy deploy semantics — kiro edits are live, generated references and other tools are not.
+3. **Project-local skill inventory.** `ls .kiro/skills/` — does anything repo-internal lack guidance? Conversely, is anything project-local that should be global (or vice versa)?
+
+Report the delta only; apply small doc fixes immediately (low-risk), ticket anything structural.
 
 ## Does NOT
 
