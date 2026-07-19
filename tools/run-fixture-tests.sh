@@ -806,6 +806,143 @@ else
 fi
 
 echo ""
+echo "=== Commit-Binding of Check Evidence (ticket 018) ==="
+# code_state {commit, dirty} in --json output + evidence events (EDA signoff
+# precedent, ADR 0009 amendment). Dedup identity unchanged; git-absent/non-repo
+# = null fields with reason, never a crash. Git-gated like CK-19.
+if command -v git >/dev/null 2>&1; then
+  CB_TREE=$(mktemp -d)
+  mkdir -p "$CB_TREE/src"
+  printf 'import direct_db\n' > "$CB_TREE/src/app.py"
+  cat > "$CB_TREE/cb-spec.md" <<'EOF'
+---
+kind: constraint
+id: cb-spec
+from_patterns: ["pattern:ball-possession"]
+confidence: "★★"
+check:
+  method: grep
+  target: "src"
+  pattern: "import direct_db"
+  expect: absent
+---
+# T
+## Rule
+No direct db imports.
+EOF
+  git -C "$CB_TREE" init -q
+  git -C "$CB_TREE" -c user.email=t@t -c user.name=t add -A
+  git -C "$CB_TREE" -c user.email=t@t -c user.name=t commit -qm init
+  CB_HEAD=$(git -C "$CB_TREE" rev-parse HEAD)
+
+  # 018a: clean tree → code_state.commit == HEAD, dirty false (exit 1: real violation)
+  rc=0; CB_OUT=$(python3 "$CHECK" --json --target "$CB_TREE" "$CB_TREE/cb-spec.md" 2>&1) || rc=$?
+  CB_CHECK=$(echo "$CB_OUT" | python3 -c "
+import json, sys
+cs = json.load(sys.stdin)['code_state']
+print('OK' if cs['commit'] == '$CB_HEAD' and cs['dirty'] is False else 'BAD: ' + json.dumps(cs))
+" 2>&1) || CB_CHECK="extract-failed"
+  if [ "$rc" -eq 1 ] && [ "$CB_CHECK" = "OK" ]; then
+    report PASS "cb018: clean tree = code_state carries HEAD commit, dirty false"
+  else
+    report FAIL "cb018: clean tree = code_state carries HEAD commit, dirty false" "exit=$rc $CB_CHECK"
+  fi
+
+  # 018b: uncommitted change → dirty true (commit alone no longer identifies the code)
+  printf '# uncommitted\n' >> "$CB_TREE/src/app.py"
+  CB_OUT=$(python3 "$CHECK" --json --target "$CB_TREE" "$CB_TREE/cb-spec.md" 2>&1) || true
+  CB_CHECK=$(echo "$CB_OUT" | python3 -c "
+import json, sys
+cs = json.load(sys.stdin)['code_state']
+print('OK' if cs['dirty'] is True else 'BAD: ' + json.dumps(cs))
+" 2>&1) || CB_CHECK="extract-failed"
+  if [ "$CB_CHECK" = "OK" ]; then
+    report PASS "cb018: dirty working tree flagged (dirty true)"
+  else
+    report FAIL "cb018: dirty working tree flagged (dirty true)" "$CB_CHECK"
+  fi
+  git -C "$CB_TREE" -c user.email=t@t -c user.name=t add -A
+  git -C "$CB_TREE" -c user.email=t@t -c user.name=t commit -qm change
+  CB_HEAD2=$(git -C "$CB_TREE" rev-parse HEAD)
+
+  # 018c: evidence event stamped with code_state (commit of the checked tree).
+  # The ledger file lives OUTSIDE the repo — inside it would dirty the tree.
+  CB_EV=$(mktemp)
+  echo '{}' > "$CB_EV"
+  rc=0; python3 "$CHECK" --json --target "$CB_TREE" --evidence "$CB_EV" "$CB_TREE/cb-spec.md" >/dev/null 2>&1 || rc=$?
+  CB_CHECK=$(python3 -c "
+import json
+L = json.load(open('$CB_EV'))
+e = L['events'][0]
+cs = e.get('code_state') or {}
+ok = (e['event'] == 'demotion-candidate' and cs.get('commit') == '$CB_HEAD2'
+      and cs.get('dirty') is False)
+print('OK' if ok and len(L['events']) == 1 else 'BAD: ' + json.dumps(e))
+" 2>&1) || CB_CHECK="extract-failed"
+  if [ "$rc" -eq 1 ] && [ "$CB_CHECK" = "OK" ]; then
+    report PASS "cb018: evidence event carries code_state (commit + dirty false)"
+  else
+    report FAIL "cb018: evidence event carries code_state (commit + dirty false)" "exit=$rc $CB_CHECK"
+  fi
+
+  # 018d: dedup identity UNCHANGED — identical re-observation at a NEW commit
+  # appends nothing (the original binding stands; staleness is judged by consumers)
+  git -C "$CB_TREE" -c user.email=t@t -c user.name=t commit -q --allow-empty -m bump
+  rc=0; CB_OUT=$(python3 "$CHECK" --json --target "$CB_TREE" --evidence "$CB_EV" "$CB_TREE/cb-spec.md" 2>&1) || rc=$?
+  CB_N=$(python3 -c "import json; print(len(json.load(open('$CB_EV'))['events']))" 2>/dev/null) || CB_N="?"
+  if echo "$CB_OUT" | grep -q '"events_appended": 0' && [ "$CB_N" = "1" ]; then
+    report PASS "cb018: identical re-observation at a new commit appends nothing (dedup unchanged)"
+  else
+    report FAIL "cb018: identical re-observation at a new commit appends nothing (dedup unchanged)" "events=$CB_N"
+  fi
+  rm -rf "$CB_TREE" "$CB_EV"
+
+  # 018e: non-repo target → commit/dirty null with reason, run otherwise unchanged
+  CB_NOGIT=$(mktemp -d)
+  mkdir -p "$CB_NOGIT/src"
+  printf 'x = 1\n' > "$CB_NOGIT/src/app.py"
+  cat > "$CB_NOGIT/cb-clean.md" <<'EOF'
+---
+kind: constraint
+id: cb-clean
+from_patterns: ["pattern:ball-possession"]
+confidence: "★"
+check:
+  method: grep
+  target: "src"
+  pattern: "import direct_db"
+  expect: absent
+---
+# T
+## Rule
+No direct db imports.
+EOF
+  rc=0; CB_OUT=$(python3 "$CHECK" --json --target "$CB_NOGIT" "$CB_NOGIT/cb-clean.md" 2>&1) || rc=$?
+  CB_CHECK=$(echo "$CB_OUT" | python3 -c "
+import json, sys
+cs = json.load(sys.stdin)['code_state']
+ok = cs['commit'] is None and cs['dirty'] is None and cs.get('reason')
+print('OK' if ok else 'BAD: ' + json.dumps(cs))
+" 2>&1) || CB_CHECK="extract-failed"
+  if [ "$rc" -eq 0 ] && [ "$CB_CHECK" = "OK" ]; then
+    report PASS "cb018: non-repo target = null code_state with reason, never a crash (exit 0)"
+  else
+    report FAIL "cb018: non-repo target = null code_state with reason, never a crash (exit 0)" "exit=$rc $CB_CHECK"
+  fi
+  rm -rf "$CB_NOGIT"
+
+  # 018f: trace mode --json carries code_state too
+  CB_OUT=$(python3 "$CHECK" --trace "$TOOLS/../tests/fixtures/trace-strict/trace-strict-conformance.yaml" "$TOOLS/../tests/fixtures/trace-strict/ok.trace.json" --json 2>&1) || true
+  if echo "$CB_OUT" | grep -q '"code_state"'; then
+    report PASS "cb018: trace-mode CK-03 document carries code_state"
+  else
+    report FAIL "cb018: trace-mode CK-03 document carries code_state"
+  fi
+else
+  report SKIP "cb018: commit-binding (git unavailable)"
+fi
+
+echo ""
 echo "=== Changed-Only Scope Selection (CK-19) ==="
 # --changed-only [--base <ref>]: only specs affected by the git diff run.
 # Affected = spec file changed OR changed/untracked file under check.target;
