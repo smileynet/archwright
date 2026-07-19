@@ -221,6 +221,7 @@ Notes:
 - Coverage gaps follow the Extension Protocol (ADR 0008): pending-with-reason, new instances flow through, new kinds need ADR + HITL; adapter status in `tools/stacks/REGISTRY.yaml` is computed by the fixture suite, never hand-declared
 - Discovery track (ADR 0011, `.memory/adr/0011-discovery-track.md`) — HITL-dense discovery work feeds the mechanical pipeline at the `resolve` seam via decision ledgers; see the ADR for the seam contract and grill verdicts
 - The agent IS the system; tools are mechanical servants
+- Sanitized field references — committed content never names real target projects; field runs, fixtures, and lesson notes use the established invented aliases (fieldball-coach/FBC, TileRush, tilerush-demo, DemoAR, DemoVR — sanitized repo-wide 2026-07-19). The real↔alias mapping lives outside the repo (recall). New field work aliases at the source, not in a cleanup pass
 - Subagents extract (read files → structured output); main agent synthesizes (dedup, cluster, merge)
 
 ## Pipeline Phase Discipline
