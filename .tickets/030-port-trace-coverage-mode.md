@@ -1,7 +1,7 @@
 ---
 id: 030
 title: "Port --trace-coverage mode into archwright-check.py"
-status: open
+status: done
 blocked_by: []
 ---
 

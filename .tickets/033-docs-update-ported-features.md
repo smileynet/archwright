@@ -1,7 +1,7 @@
 ---
 id: 033
 title: "Update docs for ported features (AGENTS, README, conventions, open-questions)"
-status: open
+status: done
 blocked_by: [029, 030, 031, 032]
 ---
 

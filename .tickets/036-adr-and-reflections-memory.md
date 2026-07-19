@@ -1,7 +1,7 @@
 ---
 id: 036
 title: "Add ADR 0008 and reflections memory files"
-status: open
+status: done
 blocked_by: []
 ---
 

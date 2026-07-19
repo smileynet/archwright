@@ -1,7 +1,7 @@
 ---
 id: 035
 title: "Add reflection template and GDScript trace instrumentation to stacks/"
-status: open
+status: done
 blocked_by: []
 ---
 
