@@ -1925,10 +1925,112 @@ def probe_behavior(spec_path):
     return 1
 
 
+def trace_coverage_report(specs_dir, traces_dir, json_output=False):
+    """Report which behavior spec scenarios have matching trace files.
+
+    Matches traces to specs by spec_id field in the trace JSON or by filename
+    convention (stem contains the spec id slug). Reports covered/uncovered
+    scenarios and orphan traces.
+
+    Exit codes: 0 = all covered, 1 = gaps exist, 2 = error.
+    """
+    specs_path = Path(specs_dir)
+    traces_path = Path(traces_dir)
+
+    if not specs_path.exists():
+        msg = f"Specs directory not found: {specs_path}"
+        if json_output:
+            print(json.dumps({"status": "error", "message": msg}))
+        else:
+            print(f"ERROR: {msg}", file=sys.stderr)
+        return 2
+
+    # Collect traces and their spec associations
+    trace_files = list(traces_path.glob("*.json")) if traces_path.exists() else []
+    trace_spec_ids = {}
+    for tf in trace_files:
+        try:
+            data = json.loads(tf.read_text(encoding="utf-8"))
+            sid = data.get("spec_id", "")
+            source = data.get("source", tf.stem)
+            trace_spec_ids.setdefault(sid, []).append(source)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    total_scenarios = 0
+    covered_scenarios = 0
+    spec_reports = []
+
+    for f in sorted(specs_path.glob("*.yaml")):
+        try:
+            data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        except (yaml.YAMLError, OSError):
+            continue
+        if not isinstance(data, dict) or data.get("kind") != "behavior":
+            continue
+        spec_id = data.get("id", "")
+        scenarios = data.get("scenarios", [])
+        traces_for_spec = trace_spec_ids.get(spec_id, [])
+
+        scenario_results = []
+        for s in scenarios:
+            total_scenarios += 1
+            name = s.get("name", "unnamed")
+            name_slug = name.lower().replace(" ", "_").replace("-", "_")
+            matched = any(name_slug in t.lower().replace("-", "_") for t in traces_for_spec)
+            if matched:
+                covered_scenarios += 1
+            scenario_results.append({"name": name, "covered": matched})
+
+        spec_reports.append({
+            "spec_id": spec_id,
+            "trace_count": len(traces_for_spec),
+            "scenario_count": len(scenarios),
+            "scenarios": scenario_results,
+        })
+
+    # Orphan traces: traces whose spec_id matches no loaded spec
+    known_ids = {r["spec_id"] for r in spec_reports}
+    orphan_traces = [sid for sid in trace_spec_ids if sid and sid not in known_ids]
+
+    status = "pass" if covered_scenarios == total_scenarios else "fail"
+
+    if json_output:
+        doc = {
+            "status": status,
+            "scope": {"mode": "trace-coverage",
+                      "specs_dir": str(specs_path),
+                      "traces_dir": str(traces_path)},
+            "summary": {
+                "total_scenarios": total_scenarios,
+                "covered": covered_scenarios,
+                "uncovered": total_scenarios - covered_scenarios,
+                "orphan_traces": orphan_traces,
+            },
+            "specs": spec_reports,
+        }
+        print(json.dumps(doc, indent=2, ensure_ascii=False))
+    else:
+        print("# Trace Coverage Report\n")
+        for r in spec_reports:
+            print(f"## {r['spec_id']} ({r['trace_count']} trace(s) / {r['scenario_count']} scenario(s))")
+            for s in r["scenarios"]:
+                icon = "✅" if s["covered"] else "❌"
+                print(f"  {icon} {s['name']}")
+            print()
+        if orphan_traces:
+            print(f"## Orphan traces (no matching spec): {', '.join(orphan_traces)}\n")
+        print(f"## Summary: {covered_scenarios}/{total_scenarios} scenarios covered by traces")
+
+    return 0 if status == "pass" else 1
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] "
-              "[--changed-only [--base <ref>]] | --trace <spec> <trace> [--evidence <file>] | --probe <spec>\n"
+              "[--changed-only [--base <ref>]] | --trace <spec> <trace> [--evidence <file>] | "
+              "--probe <spec> | --trace-coverage <specs-dir> <traces-dir> | "
+              "--coverage <specs-dir> [--target <root>]\n"
               "Common flags: --json  --baseline <file>  --update-baseline  --evidence <file>")
         sys.exit(2)
 
@@ -1963,6 +2065,14 @@ def main():
             print("Usage: archwright-check --probe <behavior-spec.yaml>")
             sys.exit(2)
         sys.exit(probe_behavior(sys.argv[2]))
+
+    # Handle --trace-coverage mode early (different flow)
+    if sys.argv[1] == "--trace-coverage":
+        if len(sys.argv) < 4:
+            print("Usage: archwright-check --trace-coverage <specs-dir> <traces-dir> [--json]")
+            sys.exit(2)
+        tc_json = "--json" in sys.argv[4:]
+        sys.exit(trace_coverage_report(sys.argv[2], sys.argv[3], json_output=tc_json))
 
     files = []
     target_root = None
