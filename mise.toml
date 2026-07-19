@@ -39,7 +39,7 @@ description = "Batch static check: mise run check-static -- <specs-dir> [--targe
 run = "python tools/archwright-check.py --static"
 
 [tasks.test]
-description = "Fixture suite over tests/fixtures/ — the repo's regression net (count: AGENTS.md test row)"
+description = "Fixture suite over tests/fixtures/ + examples/ lifecycle corpora — the repo's regression net (count: AGENTS.md test row)"
 run = "bash tools/run-fixture-tests.sh"
 
 [tasks.deploy-skills]
