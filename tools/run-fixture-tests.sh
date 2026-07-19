@@ -185,6 +185,26 @@ if python3 "$TOOLS/archwright-forces-gen.py" "$FG_DIR/bad.yaml" -o "$FG_DIR/out2
 else
   report PASS "forces-gen: invalid polarity = tool error (exit 2)"
 fi
+# No-partial-set: a valid entry BEFORE an invalid one must not reach disk —
+# render-all-then-write (same discipline as import-woz).
+cat > "$FG_DIR/mixed.yaml" <<'EOF'
+forces:
+  - id: good-force
+    polarity: constraint-hard
+    statement: "s"
+    evidence_level: L1
+    provenance: [{source: "t", quote: "q"}]
+  - id: bad-force
+    polarity: not-a-polarity
+    statement: "s"
+    provenance: [{source: "t", quote: "q"}]
+EOF
+rc=0; python3 "$TOOLS/archwright-forces-gen.py" "$FG_DIR/mixed.yaml" -o "$FG_DIR/out3" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 2 ] && [ "$(ls "$FG_DIR/out3" 2>/dev/null | wc -l)" = "0" ]; then
+  report PASS "forces-gen: invalid entry mid-list writes NO partial set (exit 2, 0 files)"
+else
+  report FAIL "forces-gen: invalid entry mid-list writes NO partial set (exit 2, 0 files)" "exit=$rc"
+fi
 rm -rf "$FG_DIR"
 
 # --probe: non-vacuity probing (jar-gated like behavior checks)

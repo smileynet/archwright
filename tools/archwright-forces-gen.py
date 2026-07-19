@@ -74,22 +74,24 @@ def main():
         sys.exit(2)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    written = 0
+    # Render EVERYTHING before writing anything — an invalid entry mid-list
+    # must not leave a partial set on disk (same discipline as import-woz).
+    rendered = []
     try:
         for f in inv.get("product_forces") or []:
-            (out_dir / f"{f['id']}.md").write_text(render_force(f, True), encoding="utf-8")
-            written += 1
+            rendered.append((out_dir / f"{f['id']}.md", render_force(f, True)))
         for f in inv.get("forces") or []:
-            (out_dir / f"{f['id']}.md").write_text(render_force(f, False), encoding="utf-8")
-            written += 1
+            rendered.append((out_dir / f"{f['id']}.md", render_force(f, False)))
     except ValueError as e:
         print(f"Error: {e}")
         sys.exit(2)
 
-    if written == 0:
+    if not rendered:
         print("Error: inventory contains no forces (product_forces/forces lists empty or missing)")
         sys.exit(2)
-    print(f"Generated {written} force file(s) in {out_dir}")
+    for path, content in rendered:
+        path.write_text(content, encoding="utf-8")
+    print(f"Generated {len(rendered)} force file(s) in {out_dir}")
 
 
 if __name__ == "__main__":

@@ -64,6 +64,12 @@ Beyond individual specs, validate the graph:
 - All `links[].target` references resolve
 - No orphan specs (without parent pattern)
 
+### Discovery artifacts (kind: discovery, ticket 026)
+
+`archwright-validate.py` also validates discovery-track seam artifacts (`design/discovery/`): frontmatter schema (status ∈ proposed/approved/superseded), ledger entry structure (origin/category enums, duplicate anchors), and the conservation check both ways — per-file: every Hands-To / Graduates-to-Patterns element cites a `D{NNN}` anchor (nothing invented); `--links`: every citation resolves and every active entry is consumed or explicitly deferred (nothing lost).
+
+**Interpretation is status-gated:** on `proposed` artifacts conservation findings are WARNINGS — expected mid-session and on fresh WoZ imports; do not "fix" them, the interpretation/graduation pass consumes the entries. On `approved` they are ERRORS — approval arms the gate, so consume-or-defer must be complete before flipping status. `superseded` artifacts are skipped entirely.
+
 ## Backend Prerequisites (rehydration)
 
 Behavior checks need the Alloy jar, which is NOT in the repo (`.references/` is gitignored). Before reporting SKIPs on behavior specs, offer to rehydrate.
