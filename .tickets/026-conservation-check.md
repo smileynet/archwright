@@ -1,7 +1,7 @@
 ---
 id: 026
 title: "Conservation-check validator rule for seam artifacts"
-status: open
+status: done
 blocked_by: [020, 022]
 ---
 

@@ -1044,6 +1044,98 @@ fi
 rm -rf "$FM_DIR"
 
 echo ""
+echo "=== Discovery Schema + Conservation (ticket 026) ==="
+# kind: discovery seam artifacts (ADR 0011, grill Q6): frontmatter schema +
+# conservation citation-graph. Golden corpus per Extension Protocol rule 4 —
+# passing corpus + violating fixtures for BOTH conservation directions, the
+# schema, and citation resolution. Fixture: tests/fixtures/discovery/.
+DISC="$TOOLS/../tests/fixtures/discovery"
+rc=0; python3 "$VALIDATE" "$DISC"/passing/design/discovery/ui/*.md >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ]; then
+  report PASS "discovery: passing corpus schema-valid (design-system + wireframe + model-seed)"
+else
+  report FAIL "discovery: passing corpus schema-valid (design-system + wireframe + model-seed)" "exit=$rc"
+fi
+rc=0; python3 "$VALIDATE" --links "$DISC/passing/design" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ]; then
+  report PASS "discovery: passing corpus conserves (SUPERSEDES excluded, deferral honored, links resolve)"
+else
+  report FAIL "discovery: passing corpus conserves (SUPERSEDES excluded, deferral honored, links resolve)" "exit=$rc"
+fi
+# Violating: orphan output — approved artifact, Hands-To element without a citation
+rc=0; DISC_OUT=$(python3 "$VALIDATE" "$DISC/violating/orphan-output/wf-orphan.md" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] && echo "$DISC_OUT" | grep -q "nothing invented"; then
+  report PASS "discovery: orphan output FAILs approved artifact (nothing invented)"
+else
+  report FAIL "discovery: orphan output FAILs approved artifact (nothing invented)" "exit=$rc"
+fi
+# Status gating: the SAME orphan as proposed = warning only, exit 0
+DISC_TMP=$(mktemp -d)
+sed 's/^status: approved/status: proposed/' "$DISC/violating/orphan-output/wf-orphan.md" > "$DISC_TMP/wf-orphan.md"
+rc=0; DISC_OUT=$(python3 "$VALIDATE" "$DISC_TMP/wf-orphan.md" 2>&1) || rc=$?
+if [ "$rc" -eq 0 ] && echo "$DISC_OUT" | grep -q "WARN: conservation"; then
+  report PASS "discovery: same orphan as proposed = WARN only, exit 0 (approval is the gate)"
+else
+  report FAIL "discovery: same orphan as proposed = WARN only, exit 0 (approval is the gate)" "exit=$rc"
+fi
+rm -rf "$DISC_TMP"
+# Violating: unaccounted input — active entry neither consumed nor deferred (--links)
+rc=0; DISC_OUT=$(python3 "$VALIDATE" --links "$DISC/violating/unaccounted-input/design" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] && echo "$DISC_OUT" | grep -q "nothing lost"; then
+  report PASS "discovery: unaccounted active entry FAILs --links (nothing lost)"
+else
+  report FAIL "discovery: unaccounted active entry FAILs --links (nothing lost)" "exit=$rc"
+fi
+# Violating: illegal status value
+rc=0; DISC_OUT=$(python3 "$VALIDATE" "$DISC/violating/illegal-status/wf-bad-status.md" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] && echo "$DISC_OUT" | grep -q "invalid status"; then
+  report PASS "discovery: illegal status value rejected"
+else
+  report FAIL "discovery: illegal status value rejected" "exit=$rc"
+fi
+# Violating: citation to a nonexistent ledger entry — must FAIL even with no
+# ledger anywhere in the tree (the vacuous-pass guard)
+rc=0; DISC_OUT=$(python3 "$VALIDATE" --links "$DISC/violating/broken-citation/design" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] && echo "$DISC_OUT" | grep -q "does not resolve (no such ledger entry)"; then
+  report PASS "discovery: citation to nonexistent entry FAILs (no vacuous pass without a ledger)"
+else
+  report FAIL "discovery: citation to nonexistent entry FAILs (no vacuous pass without a ledger)" "exit=$rc"
+fi
+# Ledger entry structure: bad origin/category/duplicate anchor all rejected
+DISC_TMP=$(mktemp -d)
+cat > "$DISC_TMP/wf-bad-entries.md" <<'EOF'
+---
+kind: discovery
+id: wf-bad-entries
+status: proposed
+---
+# T
+## Decisions
+### D001 — Bad enums
+- **Category:** vibes
+- **Origin:** telepathy
+- **Decision:** x
+- **Rationale:** "x"
+- **Alternatives:** x
+### D001 — Duplicate anchor
+- **Category:** structure
+- **Origin:** user
+- **Decision:** y
+- **Rationale:** "y"
+- **Alternatives:** y
+EOF
+rc=0; DISC_OUT=$(python3 "$VALIDATE" "$DISC_TMP/wf-bad-entries.md" 2>&1) || rc=$?
+if [ "$rc" -eq 1 ] \
+   && echo "$DISC_OUT" | grep -q "invalid origin" \
+   && echo "$DISC_OUT" | grep -q "invalid category" \
+   && echo "$DISC_OUT" | grep -q "duplicate ledger entry"; then
+  report PASS "discovery: ledger entry structure enforced (origin, category enum, duplicate anchor)"
+else
+  report FAIL "discovery: ledger entry structure enforced (origin, category enum, duplicate anchor)" "exit=$rc"
+fi
+rm -rf "$DISC_TMP"
+
+echo ""
 echo "=== Vacuous Absence Guard (ticket 012) ==="
 # expect:absent over a target that scans zero files must SKIP-with-reason,
 # never PASS — while a real absent-check over real files still PASSes/FAILs.

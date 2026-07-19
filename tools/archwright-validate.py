@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""archwright-validate: Validate pattern and spec files against schemas.
+"""archwright-validate: Validate pattern, spec, and discovery files against schemas.
 
 Usage:
   archwright-validate [--json] <file>...          Validate individual files
   archwright-validate [--json] --links <dir>      Validate all links resolve
+
+Discovery artifacts (kind: discovery, ADR 0011 / ticket 026): per-file mode
+validates the frontmatter schema, ledger entry structure, and the nothing-
+invented conservation direction; --links adds citation resolution and the
+nothing-lost direction across the artifact set.
 
 Output: per-file PASS/FAIL plus non-fatal `WARN:` lines (advisory quality
 signals, e.g. a spec missing `protects_experience`) — warnings never affect
@@ -25,7 +30,7 @@ SCHEMA_DIR = Path(__file__).parent
 PATTERN_SCHEMA = SCHEMA_DIR / "pattern-schema.yaml"
 SPEC_SCHEMA = SCHEMA_DIR / "spec-schema.yaml"
 
-VALID_KINDS = {"pattern", "behavior", "contract", "constraint", "dependency", "boundary", "protocol", "force"}
+VALID_KINDS = {"pattern", "behavior", "contract", "constraint", "dependency", "boundary", "protocol", "force", "discovery"}
 VALID_CONFIDENCES = {"★★", "★", "—"}
 VALID_SCALES = {"premise", "loops-systems", "verbs-interactions", "feel-finish"}
 # gated = resolution ratified, activation gated on a named event (requires gated_on:).
@@ -35,6 +40,24 @@ VALID_POLARITIES = {"desire", "constraint"}
 VALID_HARDNESS = {"hard", "soft"}
 VALID_EVIDENCE_LEVELS = {"L1", "L2", "L3", "L4", "L5"}
 LINK_REF_PATTERN = re.compile(r"^(behavior|contract|constraint|dependency|boundary|protocol|pattern|force):.+$")
+
+# Discovery track (ADR 0011, ticket 026) — seam artifact schema + conservation.
+VALID_DISCOVERY_STATUSES = {"proposed", "approved", "superseded"}
+VALID_ORIGINS = {"user", "suggested", "inferred"}
+CORE_CATEGORIES = {"scope", "experience", "structure", "technical", "meta"}
+# Ledger entry heading: "### D001 — Title" (file-scoped numbering)
+LEDGER_ENTRY_PATTERN = re.compile(r"^###\s+D(\d{3})\s+[—-]", re.MULTILINE)
+# Citation anchors: bare D001 (file-scoped) or qualified artifact-id#D001
+QUALIFIED_CITATION_PATTERN = re.compile(r"([a-z][a-z0-9-]+)#D(\d{3})")
+BARE_CITATION_PATTERN = re.compile(r"(?<![#\w-])D(\d{3})\b")
+SUPERSEDES_PATTERN = re.compile(r"SUPERSEDES\s+(?:([a-z][a-z0-9-]+)#)?D(\d{3})")
+# Seam-output sections whose ELEMENTS (list items / table rows) must cite anchors
+# (grill Q6 — nothing invented; granularity resolved 2026-07-19: element-level,
+# matching the templates' per-bullet/per-row citation obligation).
+OUTPUT_SECTIONS = {"hands to", "graduates to patterns"}
+# Sections exempt from the citation obligation in ledger-less consumer artifacts
+# (model seeds): the ledger itself, the deferral list, and gap/TODO lists.
+CONSUMER_EXEMPT_SECTIONS = {"decisions", "unconsumed decisions", "not resolved here", "todo", "todos"}
 
 
 def extract_frontmatter(path):
@@ -244,6 +267,161 @@ def validate_contract(data, path):
     return errors
 
 
+_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+_FENCE_RE = re.compile(r"^```.*?^```[^\n]*$", re.DOTALL | re.MULTILINE)
+_CATEGORY_CACHE = None
+
+
+def _discovery_categories():
+    """Valid ledger categories: core 5 ∪ union of all domain overlay extensions
+    (script-relative tools/domains/*/discovery.yaml — grill Q2). Union, not
+    per-domain strict: the validator has no domain-detection context; a category
+    outside every known vocabulary is the mechanical floor it can enforce."""
+    global _CATEGORY_CACHE
+    if _CATEGORY_CACHE is None:
+        cats = set(CORE_CATEGORIES)
+        for f in sorted((SCHEMA_DIR / "domains").glob("*/discovery.yaml")):
+            try:
+                d = yaml.safe_load(f.read_text(encoding="utf-8"))
+            except yaml.YAMLError:
+                continue
+            if isinstance(d, dict):
+                cats.update(d.get("category_extensions") or [])
+        _CATEGORY_CACHE = cats
+    return _CATEGORY_CACHE
+
+
+def _discovery_body(path):
+    """Markdown body after frontmatter, with HTML comments and fenced code
+    stripped (template guidance comments and ASCII wireframes must never
+    register as ledger entries, citations, or citable elements)."""
+    content = path.read_text(encoding="utf-8")
+    if content.startswith("---"):
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            content = parts[2]
+    return _FENCE_RE.sub("", _COMMENT_RE.sub("", content))
+
+
+def _split_sections(body):
+    """Split body into (heading_lowercase, text) pairs by ## headings.
+    Text before the first ## gets heading ''."""
+    sections = []
+    heading, lines = "", []
+    for line in body.splitlines():
+        m = re.match(r"^##\s+(.+?)\s*$", line)
+        if m:
+            sections.append((heading, "\n".join(lines)))
+            heading, lines = m.group(1).strip().lower(), []
+        else:
+            lines.append(line)
+    sections.append((heading, "\n".join(lines)))
+    return sections
+
+
+def _parse_ledger(text):
+    """Parse D{NNN} entries from a Decisions section: [{'num', 'text'}]."""
+    parts = re.split(r"^###\s+D(\d{3})\b[^\n]*$", text, flags=re.MULTILINE)
+    return [{"num": parts[i], "text": parts[i + 1]} for i in range(1, len(parts) - 1, 2)]
+
+
+def _elements(text):
+    """Citable elements in a section: list items and table data rows.
+    The first two lines of a pipe-table run (header + separator) are skipped."""
+    out = []
+    pipe_run = 0
+    for line in text.splitlines():
+        s = line.strip()
+        if s.startswith("|"):
+            pipe_run += 1
+            if pipe_run >= 3 and not re.match(r"^\|[\s:|-]+\|?$", s):
+                out.append(s)
+            continue
+        pipe_run = 0
+        if re.match(r"^[-*]\s+\S", s):
+            out.append(s)
+    return out
+
+
+def _has_citation(text):
+    return bool(BARE_CITATION_PATTERN.search(text) or QUALIFIED_CITATION_PATTERN.search(text))
+
+
+def validate_discovery(data, path):
+    """Validate a discovery artifact (ticket 026): frontmatter schema, ledger
+    entry structure, and the within-file conservation direction (nothing
+    invented — every seam-output element cites a ledger anchor, grill Q6).
+    The cross-file direction (nothing lost) lives in --links.
+
+    Conservation gates on status: approved = errors (graduation is the gate),
+    proposed = warnings (session in progress), superseded = skipped entirely.
+    Returns (errors, warnings)."""
+    errors = []
+    warnings = []
+    for field in ("kind", "id", "status"):
+        if field not in data:
+            errors.append(f"required field '{field}' missing")
+
+    if data.get("kind") != "discovery":
+        errors.append(f"kind must be 'discovery', got '{data.get('kind')}'")
+    if data.get("id") and not re.match(r"^[a-z][a-z0-9-]+$", data["id"]):
+        errors.append(f"id '{data['id']}' must be lowercase slug (a-z, 0-9, hyphens)")
+    status = data.get("status")
+    if status and status not in VALID_DISCOVERY_STATUSES:
+        errors.append(f"invalid status '{status}' — must be one of: {sorted(VALID_DISCOVERY_STATUSES)}")
+    for ref in data.get("serves") or []:
+        if isinstance(ref, str) and ":" in ref:
+            errors.append(f"serves entry '{ref}' must be a bare force id (no 'kind:' prefix)")
+
+    if status == "superseded":
+        return errors, warnings  # excluded from every projection (ledger rule 1)
+
+    sections = _split_sections(_discovery_body(path))
+    valid_categories = _discovery_categories()
+
+    # Ledger entry structure (format: tools/templates/discovery-ledger.md)
+    entry_ids = set()
+    for heading, text in sections:
+        if heading != "decisions":
+            continue
+        for entry in _parse_ledger(text):
+            eid = f"D{entry['num']}"
+            if eid in entry_ids:
+                errors.append(f"duplicate ledger entry id {eid} — anchors must be unique (append-only, never renumbered)")
+            entry_ids.add(eid)
+            for field in ("Category", "Origin", "Decision", "Rationale", "Alternatives"):
+                if not re.search(rf"\*\*{field}:\*\*", entry["text"]):
+                    errors.append(f"ledger entry {eid} missing required field '{field}'")
+            m = re.search(r"\*\*Origin:\*\*\s*(\S+)", entry["text"])
+            if m and m.group(1) not in VALID_ORIGINS:
+                errors.append(f"ledger entry {eid} invalid origin '{m.group(1)}' — must be one of: {sorted(VALID_ORIGINS)}")
+            m = re.search(r"\*\*Category:\*\*\s*(\S+)", entry["text"])
+            if m and m.group(1) not in valid_categories:
+                errors.append(f"ledger entry {eid} invalid category '{m.group(1)}' — must be core "
+                              f"({sorted(CORE_CATEGORIES)}) or a domain overlay extension")
+
+    # Nothing invented (element-level). Ledger-bearing artifacts: only the
+    # designated seam-output sections carry the obligation. Ledger-less
+    # consumers (model seeds): every non-exempt element must cite.
+    orphans = []
+    for heading, text in sections:
+        if entry_ids:
+            if heading not in OUTPUT_SECTIONS:
+                continue
+        elif heading in CONSUMER_EXEMPT_SECTIONS or heading == "":
+            continue
+        for element in _elements(text):
+            if not _has_citation(element):
+                orphans.append(f"conservation (nothing invented): element in '{heading or 'body'}' "
+                               f"cites no ledger anchor — \"{element[:70]}\"")
+    if status == "approved":
+        errors.extend(orphans)
+    else:
+        warnings.extend(orphans)
+
+    return errors, warnings
+
+
 def validate_file(path):
     """Validate a single file. Returns (status, errors, warnings)."""
     path = Path(path)
@@ -254,6 +432,7 @@ def validate_file(path):
     if load_errors:
         return "error", load_errors, []
 
+    warnings = []
     if kind == "pattern":
         errors = validate_pattern(data, path)
     elif kind == "force":
@@ -264,12 +443,13 @@ def validate_file(path):
         errors = validate_constraint_or_dependency(data, path)
     elif kind == "contract":
         errors = validate_contract(data, path)
+    elif kind == "discovery":
+        errors, warnings = validate_discovery(data, path)
     elif kind in ("boundary", "protocol"):
         errors = []  # minimal validation for now
     else:
         errors = [f"unknown kind '{kind}'"]
 
-    warnings = []
     if kind in ("behavior", "contract", "constraint", "dependency") and not data.get("protects_experience"):
         warnings.append(
             "no 'protects_experience' — link a modeled experience id (preferred) or a "
@@ -394,6 +574,57 @@ def collect_all_refs(directory):
     return index, all_outgoing, force_outgoing, model_outgoing, event_coverage
 
 
+def collect_discovery_graph(directory):
+    """Index ledger entries + citations across all kind: discovery artifacts
+    (conservation cross-file direction, grill Q6 / ticket 026).
+
+    Returns (entries, consumed, deferred, citations):
+      entries:   {(artifact_id, 'D001'): {'path', 'status', 'superseded'}}
+      consumed:  {(artifact_id, 'D001')} — cited outside Decisions/Unconsumed sections
+      deferred:  {(artifact_id, 'D001')} — listed under an 'Unconsumed decisions' section
+      citations: [(source_path, artifact_id, 'D001')] — every citation outside
+                 Decisions sections, for anchor-resolution checking
+    """
+    directory = Path(directory)
+    entries = {}
+    consumed = set()
+    deferred = set()
+    citations = []
+    supersedes_refs = []  # (source_path, source_artifact, target_artifact_or_None, dnum)
+
+    for path in directory.rglob("*.md"):
+        data, kind, _ = load_file(path)
+        if kind != "discovery" or not isinstance(data, dict) or not data.get("id"):
+            continue
+        artifact_id = data["id"]
+        status = data.get("status")
+        for heading, text in _split_sections(_discovery_body(path)):
+            if heading == "decisions":
+                for entry in _parse_ledger(text):
+                    key = (artifact_id, f"D{entry['num']}")
+                    entries[key] = {"path": path, "status": status, "superseded": False}
+                    for m in SUPERSEDES_PATTERN.finditer(entry["text"]):
+                        supersedes_refs.append((path, artifact_id, m.group(1), f"D{m.group(2)}"))
+                continue
+            found = set()
+            for m in QUALIFIED_CITATION_PATTERN.finditer(text):
+                found.add((m.group(1), f"D{m.group(2)}"))
+            for m in BARE_CITATION_PATTERN.finditer(text):
+                found.add((artifact_id, f"D{m.group(1)}"))
+            for key in found:
+                citations.append((path, key[0], key[1]))
+                (deferred if heading == "unconsumed decisions" else consumed).add(key)
+
+    for path, source_artifact, target_artifact, dnum in supersedes_refs:
+        key = (target_artifact or source_artifact, dnum)
+        if key in entries:
+            entries[key]["superseded"] = True
+        else:
+            citations.append((path, key[0], key[1]))  # broken SUPERSEDES ref → resolution error
+
+    return entries, consumed, deferred, citations
+
+
 def validate_links(directory):
     """Validate all cross-references resolve. Returns (errors, warnings)."""
     index, all_outgoing, force_outgoing, model_outgoing, event_coverage = collect_all_refs(directory)
@@ -466,6 +697,28 @@ def validate_links(directory):
                     f"contract candidate '{event_name}' is covered by {len(covering)} contract specs "
                     f"({names}) — exactly one spec must own each candidate"
                 )
+
+    # Discovery conservation, cross-file direction (ticket 026, grill Q6):
+    # every citation resolves to a real ledger entry, and every ACTIVE entry of
+    # an approved artifact is consumed or explicitly deferred (nothing lost).
+    entries, consumed, deferred, citations = collect_discovery_graph(directory)
+    if entries or citations:  # any citation activates resolution — no ledger anywhere is not a pass
+        for source_path, artifact_id, dnum in citations:
+            if (artifact_id, dnum) not in entries:
+                errors.append(f"{source_path}: discovery citation '{artifact_id}#{dnum}' does not resolve "
+                              f"(no such ledger entry)")
+        for (artifact_id, dnum), meta in sorted(entries.items(), key=lambda kv: (str(kv[1]['path']), kv[0])):
+            if meta["superseded"] or meta["status"] == "superseded":
+                continue  # excluded from every projection (ledger rule 1)
+            key = (artifact_id, dnum)
+            if key in consumed or key in deferred:
+                continue
+            msg = (f"{meta['path']}: conservation (nothing lost): active entry '{artifact_id}#{dnum}' "
+                   f"is neither consumed by an output nor listed under 'Unconsumed decisions'")
+            if meta["status"] == "approved":
+                errors.append(msg)
+            else:
+                warnings.append(msg)
 
     return errors, warnings
 
