@@ -1603,5 +1603,41 @@ fi
 rm -rf "$EX_TMP" "$EX_OUT"
 
 echo ""
+echo "=== Deploy Steering Ownership Guard (ticket 037) ==="
+# deploy-skills.sh must never overwrite a steering file another project
+# manages (crew-research collision, 2026-07-19). Manifest-based ownership:
+# refresh what we wrote, skip-loudly what we didn't. The foreign-skip case
+# is this section's REQUIRED violating scenario (Extension Protocol rule 4).
+DEPLOY="$TOOLS/deploy-skills.sh"
+DG_TMP=$(mktemp -d)
+mkdir -p "$DG_TMP/p/.kiro/steering"
+echo "FOREIGN steering content (crew-managed)" > "$DG_TMP/p/.kiro/steering/subagent-reliability.md"
+DG_OUT=$(bash "$DEPLOY" --project "$DG_TMP/p" 2>&1 || true)
+if echo "$DG_OUT" | grep -q "subagent-reliability.md SKIPPED" \
+   && grep -q "FOREIGN steering content" "$DG_TMP/p/.kiro/steering/subagent-reliability.md"; then
+  report PASS "deploy-guard: foreign steering file skipped loudly, content preserved"
+else
+  report FAIL "deploy-guard: foreign steering file skipped loudly, content preserved"
+fi
+if grep -q "archwright-conventions.md" "$DG_TMP/p/.kiro/steering/.archwright-deployed" 2>/dev/null \
+   && [ -f "$DG_TMP/p/.kiro/steering/archwright-conventions.md" ]; then
+  report PASS "deploy-guard: uncontested file deploys + manifest records it"
+else
+  report FAIL "deploy-guard: uncontested file deploys + manifest records it"
+fi
+# Our stale copy (manifest hash matches dest) must refresh, then rerun stays quiet-clean
+echo "stale archwright copy" > "$DG_TMP/p/.kiro/steering/archwright-conventions.md"
+DG_STALE=$(sha256sum "$DG_TMP/p/.kiro/steering/archwright-conventions.md" | cut -d' ' -f1)
+awk -F'\t' -v h="$DG_STALE" 'BEGIN{OFS="\t"} $1=="archwright-conventions.md"{$2=h} {print}' \
+  "$DG_TMP/p/.kiro/steering/.archwright-deployed" > "$DG_TMP/m" && mv "$DG_TMP/m" "$DG_TMP/p/.kiro/steering/.archwright-deployed"
+bash "$DEPLOY" --project "$DG_TMP/p" >/dev/null 2>&1 || true
+if ! grep -q "stale archwright copy" "$DG_TMP/p/.kiro/steering/archwright-conventions.md"; then
+  report PASS "deploy-guard: our stale copy refreshes (manifest-matched overwrite)"
+else
+  report FAIL "deploy-guard: our stale copy refreshes (manifest-matched overwrite)"
+fi
+rm -rf "$DG_TMP"
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

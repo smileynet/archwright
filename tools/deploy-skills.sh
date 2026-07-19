@@ -161,7 +161,17 @@ if [ -f "$GLOSSARY_SRC" ] && [ -d "$SKILLS_DST/archwright-survey" ]; then
 fi
 
 # Deploy steering (tools with a native steering/rules dir only)
+#
+# Ownership guard (ticket 037): other projects (e.g. crew-research) manage
+# steering files with the same names in the same directory. NEVER silently
+# overwrite a file we didn't write. A manifest ($STEERING_DST/.archwright-deployed,
+# "name<TAB>sha256" lines) records what THIS script last wrote:
+#   - dest matches manifest hash → ours (possibly stale) → refresh + re-record
+#   - dest differs and isn't in the manifest at that hash → FOREIGN → SKIP loudly
+#   - dest identical to source → up to date (record hash if missing)
+_hash() { sha256sum "$1" 2>/dev/null | cut -d' ' -f1 || shasum -a 256 "$1" | cut -d' ' -f1; }
 if [ -n "$STEERING_DST" ] && [ -d "$STEERING_SRC" ]; then
+  MANIFEST="$STEERING_DST/.archwright-deployed"
   for file in "$STEERING_SRC"/*.md; do
     [ -f "$file" ] || continue
     name=$(basename "$file")
@@ -170,7 +180,22 @@ if [ -n "$STEERING_DST" ] && [ -d "$STEERING_SRC" ]; then
       echo "  ✓ steering: $name (linked — already live)"
       continue
     fi
+    src_hash=$(_hash "$file")
+    if [ -e "$STEERING_DST/$name" ]; then
+      dst_hash=$(_hash "$STEERING_DST/$name")
+      recorded=$(awk -F'\t' -v n="$name" '$1==n{print $2}' "$MANIFEST" 2>/dev/null || true)
+      if [ "$dst_hash" = "$src_hash" ]; then
+        : # up to date — fall through to record + report
+      elif [ "$dst_hash" != "$recorded" ]; then
+        echo "  ✗ steering: $name SKIPPED — destination exists with foreign content" >&2
+        echo "      (another project manages it; if it should be archwright's," >&2
+        echo "       delete $STEERING_DST/$name and re-run)" >&2
+        continue
+      fi
+    fi
     cp "$file" "$STEERING_DST/$name"
+    { awk -F'\t' -v n="$name" '$1!=n' "$MANIFEST" 2>/dev/null || true; printf '%s\t%s\n' "$name" "$src_hash"; } > "$MANIFEST.tmp"
+    mv "$MANIFEST.tmp" "$MANIFEST"
     echo "  ✓ steering: $name"
   done
 elif [ -n "$STEERING_SKIP_REASON" ]; then

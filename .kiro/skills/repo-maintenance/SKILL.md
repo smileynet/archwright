@@ -40,6 +40,8 @@ Project-local skill — never deployed globally. Owns the two repo-internal scri
 | `✓ skill (symlink): <name>` | kiro global is symlinked into this repo — edits are live immediately, NO redeploy needed |
 | `✓ skill: <name>` (copy mode: claude/codex/agy/project scope) | Copies go stale silently; redeploy after every skill edit intended for those targets |
 | `✓ domains / stacks / glossary` | Generated references — materialized copies even under symlink mode; re-run deploy after editing `tools/domains/`, `tools/stacks/REGISTRY.yaml`, or `docs/glossary.md` |
+| `✗ steering: <name> SKIPPED — foreign content` | Ownership guard (ticket 037): the destination file is managed by another project (e.g. crew-research's `subagent-reliability.md`) — deploy will NEVER overwrite it. If it genuinely should be archwright's, delete the destination file and re-run |
+| `✓ steering: <name>` | Written + recorded in `<dst>/.archwright-deployed` (name + sha256). Only manifest-matched files are ever overwritten on later runs — copies deployed BEFORE the manifest existed read as foreign; take ownership via delete + re-run |
 
 **When to run:** after ADDING a new skill (symlinks exist per-skill — a new dir isn't linked yet), and after any edit when targeting claude/codex/agy. NOT needed for edits to already-symlinked kiro skills.
 
