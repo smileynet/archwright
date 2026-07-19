@@ -84,6 +84,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── specs/                     # Specs for plan deliverables (incl. Phase 5)
 │   ├── audit/                     # Audit reports (tools, skills, claims)
 │   ├── grill/                     # Grill session decision records (INDEX.md + Q-files per topic)
+│   ├── DEPRECATED.md              # Removal queue — superseded files + remove-when conditions (reviewed by repo-maintenance audit)
 │   ├── lessons/                   # One durable lesson per file + README index/session log
 │   ├── research-*.md              # Research plans & syntheses
 │   └── adr/                       # Architecture decision records
