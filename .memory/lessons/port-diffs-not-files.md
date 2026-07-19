@@ -23,7 +23,12 @@ locally and entrench the regression.
    a net-negative diffstat on a core tool is a red flag, whatever the message says.
 3. **Suite green before push** — the receiving repo's suite is the arbiter;
    run it at the final tree, not just after your own commits.
-4. Scratch worktree (`git worktree add /tmp/x origin/main`) proves upstream
+4. **Merges reintroduce policy violations.** The same merge reintroduced the
+   real target-project name in 2 files (sanitization convention, README status
+   line staleness) — caught only by an incidental grep hours later. After any
+   merge, sweep repo-wide conventions (sanitization aliases, status lines),
+   not just the suite.
+5. Scratch worktree (`git worktree add /tmp/x origin/main`) proves upstream
    health without disturbing local state; remove with `--force` after.
 
 ## Repair pattern used
