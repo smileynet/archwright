@@ -1,0 +1,12 @@
+{
+  "comment": "Known debt accepted when checks were first enabled on the partial state (2026-07-19). The kiosk UI's bench-test dispenser hookup predates the session protocol; removing it is scheduled work. Entries are human-created (the tool never adds); `--update-baseline` removes them once the hookup is gone — the complete state is the after picture. The dispenser violations are deliberately NOT baselined: they are the partial state's live failures.",
+  "entries": [
+    {
+      "algo": "aw/v1",
+      "fingerprint": "380fbb1c80d4d80c_0",
+      "spec_id": "ui-no-hardware-import",
+      "path": "src/kiosk_ui.py",
+      "note": "maintenance bench-test import; remove with the maintenance_test path"
+    }
+  ]
+}

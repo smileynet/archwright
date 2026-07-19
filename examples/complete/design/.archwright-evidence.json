@@ -1,0 +1,21 @@
+{
+  "events": [
+    {
+      "event": "promotion-candidate",
+      "key": "constraint:no-dispense-outside-session",
+      "invariant": "no-dispense-outside-session",
+      "confidence": "★",
+      "reason": "pass-streak-5",
+      "fingerprints": [],
+      "at": "2026-07-19T16:04:10+00:00",
+      "code_state": {
+        "commit": null,
+        "dirty": null,
+        "reason": "not a git repository (or no commits yet)"
+      }
+    }
+  ],
+  "streaks": {
+    "constraint:no-dispense-outside-session#no-dispense-outside-session": 5
+  }
+}

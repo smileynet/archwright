@@ -1,0 +1,38 @@
+# Snackbox domain model — machine-readable half (human half: snackbox.md).
+# Produced by the model phase from pattern:payment-gate.
+actors:
+  - id: payment-session
+    from_patterns: ["pattern:payment-gate"]
+    owns:
+      balance: {type: int, initial: 0}
+      selected_slot: {type: reference, nullable: true}
+    lifecycle: transient          # session state never survives a power cycle
+    emits_events: [dispense, refund]
+    accepts_events: [COIN_IN, SELECT, VEND, CANCEL, DISPENSE_DONE]
+
+  - id: dispenser
+    from_patterns: ["pattern:payment-gate"]
+    owns:
+      motor_running: {type: bool, initial: false}
+    lifecycle: transient
+    emits_events: [dispense_done]
+    accepts_events: [dispense]
+
+boundary_entities:
+  - id: coin-acceptor            # hardware; produces coin events, owns no modeled state
+  - id: kiosk-ui                 # renders session state; never writes it
+
+contract_candidates:
+  - event: dispense
+    producer: payment-session
+    consumers: [dispenser]
+  - event: dispense_done
+    producer: dispenser
+    consumers: [payment-session]
+  - event: coin_inserted
+    producer: coin-acceptor      # boundary entity as producer (ticket 013 case)
+    consumers: [payment-session]
+  - event: refund
+    producer: payment-session
+    consumers: [coin-acceptor]
+    folded_into: coin_inserted   # refund rides the coin-events protocol cluster

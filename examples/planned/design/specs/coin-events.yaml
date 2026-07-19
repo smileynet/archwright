@@ -1,0 +1,32 @@
+kind: contract
+id: coin-events
+from_patterns:
+  - "pattern:payment-gate"
+from_model: "model:coin-acceptor"   # boundary entity named as producer in contract_candidates (ticket 013)
+confidence: "★★"
+
+protects_experience: "fair-exchange"
+user_story: "Every coin the customer inserts is reported to the session authority with its value — money movement is always an explicit, typed event."
+
+# The refund candidate is folded into this protocol (model annotates
+# `folded_into: coin_inserted`): a refund is the mirror leg of the same
+# cash-flow protocol — the acceptor pays out the session balance. Its payload
+# is the `amount` field below with direction reversed; it deliberately has no
+# events: entry of its own (a folded candidate must not be double-owned).
+events:
+  coin_inserted:
+    producer: coin-acceptor
+    consumers: [payment-session]
+    stability: internal
+    payload:
+      amount:
+        type: int
+        required: true
+        nullable: false
+        description: "Coin value in cents (refund leg: total paid out)"
+
+links:
+  - target: "behavior:purchase-session"
+    type: consumed-by
+  - target: "constraint:single-balance-writer"
+    type: enforces

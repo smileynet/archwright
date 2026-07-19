@@ -41,6 +41,8 @@ Discovery work — UI wireframing sessions (`archwright-discover-ui`), wizard_of
 
 Design artifacts land in the target project under `design/` (forces, patterns, models, specs) — live documents on your current branch, each carrying provenance back to the forces that demanded it.
 
+**Want to see the output before running it?** Browse [`examples/`](examples/README.md) — one toy product (a vending kiosk) expressed at three lifecycle states: design-only, mid-implementation with real check failures and baselined debt, and quiescence with an accumulating evidence ledger. The diff between the states is the methodology in motion.
+
 ## What a Catch Looks Like
 
 Checks verify the implementation against the stated design. When code (or an execution trace) violates a design invariant, the violation arrives with everything needed to route it — trimmed real output:
