@@ -78,7 +78,12 @@ def _entry_md(d, superseded_by=None):
     lines.append(f"- **Origin:** {d['origin']}")
     decision = d["decision"]
     if d.get("supersedes") is not None:
-        decision = f"SUPERSEDES D{d['supersedes']:03d}. {decision}"
+        marker = f"SUPERSEDES D{d['supersedes']:03d}"
+        # Trust boundary: wizard_of_oz's canonical exports (salvage-run) embed
+        # the marker in the decision text; minimal exports don't. Prepend only
+        # when absent so both render identically.
+        if not decision.startswith(marker):
+            decision = f"{marker}. {decision}"
     lines.append(f"- **Decision:** {decision}")
     lines.append(f"- **Rationale:** {d['rationale']}")
     lines.append(f"- **Alternatives:** {d['alternatives']}")
