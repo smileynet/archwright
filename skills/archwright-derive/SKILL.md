@@ -29,6 +29,19 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 
 **When both exist:** The domain model is authoritative for actor boundaries, state machines, and composition. Patterns provide provenance (which force demanded what). Use both together — the model's invariant summary is the spec dispatch list.
 
+### 1b. Read reflections (if they exist)
+
+Before generating specs, check for lessons from prior derivation failures:
+
+1. **Global reflections** — methodology-level lessons that apply to ALL projects. Located in the archwright repo at `.memory/reflections/` (deployed alongside skills). These capture tool behavior pitfalls, spec authoring patterns, and check method conventions.
+
+2. **Project reflections** — target-project-specific lessons. Located in the target project's `.memory/reflections/`. These capture lessons about this project's file structure, language idioms, and naming conventions.
+
+**Boundary rule:** If the lesson applies regardless of target project (e.g., "grep -E is required for alternation patterns") → global. If it depends on the target project (e.g., "step_preview_2d.gd is a read-only consumer, not a derivation source") → project.
+
+- Read both if they exist. Do NOT repeat a failure that has a recorded reflection in either set.
+- If no reflections exist, proceed normally.
+
 ### 2. Read the input
 
 **From patterns**, extract:
