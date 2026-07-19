@@ -19,28 +19,28 @@ interacts with projects at different lifecycle states. Dual purpose:
 
 ## Project states to cover
 
+Decided 2026-07-19 (operator + recommendation accepted as default): **one toy
+product expressed at three states**, so browsing the diff between states shows
+the lifecycle — plus greenfield as narrative, not a directory (git cannot track
+an empty dir; nothing to browse or mechanically assert; survey is skill-driven).
+
 | State | Contents | What it demonstrates |
 |-------|----------|----------------------|
-| Greenfield | no design, no code | survey on empty project → discovery track entry |
-| Fully planned | complete `design/` (forces, patterns, models, specs), no code | pipeline output shape; checks SKIP/pending against absent targets |
-| Partially implemented | `design/` + partial code | mixed check results: passes, real FAILs, pending adapters, baseline usage |
-| Fully implemented | `design/` + complete code | quiescence: suite green, evidence ledger accumulating pass streaks |
-
-(User phrasing "fully planned, no code, partially implemented, fully
-implemented" — resolve at implementation whether greenfield is a distinct
-fourth state or folded into fully-planned; the table above assumes distinct,
-since empty-project survey behavior is otherwise undemonstrated.)
+| State 0: greenfield | covered in `examples/README.md` only | entry path: survey on an empty project → discovery track; points at `planned/` as the landing state |
+| `examples/planned/` | complete `design/` (forces, patterns, models, specs), no code | pipeline output shape; checks SKIP/pending against absent targets |
+| `examples/partial/` | `design/` + partial code | mixed check results: passes, real FAILs, pending adapters, baseline usage |
+| `examples/complete/` | `design/` + complete code | quiescence: suite green, evidence ledger accumulating pass streaks |
 
 ## What to build
 
-- One small, coherent example domain (sanitized — no proprietary/personal
-  content; invent a toy product) expressed at each state, under
-  `tests/fixtures/examples/<state>/` (or `examples/<state>/` if user-facing
-  placement wins — decide at implementation; browsability argues for a
-  top-level `examples/` with the suite reading from it).
+- One small, coherent toy product (sanitized — no proprietary/personal
+  content) at each state under top-level **`examples/`** (decided 2026-07-19:
+  user-documentation placement wins; the suite reads from `examples/`, while
+  smaller targeted tool corpora stay in `tests/fixtures/`).
+- `examples/README.md`: the lifecycle walkthrough incl. state 0, and what a
+  user should notice per state (check output, provenance chains, gaps).
 - Each state ships with a README: what state this project is in, what
-  archwright phases have run, what a user should notice (check output,
-  provenance chains, gaps).
+  archwright phases have run, what to look at.
 - Wire into `run-fixture-tests.sh`: each state validates (`validate` +
   `--links`) and checks (`--static`) with EXPECTED results asserted —
   including the partial state's deliberate FAILs (Extension Protocol rule 4:
@@ -51,7 +51,8 @@ since empty-project survey behavior is otherwise undemonstrated.)
 
 ## Acceptance criteria
 
-- [ ] Example project exists at each agreed state, sanitized, with per-state README
+- [ ] Toy product exists at planned/partial/complete under `examples/`, sanitized, with per-state README
+- [ ] `examples/README.md` covers the lifecycle incl. state-0 greenfield entry path
 - [ ] Suite asserts expected validate/check results per state (incl. deliberate FAILs in partial)
 - [ ] Suite green; count updated in AGENTS.md Commands test row only
 - [ ] Top-level README or AGENTS.md points users at the examples
