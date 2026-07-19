@@ -1,0 +1,197 @@
+# Working force inventory — area: report (archwright report UI)
+# Extracted 2026-07-19 from the graduated UI discovery ledgers (ticket 038, forces phase).
+# Consumer: archwright-tensions. Durable files: design/forces/ via archwright-forces-gen.py.
+area: report
+domain: web
+sources_read:
+  - path: "design/discovery/ui/design-system.md"
+    type: discovery
+  - path: "design/discovery/ui/wf-overview.md"
+    type: discovery
+  - path: "design/discovery/ui/wf-all-clear.md"
+    type: discovery
+  - path: "design/discovery/ui/wf-issue-detail.md"
+    type: discovery
+  - path: "design/discovery/ui/wf-behavior-detail.md"
+    type: discovery
+  - path: "design/discovery/ui/wf-projections.md"
+    type: discovery
+  - path: "design/discovery/ui/model-seed.md"
+    type: discovery
+
+product_forces:
+  - id: cold-reader-comprehension
+    polarity: desire
+    statement: "A cold reader with no archwright knowledge understands how the app behaves — and whether its design is in good shape — from the report alone."
+    who: reviewer/lead (cold reader)
+    evidence_level: L1
+    provenance:
+      - source: "discovery:design-system#D006"
+        quote: "even a non-technical user should be able to look at the diagram and understand how things will behave"
+      - source: "discovery:design-system (Jobs J2)"
+        quote: "a trust verdict in one glance, exceptions explained in plain words"
+    tags: [explicit]
+
+  - id: actionable-without-literacy
+    polarity: desire
+    statement: "A developer whose check run flagged the project knows what to do — fix the code, revisit a design rule, or flag a broken check — without archwright literacy."
+    who: developer
+    evidence_level: L1
+    provenance:
+      - source: "discovery:design-system#D002"
+        quote: "we want to ux to focus on non-jargon, low cognitive-complexity reporting that is actionable to users without requiring them to understand archwright specifically"
+      - source: "discovery:design-system (Jobs J1)"
+        quote: "they know the action (fix code / revisit a design rule / check is broken) without reading archwright docs"
+    tags: [explicit]
+
+  - id: human-owns-judgment
+    polarity: desire
+    statement: "Humans own every judgment call; routine sign-offs may be delegated per user preference, never by default."
+    who: developer/operator
+    evidence_level: L1
+    provenance:
+      - source: "discovery:design-system#D003"
+        quote: "consider situations where user needs to make decision/ resolve ambiguity"
+      - source: "discovery:design-system#D004"
+        quote: "it should be configuratble via local mise settings to auto-approve (off by default)"
+    tags: [explicit]
+
+  - id: trust-through-disclosure
+    polarity: desire
+    statement: "A reader trusts the report because it discloses its own limits — unchecked rules, accepted debt — not because everything is green."
+    who: reviewer/lead (cold reader)
+    evidence_level: L3
+    provenance:
+      - source: "discovery:wf-all-clear#D002"
+        quote: "agree on both (user approval of researched recommendation — evidence: the project's own vacuous-pass history; unchecked = coverage statement, not a pass)"
+      - source: "discovery:model-seed (Flagged Desires)"
+        quote: "Trust is earned by disclosed limits, not green screens"
+    tags: [explicit]
+
+  - id: agent-closes-the-loop
+    polarity: desire
+    statement: "A developer wants their agent to consume the report and the human's recorded responses directly, so decisions made in the report continue the work without manual translation."
+    who: developer
+    evidence_level: L1
+    provenance:
+      - source: "discovery:design-system#D001"
+        quote: "markdown as secondary user documentation source and a source for agents, and json for agents/scripts"
+      - source: "discovery:design-system#D005"
+        quote: "let's start with static html that records state to something an agent can process"
+    tags: [explicit]
+
+forces:
+  - id: machine-stable-canonical
+    polarity: constraint-soft
+    statement: "Agents and scripts require one stable, parseable canonical run document whose shape never varies by audience."
+    serves: agent-closes-the-loop
+    provenance:
+      - source: "discovery:design-system (P1)"
+        quote: "JSON is canonical; web and markdown are one-way projections regenerated from it — never edited, never merged sideways"
+      - source: "discovery:wf-projections#D001"
+        quote: "JSON ships the canonical check document untouched, plus generation-time model_view and asks blocks"
+    tags: [explicit]
+
+  - id: plain-language-surface
+    polarity: constraint-soft
+    statement: "The primary surface must read in product language only — methodology vocabulary is confined to progressive-disclosure layers."
+    serves: [actionable-without-literacy, cold-reader-comprehension]
+    provenance:
+      - source: "discovery:design-system#D002"
+        quote: "The report's UX uses no archwright jargon on its primary surface"
+      - source: "discovery:design-system (P0)"
+        quote: "the primary layer uses no archwright vocabulary — outcomes and actions only; methodology terms appear solely inside progressive-disclosure details"
+    tags: [explicit]
+
+  - id: expert-precision-available
+    polarity: constraint-soft
+    statement: "Exact methodology terms (spec ids, confidence marks, check mechanics) must remain reachable for expert users to act precisely."
+    serves: actionable-without-literacy
+    provenance:
+      - source: "discovery:design-system (tokens.vocabulary)"
+        quote: "confidence_glyphs ... detail layer ONLY (D002) — surface uses vocabulary map below"
+      - source: "discovery:wf-behavior-detail#D002"
+        quote: "with its check mechanics behind a disclosure — spec ids and check methods never on the surface"
+    tags: [implicit]
+
+  - id: hitl-hard-floor
+    polarity: constraint-hard
+    statement: "Genuine ambiguity and firm-rule (★★) changes always require a human decision — never auto-resolved, no configuration can bypass this."
+    serves: human-owns-judgment
+    provenance:
+      - source: "discovery:design-system#D004"
+        quote: "Decisions are excluded from auto-approval unconditionally — the ★★ hard floor and ambiguity items always wait for a human"
+      - source: "discovery:design-system#D003"
+        quote: "Items with genuine ambiguity are framed as 'decisions needed' and are never auto-resolvable"
+    tags: [explicit]
+
+  - id: per-user-delegation
+    polarity: constraint-soft
+    statement: "Approval delegation is configured per user/machine and is off by default."
+    serves: human-owns-judgment
+    provenance:
+      - source: "discovery:design-system#D004"
+        quote: "approval appetite is per-developer/per-machine, mise.local.toml is gitignored by convention"
+    tags: [explicit]
+
+  - id: zero-infrastructure-artifact
+    polarity: constraint-soft
+    statement: "The report must travel as a self-contained static artifact — no server, no build step, no network required to read or respond."
+    serves: [cold-reader-comprehension, actionable-without-literacy]
+    provenance:
+      - source: "discovery:design-system#D005"
+        quote: "The report ships as static, self-contained HTML"
+      - source: "discovery:design-system (P5)"
+        quote: "Self-contained single-file HTML: zero build, no webfonts, no JS beyond native <details> + optional filter toggles; travels as a CI artifact"
+    tags: [explicit]
+
+  - id: in-report-response-capture
+    polarity: constraint-soft
+    statement: "Every interaction (approve, option choice, freeform, reroute) must be captured inside the report and terminate in one structured response file — the only return channel."
+    serves: [human-owns-judgment, agent-closes-the-loop]
+    provenance:
+      - source: "discovery:design-system#D005"
+        quote: "Its interactive controls (approve, option choice, freeform text) record state into an artifact an agent or script can process"
+      - source: "discovery:wf-overview (bottom bar note)"
+        quote: "choices accumulate in the page and export as one structured response file the agent processes. Nothing is sent anywhere — the file is the handoff"
+    tags: [explicit]
+
+  - id: status-never-color-alone
+    polarity: constraint-hard
+    statement: "Every status must be readable without color — color pairs with glyph/label, meeting WCAG 2.2 SC 1.4.1."
+    serves: cold-reader-comprehension
+    provenance:
+      - source: "discovery:design-system (P4)"
+        quote: "Status is never color alone: every status pairs color + glyph/label (works in grayscale, meets WCAG SC 1.4.1)"
+    tags: [explicit]
+
+  - id: gaps-share-the-verdict
+    polarity: constraint-soft
+    statement: "Coverage gaps and accepted debt must appear with the same prominence as verified content — an all-clear that hides blind spots overstates trust."
+    serves: trust-through-disclosure
+    provenance:
+      - source: "discovery:wf-all-clear#D002"
+        quote: "The all-clear view always discloses unchecked rules and accepted issues with the same prominence as the verified content — never hidden behind a fold"
+    tags: [explicit]
+
+  - id: fault-location-one-step
+    polarity: constraint-soft
+    statement: "When something fails, the affected behavior must be locatable from the front door in one step — the behavior map stays constant and violations pin to it."
+    serves: actionable-without-literacy
+    provenance:
+      - source: "discovery:wf-all-clear#D005"
+        quote: "the same diagram renders with the affected step/arrow marked ✗ — the behavior map is constant across report states; only the badges change"
+      - source: "discovery:wf-all-clear#D005 (alternatives)"
+        quote: "Diagram only in all-clear (map disappears exactly when orientation matters most)"
+    tags: [explicit]
+
+  - id: stable-ask-identity
+    polarity: constraint-soft
+    statement: "Response-file entries must key to ask identities that are stable across runs and code movement."
+    serves: agent-closes-the-loop
+    provenance:
+      - source: "discovery:model-seed (Derived Data Requirements)"
+        quote: "Response-file schema: ask-id (reuse aw/v1 fingerprints) -> choice/approval/freeform + run identity"
+      - source: "discovery:wf-projections (Not Resolved Here)"
+        quote: "ask-id stability across runs (fingerprint reuse?)"
+    tags: [implicit]
