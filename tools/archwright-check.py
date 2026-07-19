@@ -896,11 +896,129 @@ def _check_script(check, spec_id, confidence, project_root):
 
 
 def _check_semgrep(check, spec_id, confidence, project_root):
-    """Run a semgrep-based check (placeholder)."""
-    return [{
-        "invariant": spec_id, "status": "skipped",
-        "message": "semgrep checks not yet implemented",
-    }]
+    """Run a semgrep-based check for structural/AST patterns.
+
+    Spec fields:
+      check.method: semgrep
+      check.target: path (relative to project root) to scan
+      check.rule: inline semgrep rule (dict — written to a temp file)
+      check.rules_file: path to a .yaml rule file (alternative to inline)
+      check.expect: absent (default) | present
+      check.include: glob or list of globs to filter scanned files (optional)
+    """
+    import tempfile
+
+    target = check.get("target", ".")
+    rule_inline = check.get("rule")
+    rules_file = check.get("rules_file")
+    expect = check.get("expect", "absent")
+    include = check.get("include")
+    if isinstance(include, str):
+        include = [include]
+
+    if expect not in ("absent", "present"):
+        return [{"invariant": spec_id, "status": "error",
+                 "message": f"semgrep: unknown expect value '{expect}' — must be absent|present"}]
+
+    target_path = project_root / target
+    if not target_path.exists():
+        return [{"invariant": spec_id, "status": "error",
+                 "message": f"Target path not found: {target_path}"}]
+
+    # Determine rule source
+    rule_path = None
+    tmp_file = None
+
+    if rules_file:
+        rule_path = Path(rules_file)
+        if not rule_path.is_absolute():
+            rule_path = project_root / rule_path
+        if not rule_path.exists():
+            return [{"invariant": spec_id, "status": "error",
+                     "message": f"Rules file not found: {rule_path}"}]
+    elif rule_inline:
+        # Write inline rule to temp file
+        if isinstance(rule_inline, dict):
+            rule_content = yaml.dump(
+                {"rules": [rule_inline]}, default_flow_style=False)
+        elif isinstance(rule_inline, str):
+            rule_content = rule_inline
+        else:
+            return [{"invariant": spec_id, "status": "error",
+                     "message": "semgrep check.rule must be a dict (single rule) or string (raw YAML)"}]
+        tmp_file = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", prefix="semgrep-rule-", delete=False)
+        tmp_file.write(rule_content)
+        tmp_file.close()
+        rule_path = Path(tmp_file.name)
+    else:
+        return [{"invariant": spec_id, "status": "error",
+                 "message": "semgrep check requires 'rule' (inline) or 'rules_file'"}]
+
+    # Build command
+    cmd = ["semgrep", "--json", "--no-git-ignore", "--config", str(rule_path)]
+    if include:
+        for glob in include:
+            cmd.extend(["--include", glob])
+    cmd.append(str(target_path))
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(project_root))
+        output = json.loads(result.stdout) if result.stdout.strip() else {}
+    except FileNotFoundError:
+        return [{"invariant": spec_id, "status": "skipped",
+                 "message": "semgrep not installed — install with: pipx install semgrep"}]
+    except json.JSONDecodeError:
+        return [{"invariant": spec_id, "status": "error",
+                 "message": f"semgrep produced invalid JSON. stderr: {(result.stderr or '')[:200]}"}]
+    finally:
+        if tmp_file:
+            try:
+                os.unlink(tmp_file.name)
+            except OSError:
+                pass
+
+    # Check for semgrep-level errors (not findings)
+    errors = output.get("errors", [])
+    if errors and not output.get("results"):
+        err_msgs = [e.get("message", str(e))[:100] for e in errors[:3]]
+        return [{"invariant": spec_id, "status": "error",
+                 "message": f"semgrep errors: {'; '.join(err_msgs)}"}]
+
+    findings = output.get("results", [])
+
+    # Interpret based on expect
+    if expect == "absent":
+        if findings:
+            evidence = []
+            for f in findings[:_EVIDENCE_CAP]:
+                path = f.get("path", "?")
+                line = f.get("start", {}).get("line", "?")
+                msg = f.get("extra", {}).get("message", f.get("check_id", ""))
+                evidence.append(f"{path}:{line}:{msg}")
+            return [{
+                "invariant": spec_id,
+                "status": "fail",
+                "confidence": confidence,
+                "assurance": "conformance",
+                "message": f"semgrep found {len(findings)} match(es) — expected none",
+                "violations": evidence[:5],
+                "_all_matches": evidence,
+                "from_pattern": _first_pattern(check),
+            }]
+        return [{"invariant": spec_id, "status": "pass", "assurance": "conformance"}]
+
+    elif expect == "present":
+        if findings:
+            return [{"invariant": spec_id, "status": "pass", "assurance": "conformance"}]
+        return [{
+            "invariant": spec_id, "status": "fail", "confidence": confidence,
+            "assurance": "conformance",
+            "message": "semgrep found no matches — expected at least one",
+            "from_pattern": _first_pattern(check),
+        }]
+
+    return [{"invariant": spec_id, "status": "pass", "assurance": "conformance"}]
 
 
 def _first_pattern(check):
