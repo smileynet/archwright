@@ -207,7 +207,7 @@ Present the batch grouped by actor:
 
 ## Output Location
 
-Contract specs are written to `design/specs/` alongside behavior and constraint specs, **organized per owning producer actor**. File path is always `design/specs/<spec-id>.yaml` — the deterministic `kind:id` → path mapping is absolute:
+Contract specs are written to `design/specs/` alongside behavior and constraint specs, **organized per owning producer actor**. Author from the template `tools/templates/spec-contract.yaml`; `archwright-validate.py` enforces the shape (`tools/contract-schema.yaml` — `from_model:` and `events:` are the load-bearing fields). File path is always `design/specs/<spec-id>.yaml` — the deterministic `kind:id` → path mapping is absolute:
 - State schemas: `design/specs/<actor-id>-state-schema.yaml`
 - Event payloads: `design/specs/<event-name>.yaml` (one per event type; a protocol cluster uses `design/specs/<protocol-name>-events.yaml`)
 - Persistence schemas: `design/specs/<actor-id>-persistence.yaml`

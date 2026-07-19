@@ -130,6 +130,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 | `archwright-import-woz.py` | `archwright-woz-import` |
 | `run-fixture-tests.sh`, `deploy-skills.sh` | `.kiro/skills/repo-maintenance` — project-local, never deployed globally (2026-07-18; supersedes "no skill, this file is their home") |
 | `tools/templates/discovery-ledger.md`, `wireframe.md`, `design-system.md` (artifact contracts) | `archwright-discover-ui` |
+| `tools/templates/pattern.md`, `force.md`, `spec-*.{yaml,md}` (authoring templates) | `archwright-formalize` (pattern), `archwright-forces` (force), `archwright-derive` (behavior/constraint/dependency), `archwright-contract` (contract) |
 | `archwright_common.py` | none — shared module, not a CLI |
 
 **Workflow:** Edit skills/steering in this repo → commit. Kiro-global copies are symlinks (live immediately); run `tools/deploy-skills.sh` only for NEW skills, generated references (domains/stacks/glossary), or other tools (claude/codex/agy — their copies go stale silently). Contract details: `.kiro/skills/repo-maintenance`.

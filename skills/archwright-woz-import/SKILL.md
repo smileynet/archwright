@@ -30,12 +30,12 @@ python3 <archwright-repo>/tools/archwright-import-woz.py export.json [-o design]
 ```
 
 Produces `design/discovery/woz/woz-<session-id>.md` — a `kind: discovery` artifact, `status: proposed`, with:
-- the full ledger (active + superseded entries in append order; `SUPERSEDES` rendered so the ticket-026 validator excludes superseded targets),
+- the full ledger (active + superseded entries in append order; `SUPERSEDES` rendered idempotently — exports may already embed the marker in the decision text (salvage-run does), marker-free exports get it prepended; either shape renders it once, and the ticket-026 validator excludes superseded targets),
 - categories mapped consumer-side (identity except woz `aesthetic` → core `experience`),
 - session summary, fenced simulation log + wireframes (verbatim evidence — fencing keeps transcript D-mentions out of the conservation citation graph),
 - Not Resolved Here from the export's `unresolved` block.
 
-Exit 2 on an existing import without `--force` — refreshing a snapshot is a deliberate act. Re-running after a session evolved is the intended refresh path; interpretation artifacts (step 3) cite entry anchors, which are append-only stable.
+Exit 1 = contract violation (unknown format version or category — regenerate the export in wizard_of_oz), nothing written. Exit 2 on an existing import without `--force` — refreshing a snapshot is a deliberate act. Re-running after a session evolved is the intended refresh path; interpretation artifacts (step 3) cite entry anchors, which are append-only stable.
 
 ### 3. Interpret (this skill's work)
 
@@ -46,7 +46,7 @@ Work from the imported artifact — entries are truth; cite every claim as `woz-
 3. **Screen flow:** wireframes in the sim log → screen-flow section of the seed (what the player SEES at each beat, transitions between them), each citing the beat's decisions.
 4. **Draft behavior seeds:** candidate state machines (e.g., run lifecycle, resource states) as SEED SECTIONS inside the model seed — with `from_woz:` anchors. These are inputs for the model/derive phases; never write `design/specs/` files here.
 5. **Unconsumed decisions:** active entries no interpretation output cites go under an explicit `## Unconsumed decisions` list with reasons (nothing lost).
-6. **Surface `inferred` entries** for confirmation — unconfirmed inferred entries block graduation (ledger rules).
+6. **Surface `inferred` entries** for confirmation — unconfirmed inferred entries block graduation (ledger rules). Confirmations may exist only as prose in a later entry's decision text ("CONFIRMS D005") — `woz-session/v1` has no structured confirms field, so the mechanical layer can't see them; read the ledger and cite the confirming entry when resolving an inferred entry's status (field case: salvage-run D024 confirms D005, 2026-07-19).
 
 ### 4. Validate + graduate
 
