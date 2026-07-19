@@ -306,7 +306,7 @@ Phase 6: Discovery Track
 ├── 022 T4 archwright-discover-ui skill + templates             [DONE 2026-07-18]
 ├── 023 T5 field run: operator's game project                   (022) [open — operator-driven]
 ├── 024 T6 docs sync: steering/AGENTS/audit scope               [DONE 2026-07-18]
-├── 025 T7b woz-export consumer (exporter T7a in wizard_of_oz)  (020) [open — blocked in practice on T7a]
+├── 025 T7b woz-export consumer (exporter T7a in wizard_of_oz)  (020) [open — UNBLOCKED: T7a shipped 2026-07-19]
 ├── 026 T8 conservation-check validator rule + discovery schema [DONE 2026-07-19 — suite green, discover-ui §6.5 pending-note removed]
 └── 027 seam integration: pipeline skills discovery-aware       [DONE 2026-07-18]
 ```
