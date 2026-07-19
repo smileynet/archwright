@@ -112,3 +112,37 @@ How should archwright-check.py interface with target project languages? Research
 Key finding: tree-sitter-gdscript (PrestonKnopp) is production-ready. ast-grep supports custom languages via dynamic .so loading. tree-sitter-language-pack provides 306 languages (including GDScript) for Python-native parsing.
 
 Next step: Build the spec-to-check compiler that routes constraint specs to the appropriate tier based on `check.method`.
+
+
+### 14. UPPAAL Spike: Behavior Verification Backend ← NEW (from research 2026-07-14)
+
+UPPAAL (timed automata model checker) is a better fit than Alloy for behavior spec verification. Automata are native, properties map directly (`A[] not(violation)`), exhaustive for finite state spaces, and produces execution traces (not static instances). See ADR-0012.
+
+**Trigger:** ADR-0012 Tier 3 conditions met (invariant needing all-paths verification that traces can't exhaustively cover).
+**Spike scope:** Compile `step-advancement.yaml` → UPPAAL `.xml`, run `verifyta`, compare to Alloy spike S3.
+**Acceptance:** <100 lines compile, no manual editing, <1s verify, path-based diagnostics.
+**Licensing:** Free academic. Commercial license from veriaal.dk. Clean-room BFS fallback (~100 lines Python) for simple FSMs.
+
+### 15. Petri Nets for Concurrent Actor Verification ← NEW (from research 2026-07-14)
+
+When multiple behavior specs share mutable state and interleaving order matters, separate FSMs with shared variables may be insufficient. Data Petri Nets or Colored Petri Nets can model token flow across concurrent actors and verify deadlock-freedom, mutual exclusion, and liveness under all interleavings.
+
+**Trigger:** Multiple behavior specs interact concurrently (not sequentially).
+**Prior art:** Data Petri Nets (ScienceDirect 2024), Collaboration Petri Nets (arXiv 2024), CPN Tools.
+**Evaluation:** Model one concurrent interaction as a Petri net. Does it catch a bug that separate FSMs miss?
+
+### 16. Probabilistic Analysis Layer ← NEW (from research 2026-07-14)
+
+Separate from verification (which asks "can this be violated?"). Probabilistic analysis asks "how likely is state X given random/modeled user behavior?" Relevant for: UX flow optimization, playtesting analytics, AI opponent fairness.
+
+**Trigger:** A project asks probability questions about its state machines.
+**Tool candidates:** PRISM (dedicated), UPPAAL statistical model checking mode.
+**Current status:** No project currently asks probabilistic questions.
+
+### 17. Cross-Session Semantic Review Learning ← NEW (from Reflexion research 2026-07-14)
+
+After multiple semantic reviews (Layer 3) on the same project, patterns emerge in what's caught and missed. Storing review outcomes and feeding "previously missed" issues into subsequent reviews could improve accuracy over time.
+
+**Trigger:** After 3+ semantic reviews on same project with actionable findings.
+**Mechanism:** Store review findings in `.memory/review-history/`. Feed missed issues as context to next review.
+**Evaluation:** Does review accuracy improve (fewer false negatives) across sessions?
