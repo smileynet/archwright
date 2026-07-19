@@ -45,6 +45,10 @@ Authoritative schema: `<archwright-repo>/tools/check-output-schema.yaml`. If han
 - **★ demotion and all promotion candidates** are span-digest items, not escalations: list them so the human sees pending confidence moves.
 - **Never ratify from the ledger.** A candidate becomes a confidence change only when a human edits the artifact (confidence field + Evidence line citing the events); ★★ transitions always block for HITL (ADR 0007). This skill surfaces candidates; it does not apply them.
 
+**`code_state` (ticket 018, ADR 0009 amendment)** — the document and ledger events carry the git identity of the checked tree: `{commit, dirty}` (null with `reason` when git is absent). Use it when presenting evidence and candidates:
+- `dirty: true` = the commit doesn't fully identify the checked code — present the finding normally, but flag ledger candidates built on dirty runs as unverifiable for signoff-grade claims (ratifiers discount them).
+- Staleness is judged HERE, at presentation, never by rewriting the ledger: evidence recorded at commit C is fresh iff the spec and its `check.target` are unchanged since C (mechanically: `--changed-only --base C` selects the spec ⇒ stale). Present stale events as historical context alongside fresh ones — never delete or re-route them.
+
 ## Process
 
 ### 1. Triage: the CEGAR fork (spurious vs. real)

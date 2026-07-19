@@ -207,6 +207,8 @@ These files are what `serves:` (patterns) and `from_force:` (specs) resolve agai
 
 **Generation is mechanical — use the tool:** `python3 <archwright-repo>/tools/archwright-forces-gen.py <inventory.yaml> -o design/forces` projects the working inventory into force files (strip unvalidated L4/L5 candidates from the inventory first, or into a filtered copy). Then validate: `python3 <archwright-repo>/tools/archwright-validate.py design/forces/*.md`.
 
+Output contract: exit 0 = files written (one per force, count printed); exit 2 = tool/input error (malformed inventory, invalid polarity/field) — fix the INVENTORY and re-run; the tool never writes a partial set on error, and never invents content beyond the inventory (mechanical projection). A generated file failing the subsequent validate step means the inventory entry was structurally valid but semantically wrong (e.g. a desire with `serves:`) — fix at the inventory, regenerate; never hand-edit generated files to pass.
+
 ## Quality Checks
 
 Before presenting output:
