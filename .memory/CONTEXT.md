@@ -168,3 +168,7 @@ _Avoid_: applying the strict tripwire to grills (punishes legitimate agreement)
 **Reconciliation pass**:
 For large projects/monorepos: after per-area pipeline runs, an all-up synthesis that dedupes forces across areas, surfaces cross-area tensions, and unifies models. Only used when scale forces area partitioning — normal projects run full-project/all-areas in one pipeline (grill Q06, 2026-07-17). Design artifacts are live documents committed branch-agnostically to the current project branch unless the user specifies otherwise.
 _Avoid_: area-scoping small projects (partition is the exception for scale, not the norm); special design branches by default.
+
+**Ask-type (report taxonomy)**:
+The three kinds of asks the archwright report makes of a human: DECISIONS (genuine ambiguity, options + freeform + marked recommendation + rationale fold-out, never auto-resolved), APPROVALS (clear right answer with recommendation, sign-off; auto-approvable via local mise config, off by default), SUGGESTIONS (optional nudges like trust promotions; never block the all-clear verdict). Defined in design/discovery/ui/design-system.md#D003/#D004 + wf-all-clear#D003.
+_Avoid_: "notifications" (asks require a response channel), treating suggestions as blocking decisions.
