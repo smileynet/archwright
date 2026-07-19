@@ -45,3 +45,28 @@ run = "bash tools/run-fixture-tests.sh"
 [tasks.deploy-skills]
 description = "Sync skills + steering + overlays to agent tools (kiro copies are symlinks — needed only for NEW skills, regenerated references, or other tools)"
 run = "bash tools/deploy-skills.sh"
+
+[tasks.sanitize-check]
+description = "Grep tracked files for real target-project names (.sanitization-denylist, gitignored; SKIP if absent)"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+LIST="{{config_root}}/.sanitization-denylist"
+if [ ! -f "$LIST" ]; then
+  echo "SKIP: no .sanitization-denylist on this machine — create it from the recall-held alias map (one term per line, # comments ok)"
+  exit 0
+fi
+HITS=0
+while IFS= read -r term; do
+  term="${term%%#*}"; term="$(echo "$term" | xargs)"
+  [ -z "$term" ] && continue
+  if git grep -I -i -n --untracked "$term" -- ':!.sanitization-denylist' ; then
+    HITS=1
+  fi
+done < "$LIST"
+if [ "$HITS" -eq 1 ]; then
+  echo "FAIL: denylisted names in the tree (above) — alias at the source per AGENTS.md sanitization convention"
+  exit 1
+fi
+echo "PASS: no denylisted names in tracked/untracked files"
+"""

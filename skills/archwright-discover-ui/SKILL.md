@@ -31,6 +31,7 @@ Ledger rules (append-only, origin, verbatim rationale, `SUPERSEDES`): `tools/tem
 
 - Domain: from the survey intake outline if one exists; else apply `../archwright-survey/references/domains/detect.yaml` (explicit override wins).
 - Load the domain's `discovery.yaml` overlay (deployed at `../archwright-survey/references/domains/<domain>/`) — its frameworks supply the opening questions; its `category_extensions` extend the ledger enum.
+- **Anchor the job first:** walk the overlay's FIRST coverage gate (the job — who uses this, to get what done) in ONE exchange before proposing anything. Artifact-fast (stance §4) bounds the upfront interview at 2–3 questions, never zero — a design system proposed before the job is anchored gets reworked (field-hit 2026-07-19: report-ui session's overview rebuilt after the user had to inject JTBD themselves).
 - Read existing `design/forces/` and `design/discovery/ui/` if present — never re-derive decided things; a changed mind is a `SUPERSEDES` entry, not a re-litigation.
 
 ### 2. Research (agent-side, before proposing)
