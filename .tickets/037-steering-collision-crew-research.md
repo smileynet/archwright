@@ -1,7 +1,7 @@
 ---
 id: 037
 title: "deploy-skills.sh: stop overwriting crew-research's subagent-reliability steering"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -27,6 +27,6 @@ Whatever the choice: collision behavior is explicit in the script output (never 
 
 ## Acceptance criteria
 
-- [ ] Running deploy-skills.sh on a machine with crew-research's subagent-reliability.md present does NOT replace crew's content, and says why
-- [ ] A machine without crew-research still gets subagent-reliability guidance by a documented path
-- [ ] README/AGENTS deploy notes updated if behavior changes
+- [x] Running deploy-skills.sh on a machine with crew-research's subagent-reliability.md present does NOT replace crew's content, and says why
+- [x] A machine without crew-research still gets subagent-reliability guidance by a documented path
+- [x] README/AGENTS deploy notes updated if behavior changes
