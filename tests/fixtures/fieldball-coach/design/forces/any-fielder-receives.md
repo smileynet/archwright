@@ -3,7 +3,7 @@ kind: force
 id: any-fielder-receives
 polarity: desire
 evidence_level: L2
-source: "LBP grill sessions (open-play requirement)"
+source: "FBC grill sessions (open-play requirement)"
 ---
 
 # Any Fielder Receives

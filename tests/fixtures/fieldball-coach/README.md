@@ -1,6 +1,6 @@
-# Test Fixture: fieldball-practice
+# Test Fixture: fieldball-coach
 
-Sanitized reference files from fieldball-practice-platform that exercise all archwright checks.
+Sanitized reference files from fieldball-coach-platform that exercise all archwright checks.
 
 ## Structure
 

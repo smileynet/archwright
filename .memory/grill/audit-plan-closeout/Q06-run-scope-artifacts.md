@@ -5,11 +5,11 @@
 
 ## Question
 
-How should the dynamodb-game-demo (DynamoRush) run be scoped, and where do design/ artifacts live?
+How should the tilerush-demo (TileRush) run be scoped, and where do design/ artifacts live?
 
 ## Research
 
-DynamoRush: clean tree, GitFarm remote, 7 ADRs + 3 grills, no design/ yet, ~4.5K TS files, apps/+packages/ workspace layout (monorepo). Full-depth single-run survey would exceed subagent sizing guidance (>15 files → batching; this is 100×).
+TileRush: clean tree, GitFarm remote, 7 ADRs + 3 grills, no design/ yet, ~4.5K TS files, apps/+packages/ workspace layout (monorepo). Full-depth single-run survey would exceed subagent sizing guidance (>15 files → batching; this is 100×).
 
 ## Decision (operator policy — applies to ALL runs, not just C10)
 
@@ -20,7 +20,7 @@ DynamoRush: clean tree, GitFarm remote, 7 ADRs + 3 grills, no design/ yet, ~4.5K
 
 ## Application to C10
 
-DynamoRush is a monorepo → area-partitioned: per-area pipeline runs (area inventory from survey; order-book matching engine is the most invariant-dense candidate per ADR 0002) followed by all-up reconciliation. Artifacts commit to the current branch. TS trace emitter lives in archwright `tools/stacks/typescript/` with conformance corpus; DynamoRush gets thin emit calls only.
+TileRush is a monorepo → area-partitioned: per-area pipeline runs (area inventory from survey; order-book matching engine is the most invariant-dense candidate per ADR 0002) followed by all-up reconciliation. Artifacts commit to the current branch. TS trace emitter lives in archwright `tools/stacks/typescript/` with conformance corpus; TileRush gets thin emit calls only.
 
 ## Implications
 

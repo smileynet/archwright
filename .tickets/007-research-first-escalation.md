@@ -21,7 +21,7 @@ first try to resolve through researching related topics, best practices, prior
 art, etc."
 
 Current behavior: any ★★ violation is presented as an HITL event (ADR 0007).
-In the ExposeAR field run this surfaced ★★ violations that research alone could
+In the DemoAR field run this surfaced ★★ violations that research alone could
 disposition (e.g., `no-tracked-secrets` FAILing on an icon PNG named
 `Res_Credentials_48_Dark.png` — the contrast pair already contained the answer).
 
@@ -41,5 +41,5 @@ disposition (e.g., `no-tracked-secrets` FAILing on an icon PNG named
 ## Notes
 
 - This refines, not repeals, ADR 0007 — likely needs a small ADR amendment.
-- Session lane split (2026-07-17): ExposeAR session applies this as operating
+- Session lane split (2026-07-17): DemoAR session applies this as operating
   practice; formalization belongs to the archwright-improvements session.

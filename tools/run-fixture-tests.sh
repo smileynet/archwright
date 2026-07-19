@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Run all archwright checks against the fieldball-practice fixture.
+# Run all archwright checks against the fieldball-coach fixture.
 # Exit 0 if all pass (or fixture is empty), 1 if any fail.
 set -euo pipefail
 
 TOOLS="$(dirname "$0")"
-FIXTURE="$TOOLS/../tests/fixtures/fieldball-practice"
+FIXTURE="$TOOLS/../tests/fixtures/fieldball-coach"
 VALIDATE="$TOOLS/archwright-validate.py"
 CHECK="$TOOLS/archwright-check.py"
 PASS=0

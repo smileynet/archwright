@@ -8,7 +8,7 @@ created: 2026-07-17
 
 # Pattern quality gate: 70% evidence-share threshold measures the wrong thing
 
-Field-driven (AwsArchVR phase-1 review 2026-07-17): all 13 ExposeAR patterns
+Field-driven (DemoVR phase-1 review 2026-07-17): all 13 DemoAR patterns
 measure 25–39% evidence share against the "Evidence section: ≥70% of the pattern
 body" gate — a 13/13 systematic miss — while the same review rated citation
 quality "excellent throughout" (fresh, sourced, specific). When every instance
@@ -26,7 +26,7 @@ miscalibrated, not the corpus.
 
 ## Acceptance criteria
 
-- [ ] The 13 ExposeAR patterns pass the recalibrated gate unmodified (they were
+- [ ] The 13 DemoAR patterns pass the recalibrated gate unmodified (they were
       judged good) OR the gate's failure messages identify real substance gaps
 - [ ] A deliberately evidence-free pattern still FAILs the gate
 - [ ] Formalize skill template and gate agree (template output passes its own gate)
@@ -44,6 +44,6 @@ formalize skill Writing Quality, pattern-schema.md, pattern template — all
 3. Freshness visible: year/version on external claims; fast-moving-tech claims
    verified-current or flagged.
 The gate is agent-judged (honor-system per A3 finding) — no tool change. AC 1
-holds by construction: the criteria are exactly what the AwsArchVR review
+holds by construction: the criteria are exactly what the DemoVR review
 praised in the 13 patterns ("fresh, sourced, specific"); spot verification
 defers to that lane.

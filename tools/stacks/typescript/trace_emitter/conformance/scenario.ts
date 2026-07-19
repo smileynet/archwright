@@ -3,7 +3,7 @@
  * the conformance scenario; rule 4: MUST include a violating scenario → FAIL).
  *
  * Simulates a session-like guarded counter (mirrors the guarded-counter fixture
- * and DynamoRush session-lifecycle) and emits two traces via the real recorder:
+ * and TileRush session-lifecycle) and emits two traces via the real recorder:
  *
  *   passing.trace.json   — respects the JOIN guard (never exceeds max)
  *   violating.trace.json — a buggy implementation admits a 4th player

@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Prove the trace validation approach works end-to-end: a gdUnit4 test exercises real LBP code, emits a JSON trace, and `archwright-check --trace` validates it against the `ball-state-lifecycle` behavior spec.
+Prove the trace validation approach works end-to-end: a gdUnit4 test exercises real FBC code, emits a JSON trace, and `archwright-check --trace` validates it against the `ball-state-lifecycle` behavior spec.
 
 ## Spike: S14
 
@@ -136,7 +136,7 @@ func test_double_possession_caught() -> void:
    - **Recommendation:** Start with Option A. If it's too burdensome after 3+ conformance tests, add Option B.
 
 2. **Trace file location:** Where do trace JSON files go?
-   - Option A: `test/traces/` in LBP (committed, reviewable)
+   - Option A: `test/traces/` in FBC (committed, reviewable)
    - Option B: Temp directory (not committed, regenerated each run)
    - **Recommendation:** Option B for CI, Option A for reference/debugging. Add `.gitignore` for traces generated during test runs, but commit one "golden" trace per spec as documentation.
 
@@ -158,5 +158,5 @@ func test_double_possession_caught() -> void:
 ## Links
 
 - Depends on: [trace-schema](trace-schema.md), [trace-validator](trace-validator.md)
-- Tests against: LBP's `ball-state-lifecycle.yaml` behavior spec
+- Tests against: FBC's `ball-state-lifecycle.yaml` behavior spec
 - Proves: the trace validation approach works for real game code

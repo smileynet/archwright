@@ -8,10 +8,10 @@ created: 2026-07-17
 
 # validate-links: accept boundary entities as from_model contract producers
 
-Field-driven (ExposeAR run, digest 2026-07-17 "Open" note; root cause confirmed in
-AwsArchVR phase-1 review 2026-07-17): `puzzle-definition.yaml` carries
+Field-driven (DemoAR run, digest 2026-07-17 "Open" note; root cause confirmed in
+DemoVR phase-1 review 2026-07-17): `puzzle-definition.yaml` carries
 `from_model: "model:content-authority"` and validate-links FAILs it — but the model
-is not wrong. `content-authority` exists in `exposear-actors.yaml` as a
+is not wrong. `content-authority` exists in `demoar-actors.yaml` as a
 **boundary_entity** (classification: configuration-authority) and is listed in
 `contract_candidates` as the producer of puzzle-definition. The validator only
 resolves from_model against actors and contract candidates-as-actors, so a
@@ -30,7 +30,7 @@ expressed without a false FAIL.
 
 ## Acceptance criteria
 
-- [ ] ExposeAR `design/` link check passes with from_model pointing at
+- [ ] DemoAR `design/` link check passes with from_model pointing at
       content-authority (no spec edit required)
 - [ ] A from_model ref to a nonexistent id still FAILs (no vacuous acceptance)
 - [ ] Fixture suite gains a violating scenario that FAILs (conformance-at-birth rule)
@@ -43,8 +43,8 @@ boundary entities FAIL with a precise producer-rule message (decision: an
 element that produces nothing has no contract-provenance role); `folded_into:`
 annotation supported on candidates (coverage follows the fold; fold + own spec
 = double-ownership error; unknown fold target = error). 4 golden checks in the
-suite reproduce the exact ExposeAR shape (configuration-authority producing
-puzzle-definition) — AC 1 verified structurally. **ExposeAR itself is not
+suite reproduce the exact DemoAR shape (configuration-authority producing
+puzzle-definition) — AC 1 verified structurally. **DemoAR itself is not
 cloned in this lane** — its `--links` run will pass without spec edits on the
 next check in that lane; flag there if it doesn't. Conventions documented in
 contract + model skills.

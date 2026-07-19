@@ -138,7 +138,7 @@ How archwright extends itself when it encounters a situation its material doesn'
 _Avoid_: treating coverage gaps as descope candidates — a gap is a counterexample against archwright's own abstractions (CEGAR applied to the methodology).
 
 **Stack adapter**:
-Per-language/engine mechanical component (`tools/stacks/<stack>/`): trace emitter, ast-grep grammar, check-pattern library. Orthogonal to domain overlays (dynamodb-game-demo = web domain + typescript stack). Tracked in `tools/stacks/REGISTRY.yaml` with guarantee-tiered status and measured cost; built on first encounter per the Extension Protocol.
+Per-language/engine mechanical component (`tools/stacks/<stack>/`): trace emitter, ast-grep grammar, check-pattern library. Orthogonal to domain overlays (tilerush-demo = web domain + typescript stack). Tracked in `tools/stacks/REGISTRY.yaml` with guarantee-tiered status and measured cost; built on first encounter per the Extension Protocol.
 _Avoid_: conflating stack (language/engine) with domain (vocabulary).
 
 **Discovery track**:

@@ -32,8 +32,8 @@ files.
 
 | Date | Session | Outcome |
 |------|---------|---------|
-| 2026-07-16 | First full pipeline run on Windows (ExposeAR) | End-to-end validation on a real brownfield Unity/MR project: 93 forces, 13 tensions, 13 patterns, 44 specs; check surfaced genuine violations once tooling was fixed. Artifacts in ExposeAR `design/` + `.memory/`. Field wants became tickets 005/006. (Was "lessons.md 2026-07-16 #1–7") |
+| 2026-07-16 | First full pipeline run on Windows (DemoAR) | End-to-end validation on a real brownfield Unity/MR project: 93 forces, 13 tensions, 13 patterns, 44 specs; check surfaced genuine violations once tooling was fixed. Artifacts in DemoAR `design/` + `.memory/`. Field wants became tickets 005/006. (Was "lessons.md 2026-07-16 #1–7") |
 | 2026-07-17 | mise adoption | mise.toml owns tools/env/tasks; baseline 22/0/0 at adoption. (Was "#1–4") |
 | 2026-07-17 | Alloy wiring + DoD-5 chain | First jar execution exposed two dormant compiler bugs; CK-03/04/05/09/10 + CK-21 landed. |
-| 2026-07-17 | include: globs + comment false-pass (ExposeAR lane) | Concurrent implementation reconciled; positional comment matching; ExposeAR tls-only 897 noise → 2 honest violations. Baseline 31/0/0. |
-| 2026-07-17 | ExposeAR close-out + AwsArchVR handoff (ExposeAR lane) | Check phase CLOSED (1/6/26/0 — 6 FAILs = intentional work queue); first field alloy authoring (5 invariants bounded-checked, non-vacuity verified); project continues as AwsArchVR (`~/code/AwsArchVR/HANDOFF.md`); tickets 007–010 queued; crew-research tickets 12/13 (push pending Code Defender approval). |
+| 2026-07-17 | include: globs + comment false-pass (DemoAR lane) | Concurrent implementation reconciled; positional comment matching; DemoAR tls-only 897 noise → 2 honest violations. Baseline 31/0/0. |
+| 2026-07-17 | DemoAR close-out + DemoVR handoff (DemoAR lane) | Check phase CLOSED (1/6/26/0 — 6 FAILs = intentional work queue); first field alloy authoring (5 invariants bounded-checked, non-vacuity verified); project continues as DemoVR (`~/code/DemoVR/HANDOFF.md`); tickets 007–010 queued; crew-research tickets 12/13 (push pending Code Defender approval). |

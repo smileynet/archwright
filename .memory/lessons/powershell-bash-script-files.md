@@ -2,7 +2,7 @@
 
 One-line: PowerShell interpolates `$PATH`/`$?`/`$@` inside double-quoted `bash -c` strings — and Windows Python can't see bash's `/tmp`.
 
-**Date:** 2026-07-17 · **Source:** ExposeAR-lane session (bit twice in one day despite a prior lessons entry)
+**Date:** 2026-07-17 · **Source:** DemoAR-lane session (bit twice in one day despite a prior lessons entry)
 
 Failure modes observed live:
 1. `& bash.exe -lc "...$?..."` → PowerShell substitutes ITS `$?` (prints `rc=True`) —

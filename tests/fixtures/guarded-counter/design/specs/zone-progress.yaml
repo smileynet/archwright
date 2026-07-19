@@ -1,5 +1,5 @@
 # Conformance corpus for guard/assign compilation (ticket 008).
-# Mirrors ExposeAR's solved-iff-win-condition acceptance case: the invariant
+# Mirrors DemoAR's solved-iff-win-condition acceptance case: the invariant
 # is provable ONLY when the SOLVE guard compiles into the model. The
 # unguarded twin (zone-progress-unguarded.yaml) MUST FAIL — Extension
 # Protocol rule 4: a checker proven only on passing cases may be vacuous.
