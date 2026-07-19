@@ -1,7 +1,7 @@
 ---
 id: 028
 title: "Sanitized example projects across the project-state spectrum"
-status: open
+status: done
 blocked_by: []
 ---
 

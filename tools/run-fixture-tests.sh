@@ -1503,5 +1503,105 @@ fi
 rm -f "$T16_OUT"
 
 echo ""
+echo "=== Lifecycle Examples (ticket 028) ==="
+# examples/{planned,partial,complete}: ONE toy product (Snackbox) at three
+# lifecycle states. Unlike the frozen golden corpora above, these are living
+# fixtures — they evolve with the methodology, and this section pins each
+# state's EXPECTED check picture (incl. the partial state's deliberate FAILs,
+# Extension Protocol rule 4).
+EX="$TOOLS/../examples"
+EX_OUT=$(mktemp)
+
+# --- planned: full design, no code ---------------------------------------
+rc=0; python3 "$VALIDATE" --links "$EX/planned/design" >/dev/null 2>&1 || rc=$?
+rc2=0; python3 "$CHECK" --static "$EX/planned/design/specs" --json > "$EX_OUT" 2>/dev/null || rc2=$?
+if [ "$rc" -eq 0 ] && [ "$rc2" -eq 0 ] \
+   && grep -q '"pending": 3' "$EX_OUT" \
+   && grep -q '"failed": 0' "$EX_OUT"; then
+  report PASS "examples/planned: links resolve; static = 3 pending (target_status), 0 failed, exit 0"
+else
+  report FAIL "examples/planned: links resolve; static = 3 pending (target_status), 0 failed, exit 0" "links=$rc static=$rc2"
+fi
+EX_JAR="${ARCHWRIGHT_ALLOY_JAR:-$TOOLS/../.references/alloy6.jar}"
+if [ -f "$EX_JAR" ] && command -v java >/dev/null 2>&1; then
+  rc=0; python3 "$CHECK" "$EX/planned/design/specs/purchase-session.yaml" --json > "$EX_OUT" 2>/dev/null || rc=$?
+  if [ "$rc" -eq 0 ] && grep -q '"status": "pass"' "$EX_OUT"; then
+    report PASS "examples/planned: payment gate proven before any code (both ★★ invariants, Alloy)"
+  else
+    report FAIL "examples/planned: payment gate proven before any code (both ★★ invariants, Alloy)" "exit=$rc"
+  fi
+else
+  report SKIP "examples/planned: payment gate proven before any code (alloy jar or java unavailable)"
+fi
+
+# --- partial: mixed picture — the deliberate-FAIL state -------------------
+rc=0; python3 "$CHECK" --static "$EX/partial/design/specs" --json > "$EX_OUT" 2>/dev/null || rc=$?
+if [ "$rc" -eq 1 ] \
+   && grep -q '"remaining_delta": 2' "$EX_OUT" \
+   && grep -q '"invariant": "single-balance-writer"' "$EX_OUT" \
+   && grep -q '"invariant": "dispenser-isolation"' "$EX_OUT" \
+   && grep -q '"pending": 1' "$EX_OUT" \
+   && grep -q '"passed": 1' "$EX_OUT"; then
+  report PASS "examples/partial: deliberate defect FAILs both owning specs (exit 1, remaining_delta 2)"
+else
+  report FAIL "examples/partial: deliberate defect FAILs both owning specs (exit 1, remaining_delta 2)" "exit=$rc"
+fi
+if grep -q '"baselined": true' "$EX_OUT" \
+   && python3 -c "
+import json,sys
+d=json.load(open('$EX_OUT'))
+b=[v for v in d['violations'] if v.get('baselined')]
+sys.exit(0 if len(b)==1 and b[0]['invariant']=='ui-no-hardware-import'
+         and b[0]['severity']=='warning' and b[0]['escalate'] is True else 1)
+" 2>/dev/null; then
+  report PASS "examples/partial: known debt baselined to warning, ★★ keeps escalate (CK-07)"
+else
+  report FAIL "examples/partial: known debt baselined to warning, ★★ keeps escalate (CK-07)"
+fi
+rc=0; python3 "$VALIDATE" --links "$EX/partial/design" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ]; then
+  report PASS "examples/partial: links resolve (design grew two specs mid-lifecycle)"
+else
+  report FAIL "examples/partial: links resolve (design grew two specs mid-lifecycle)" "exit=$rc"
+fi
+
+# --- complete: quiescence -------------------------------------------------
+# Run static in a TMP COPY: the committed evidence ledger appends on every
+# check run (activation by existence) — running in place would dirty the tree.
+EX_TMP=$(mktemp -d)
+cp -r "$EX/complete" "$EX_TMP/complete"
+rc=0; python3 "$CHECK" --static "$EX_TMP/complete/design/specs" --json > "$EX_OUT" 2>/dev/null || rc=$?
+if [ "$rc" -eq 0 ] \
+   && grep -q '"passed": 5' "$EX_OUT" \
+   && grep -q '"failed": 0' "$EX_OUT" \
+   && grep -q '"pending": 0' "$EX_OUT"; then
+  report PASS "examples/complete: quiescence — 5/5 static checks pass, pending activated by src/hardware"
+else
+  report FAIL "examples/complete: quiescence — 5/5 static checks pass, pending activated by src/hardware" "exit=$rc"
+fi
+# Ledger is live: committed snapshot holds the pass-streak promotion candidate,
+# and the tmp-copy run advanced the streak past it (accumulation, not stasis).
+if python3 -c "
+import json,sys
+snap=json.load(open('$EX/complete/design/.archwright-evidence.json'))
+evs=[e for e in snap.get('events',[]) if e.get('event')=='promotion-candidate'
+     and e.get('reason')=='pass-streak-5' and e.get('confidence')=='★']
+after=json.load(open('$EX_TMP/complete/design/.archwright-evidence.json'))
+streak=after.get('streaks',{}).get('constraint:no-dispense-outside-session#no-dispense-outside-session',0)
+sys.exit(0 if len(evs)==1 and streak>5 else 1)
+" 2>/dev/null; then
+  report PASS "examples/complete: evidence ledger accumulating (committed promotion-candidate; streak advances on run)"
+else
+  report FAIL "examples/complete: evidence ledger accumulating (committed promotion-candidate; streak advances on run)"
+fi
+rc=0; python3 "$VALIDATE" --links "$EX/complete/design" >/dev/null 2>&1 || rc=$?
+if [ "$rc" -eq 0 ] && [ ! -f "$EX/complete/.archwright-baseline.json" ]; then
+  report PASS "examples/complete: links resolve; baseline gone (debt paid, ratchet emptied it)"
+else
+  report FAIL "examples/complete: links resolve; baseline gone (debt paid, ratchet emptied it)" "exit=$rc"
+fi
+rm -rf "$EX_TMP" "$EX_OUT"
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

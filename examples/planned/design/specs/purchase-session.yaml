@@ -1,0 +1,109 @@
+kind: behavior
+id: purchase-session
+from_patterns:
+  - "pattern:payment-gate"
+
+protects_experience: "fair-exchange"
+user_story: "When a customer inserts coins and vends, they always get the snack they covered or their money back — the machine never keeps both sides of the exchange."
+
+context:
+  variables:
+    balance:
+      type: int
+      initial: 0
+      from_force: fair-exchange
+    price:
+      type: int
+      initial: 2          # abstraction: one item, unit-priced (see abstraction_notes)
+      from_force: paid-before-dispense
+
+initial: idle
+
+states:
+  idle:
+    type: atomic
+    "on":
+      COIN_IN:
+        target: accepting
+        assign:
+          balance: "balance + 1"
+        from_force: fair-exchange
+        from_pattern: payment-gate
+    from_pattern: payment-gate
+
+  accepting:
+    type: atomic
+    "on":
+      COIN_IN:
+        target: accepting
+        assign:
+          balance: "balance + 1"
+        from_force: fair-exchange
+        from_pattern: payment-gate
+      VEND:
+        target: dispensing
+        guard:
+          predicate: "balance >= price"
+          from_force: paid-before-dispense
+          confidence: "★★"
+        from_force: paid-before-dispense
+        from_pattern: payment-gate
+      CANCEL:
+        target: idle
+        assign:
+          balance: 0        # full refund — the coin acceptor returns everything
+        from_force: refund-on-cancel
+        from_pattern: payment-gate
+    from_pattern: payment-gate
+
+  dispensing:
+    type: atomic
+    "on":
+      DISPENSE_DONE:
+        target: idle
+        assign:
+          balance: 0        # price captured + change returned at completion
+        from_force: fair-exchange
+        from_pattern: payment-gate
+    invariant:
+      predicate: "balance still covers price while the motor runs"
+      confidence: "★★"
+      from_force: paid-before-dispense
+    from_pattern: payment-gate
+
+invariants:
+  - id: paid-when-dispensing
+    type: temporal
+    predicate: "always (state == dispensing implies balance >= price)"
+    # The payment gate itself: Dispensing is reachable only through the
+    # guarded VEND transition, and nothing reduces balance mid-dispense.
+    # Remove the VEND guard and the model checker produces a counterexample.
+    alloy: "always (M.current = Dispensing implies M.balance >= M.price)"
+    confidence: "★★"
+    from_force: paid-before-dispense
+    from_pattern: payment-gate
+    description: "The dispenser never runs unless the session balance covers the price"
+
+  - id: idle-holds-no-money
+    type: temporal
+    predicate: "always (state == idle implies balance == 0)"
+    # Fair exchange, refund half: every path back to idle (cancel, completed
+    # vend) settles the balance to zero — the machine never sits idle holding
+    # a customer's money.
+    alloy: "always (M.current = Idle implies M.balance = 0)"
+    confidence: "★★"
+    from_force: refund-on-cancel
+    from_pattern: payment-gate
+    description: "No customer money is retained once the session returns to idle"
+
+links:
+  - target: "contract:dispense-command"
+    type: consumes
+  - target: "constraint:single-balance-writer"
+    type: constrained-by
+
+abstraction_notes:
+  included: [session states, payment gate guard, refund path, balance settlement]
+  excluded: [coin denominations (coins are unit-valued), multiple items/prices, hardware failures mid-dispense, change-making arithmetic]
+  justification: "The checked properties (dispense only when covered; idle retains nothing) are about WHEN money and product may move, not about denomination arithmetic — unit coins and a single price preserve the guard structure."
+  scope_limit: "Checked at scope 4, 8 steps."

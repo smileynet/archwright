@@ -1,0 +1,46 @@
+kind: contract
+id: dispense-command
+from_patterns:
+  - "pattern:payment-gate"
+from_model: "model:payment-session"
+confidence: "★★"
+
+protects_experience: "fair-exchange"
+user_story: "When payment commits, the dispenser is told exactly which slot to run and reports completion — the two legs of one commit protocol."
+
+# Protocol cluster (sanctioned exception): dispense/dispense_done are the
+# command/ack legs of ONE commit protocol, authority payment-session — they
+# evolve in lockstep, so they share this spec, named for the protocol.
+events:
+  dispense:
+    producer: payment-session
+    consumers: [dispenser]
+    stability: internal
+    payload:
+      slot:
+        type: reference
+        required: true
+        nullable: false
+        description: "The shelf slot whose motor should run"
+
+  dispense_done:
+    producer: dispenser
+    consumers: [payment-session]
+    stability: internal
+    payload:
+      slot:
+        type: reference
+        required: true
+        nullable: false
+        description: "The slot that finished dispensing (echo of the command)"
+      success:
+        type: bool
+        required: true
+        nullable: false
+        description: "False when the motor jammed — the session refunds instead of settling"
+
+links:
+  - target: "behavior:purchase-session"
+    type: consumed-by
+  - target: "dependency:dispenser-isolation"
+    type: enforces
