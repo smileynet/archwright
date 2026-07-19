@@ -115,3 +115,50 @@ Before committing a spec:
 - Constraint specs: `check` section has a runnable method (grep/semgrep/script) with correct target path
 - Behavior specs: states, transitions, and invariants map to observable system behavior
 - All specs pass `archwright-check --static` before commit
+
+## Check Method Conventions
+
+### grep
+
+- Patterns use extended regex syntax (`grep -E`). Alternation (`|`) and grouping (`()`) are supported.
+- `expect: absent` — constraint holds if grep finds zero matches after exclude filtering.
+- `expect: present` — constraint holds if grep finds at least one match.
+- `expect: only-in` — matches must appear only in files whose path contains the `only_in` substring.
+- `exclude` — string or list of path substrings. Matches in files containing any exclude substring are removed before interpretation. Use for: the authorized writer itself, data model declarations, read-only consumers.
+
+### script
+
+- Script runs with `cwd` = project root.
+- Exit 0 + output = found violations. Exit 1 + no output = no violations (grep convention). Exit 2+ = script error (reported as check error, not a pass/fail result).
+- Script checks `expect: absent` means "script should produce no output."
+
+### semgrep
+
+- Rules can be inline (`check.rule`: dict or string) or external file (`check.rules_file`: path).
+- Uses `--no-git-ignore` to scan all target files regardless of .gitignore.
+- Target must exist or check reports error. Missing semgrep binary → skipped (not error).
+- Prefer semgrep for AST-level structural patterns (catch blocks, object shapes, import graphs). Use grep for simple presence/absence.
+
+### Predicate syntax (behavior spec guards/invariants)
+
+Supported operators:
+- `X == Y` — equality (variable lookup or literal)
+- `X != Y` — inequality
+- `X in {a, b, c}` — set membership
+- `not P` — negation
+- `P and Q` — conjunction
+- `P or Q` — disjunction
+- `P implies Q` — implication (not P or Q)
+- `always P` — temporal (stripped for per-step evaluation; enforced by replay loop)
+- Bare identifier — state name match against current FSM state
+
+Unknown syntax → Untranslatable (SKIP-with-reason in trace mode, per ticket 015). Spec authors: if your predicate uses unsupported syntax, the check will skip that invariant — prefer composing from the supported atoms above.
+
+## Reflections Protocol
+
+When a spec derivation failure reveals a reusable lesson:
+
+1. Write a reflection using `tools/templates/reflection.md`
+2. **Global** (methodology-level, all projects): add to `.memory/reflections/global.md` in the archwright repo
+3. **Project** (target-project-specific): add to `.memory/reflections/` in the target project
+4. `archwright-derive` Step 1b reads both sets before generating specs
