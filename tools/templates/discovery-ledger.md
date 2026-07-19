@@ -84,6 +84,16 @@ The conservation check verifies both directions:
 An entry id is therefore load-bearing — it is the source anchor the whole
 provenance chain hangs from.
 
+VALIDATOR PARSING GOTCHAS (field-hit 2026-07-19, ui session graduation):
+  - EVERY bare `D{NNN}` token in prose is parsed as a FILE-LOCAL citation —
+    casual mentions ("per D006", "inverts D006") break --links when the entry
+    lives in another file. Qualify cross-file mentions ALWAYS, even in prose.
+  - Ranges like `D001–D006` parse as a bare ref to the second id — spell out
+    both ends qualified ("X#D001 through X#D006").
+  - The INDEX projection file needs discovery frontmatter (kind/id/status/area/
+    serves) like any artifact, and its sessions-table rows must cite ≥1 anchor
+    (conservation applies to every list/table element, not just Hands-To).
+
 ═══ INDEX PROJECTION (per area, e.g. design/discovery/ui/INDEX.md) ═══
 The area INDEX carries a regenerable summary table — a projection, never the truth:
 | Entry | Artifact | Title | Category | Origin | Status |

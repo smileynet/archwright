@@ -23,6 +23,7 @@ files.
 | [checkers-need-negative-tests](checkers-need-negative-tests.md) | A checker proven only on passing cases may be vacuous |
 | [reporters-surface-source-reason](reporters-surface-source-reason.md) | Wrappers restating a tool's status in their own words drift into lies |
 | [alloy-context-vars-frozen](alloy-context-vars-frozen.md) | `alloy:` expressions must reference M.current only — context vars are frozen |
+| [port-diffs-not-files](port-diffs-not-files.md) | Whole-file ports from a fork clobber newer work; verify content, not commit messages (c5d2c81) |
 | [skills-no-repo-relative-paths](skills-no-repo-relative-paths.md) | Deployed skills run from target projects — `<archwright-repo>/` placeholders |
 | [comment-filtering-positional](comment-filtering-positional.md) | Never truncate the haystack — `http://` contains `//` |
 | [powershell-bash-script-files](powershell-bash-script-files.md) | Inline `bash -c` from PowerShell corrupts `$`-expressions; use script files; `/tmp` invisible to Windows python |
