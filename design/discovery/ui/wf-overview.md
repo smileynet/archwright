@@ -1,7 +1,7 @@
 ---
 kind: discovery
 id: wf-overview
-status: proposed
+status: approved
 area: ui
 serves: []
 ---
@@ -89,14 +89,14 @@ Decisions before approvals: decisions are rarer, heavier, and blocking — they'
 - **Category:** structure
 - **Origin:** suggested
 - **Decision:** The overview opens with a one-line plain verdict, then one card per issue needing attention; inventory/coverage stats are demoted to an expandable "the rest" strip at the bottom.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Stat-dashboard-first; columnar violations table.
 
 ### D002 — Contrast pair as the card body
 - **Category:** structure
 - **Origin:** suggested
 - **Decision:** Each issue card's body is the contrast pair phrased as "The design says: … / The code does: …" followed by one action line.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Raw invariant message + route enum; evidence-lines-first (grep output style).
 
 ### D003 — Two-zone overview: decisions above approvals
@@ -110,7 +110,7 @@ Decisions before approvals: decisions are rarer, heavier, and blocking — they'
 - **Category:** experience
 - **Origin:** suggested
 - **Decision:** A decision card states the situation in one sentence, then 2–3 concrete options in product language (keep rule / amend rule / accept for now). Where research supports a recommendation it is marked as such; genuinely ambiguous items present options only.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Free-text prompt ("what do you want to do?"); always-recommend (rejected — leading on judgment calls).
 
 ### D005 — Decision cards: options + freeform + marked recommendation + rationale fold-out
@@ -124,7 +124,7 @@ Decisions before approvals: decisions are rarer, heavier, and blocking — they'
 - **Category:** structure
 - **Origin:** suggested
 - **Decision:** A bar (bottom of page) appears once any control is used, counting recorded responses, with one action: save the structured response file for the agent. Applies design-system#D005.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Per-card immediate export (rejected — one file per decision is agent-hostile); auto-save to browser storage only (no visible handoff moment).
 
 ## Not Resolved Here

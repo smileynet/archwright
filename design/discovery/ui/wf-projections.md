@@ -1,7 +1,7 @@
 ---
 kind: discovery
 id: wf-projections
-status: proposed
+status: approved
 area: ui
 serves: []
 ---
@@ -54,7 +54,7 @@ REPORT.md
 - **Category:** structure
 - **Origin:** suggested
 - **Decision:** Markdown is a non-interactive mirror of the web hierarchy (same order, same vocabulary map, `<details>` for folds, deterministic anchors). JSON ships the canonical check document untouched, plus generation-time `model_view` and `asks` blocks; user responses live in a separate response file keyed by ask id + run identity.
-- **Rationale:** (pending user reaction)
+- **Rationale:** "approve all" (user, 2026-07-19 session close-out)
 - **Alternatives:** Markdown as full inventory dump (jargon, breaks D002); extending the check document itself with view data (rejected — keeps canonical schema pure; views are derived).
 
 ## Not Resolved Here
