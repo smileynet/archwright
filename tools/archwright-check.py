@@ -186,7 +186,7 @@ def _event_identity(ev):
             tuple(sorted(ev.get("fingerprints") or [])))
 
 
-def record_evidence(ledger, per_file, violations_by_spec):
+def record_evidence(ledger, per_file, violations_by_spec, code_state=None):
     """Apply one check run to the ledger (ADR 0009). Returns events appended.
 
     - demotion-candidate: FAIL on a ★★ or ★ spec/invariant. Baselined
@@ -197,6 +197,10 @@ def record_evidence(ledger, per_file, violations_by_spec):
       counts nor resets (proves nothing) — or a deeper-tier pass: a ★/—
       invariant passing a mechanical (bounded) check. ★★ never promotes.
     - Contract/pattern results are schema-only, not evidence: excluded.
+    - code_state (ticket 018): appended events carry the git commit + dirty
+      flag of the checked tree, like `at` — dedup identity UNCHANGED (a
+      re-observation at a new commit of unchanged evidence appends nothing;
+      staleness is judged by consumers, not re-recorded).
     """
     from datetime import datetime, timezone
 
@@ -211,6 +215,8 @@ def record_evidence(ledger, per_file, violations_by_spec):
         if _event_identity(ev) not in existing:
             existing.add(_event_identity(ev))
             ev["at"] = now
+            if code_state is not None:
+                ev["code_state"] = code_state
             ledger["events"].append(ev)
             appended.append(ev)
 
@@ -344,6 +350,30 @@ def _spec_affected(spec_path, changed):
             if c == tp or tp in c.parents:
                 return True
     return False
+
+
+def _code_state(root):
+    """Git identity of the checked tree (ticket 018, EDA signoff precedent):
+    {'commit': <hash>, 'dirty': <bool>} — evidence recorded at a commit can be
+    told apart from evidence about some other code state. A dirty tree means
+    the commit does NOT fully identify the checked code; consumers treat such
+    evidence as unverifiable for signoff-grade claims.
+
+    Git absent / not a repo = {'commit': None, 'dirty': None, 'reason': ...} —
+    a coverage statement on the field, never a crash (unlike --changed-only,
+    nothing here REQUIRES git; identity is best-effort)."""
+    import shutil
+    if shutil.which("git") is None:
+        return {"commit": None, "dirty": None, "reason": "git not on PATH"}
+    r = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        return {"commit": None, "dirty": None,
+                "reason": "not a git repository (or no commits yet)"}
+    s = subprocess.run(["git", "-C", str(root), "status", "--porcelain"],
+                       capture_output=True, text=True)
+    return {"commit": r.stdout.strip(),
+            "dirty": bool(s.stdout.strip()) if s.returncode == 0 else None}
 
 
 def extract_frontmatter(path):
@@ -1322,7 +1352,8 @@ def check_trace(spec_path, trace_path, json_output=False, evidence_arg=None):
                 "message": v.get("message"),
             })
         appended = record_evidence(evidence_ledger,
-                                   [(spec_path, "behavior", results)], {})
+                                   [(spec_path, "behavior", results)], {},
+                                   code_state=_code_state(_project_root_for(spec_path)))
         write_evidence_ledger(evidence_path, evidence_ledger)
         return {"path": str(evidence_path), "events_appended": len(appended)}
 
@@ -1330,6 +1361,7 @@ def check_trace(spec_path, trace_path, json_output=False, evidence_arg=None):
         ev_info = _maybe_record(payload, code)
         if json_output:
             doc = build_trace_document(spec_path, payload, data, active_invariants)
+            doc["code_state"] = _code_state(_project_root_for(spec_path))
             if ev_info:
                 doc["evidence_ledger"] = ev_info
             print(json.dumps(doc, indent=2, ensure_ascii=False))
@@ -1958,6 +1990,9 @@ def main():
                          baseline_fps=baseline_fps, baseline_path=baseline_path,
                          baseline_entries=len(baseline_data.get("entries", [])) if baseline_data else 0,
                          scope_extra=scope_extra)
+    # Commit-binding (ticket 018): the git identity of the checked tree.
+    code_state = _code_state(target_root or _project_root_for(files[0]))
+    doc["code_state"] = code_state
 
     # Evidence recording (ADR 0009): errored runs prove nothing — record only
     # from clean pass/fail runs (same discipline as the baseline ratchet).
@@ -1965,7 +2000,8 @@ def main():
         violations_by_spec = {}
         for v in doc["violations"]:
             violations_by_spec.setdefault(v["spec_path"], {})[v["invariant"]] = v
-        appended = record_evidence(evidence_ledger, per_file, violations_by_spec)
+        appended = record_evidence(evidence_ledger, per_file, violations_by_spec,
+                                   code_state=code_state)
         write_evidence_ledger(evidence_path, evidence_ledger)
         doc["evidence_ledger"] = {"path": str(evidence_path),
                                   "events_appended": len(appended)}

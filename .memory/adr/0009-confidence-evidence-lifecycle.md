@@ -57,3 +57,15 @@ A confidence change is applied by editing the artifact itself: the `confidence` 
 
 - **(A) Tools append to spec/pattern frontmatter:** noisy diffs on human-authored files; a check that edits what it checks is a self-review smell; merge conflicts between lanes multiply.
 - **(C) Derive-from-history (recompute on demand):** ephemeral — contradicts growth rule 7's "record evidence"; check logs aren't durable artifacts; recomputation can't distinguish "no evidence" from "evidence lost."
+
+## Amendment: Commit-Binding + Staleness Semantics (ticket 018, 2026-07-19)
+
+Evidence events and check `--json` documents now carry `code_state: {commit, dirty}` — the git identity of the checked tree (git-absent/non-repo: `{commit: null, dirty: null, reason}`; a coverage statement, never a crash). Dedup identity is UNCHANGED: a re-observation of identical evidence at a new commit appends nothing; the original event's binding stands.
+
+**Staleness rule: soft decay by affectedness, judged at consumption — never hard invalidation, never mechanical deletion.**
+
+- Evidence for spec S recorded at commit C is **fresh** for working state W iff neither S's spec file nor any file under S's `check.target` changed between C and W — exactly CK-19's affectedness predicate with `--base C`. Changes elsewhere in the repo do not decay it.
+- Evidence recorded on a **dirty tree** (`dirty: true`) is unverifiable for signoff-grade claims (the commit doesn't fully identify the code); it still counts toward candidate accumulation in day-to-day flow, and ratifiers discount it.
+- **Consumers judge; the ledger never re-litigates.** Passup, span digests, and the future report command compute freshness when presenting candidates; stale events are presented as historical context, not deleted (append-only stands).
+
+**Rejected — hard EDA-style invalidation** (any change anywhere voids all evidence): correct for tape-out signoff against a frozen artifact, wrong for continuous development. Pass streaks (promotion needs `promotion_streak` consecutive passes) would never survive normal commit cadence, leaving the ledger permanently empty and defeating this ADR's purpose. The EDA insight we keep is the *binding* (evidence names its commit, so staleness is computable at all); the archwright-native decay scope is the spec's own check target.

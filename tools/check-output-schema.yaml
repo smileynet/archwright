@@ -121,6 +121,14 @@ properties:
       events_appended: {type: integer}  # demotion/promotion candidates appended THIS run (post-dedup).
                                         # Ledger is tool-owned; human ratification happens in the
                                         # artifact (confidence field + Evidence line; ★★ moves are HITL).
+  code_state:                     # commit-binding (ticket 018, EDA signoff precedent): the git
+    type: object                  # identity of the checked tree. Emitted by check.py (--json, all
+    required: [commit, dirty]     # modes incl. trace); evidence-ledger events carry the same object.
+    properties:                   # Staleness is SOFT (ADR 0009 amendment): evidence at commit C is
+      commit: {type: [string, "null"]}  # fresh iff spec + check.target unchanged since C (CK-19
+      dirty: {type: [boolean, "null"]}  # affectedness); dirty: true = commit doesn't fully identify
+      reason: {type: string}            # the code — unverifiable for signoff-grade claims. Git absent
+                                        # or not a repo: commit/dirty null + reason — never a crash.
   remaining_delta:
     type: integer                 # violations AFTER baseline suppression (CK-07) — what a fix loop
                                   # drives to zero. No baseline active = all violations.
