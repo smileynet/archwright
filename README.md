@@ -66,7 +66,7 @@ Behavior checks compile typed context, transitions, guards, effects, and invaria
 
 Research + design phase. Shipped tools include schema/link validation, trace replay, grep conformance checks, and bounded Alloy checking with counterexample capture. Structural AST routing, contrast-pair rendering, and unbounded proof remain planned.
 
-**Next:** Tracer bullet against lacrosse-bosse — encode existing design decisions as patterns + specs, verify invariants, demonstrate violation detection.
+**Done:** Tracer bullet against fieldball-coach (sanitized alias) — design decisions encoded as patterns + specs, invariants verified, violation detection demonstrated (Phases 0-4, 2026-07-16). **Next:** field runs of the discovery track.
 
 ## Lineage
 

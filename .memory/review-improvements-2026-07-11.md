@@ -1,6 +1,6 @@
 # Archwright Improvement Recommendations — 2026-07-11
 
-Based on running the first full `archwright-review` on lacrosse-bosse-platform.
+Based on running the first full `archwright-review` on fieldball-coach-platform.
 
 ## Session Summary
 

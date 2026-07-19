@@ -51,6 +51,8 @@ Three checks; each caught real drift when first run (2026-07-18: missing script 
 
 1. **Tool→skill map completeness.** `ls tools/*.py tools/*.sh tools/*.mjs` vs the AGENTS.md ownership map. Every script needs an owning skill (usage + output-interpretation contract), a project-local owner (this skill), or an explicit "none" rationale (shared module). New templates/artifact contracts count — agents must know where their interpretation rules live.
 2. **AGENTS.md staleness against actual behavior.** Verify claims about deploy behavior, file locations, and workflows against the scripts themselves (grep the script, don't trust the doc). Known trap: symlink-vs-copy deploy semantics — kiro edits are live, generated references and other tools are not.
+3.5. **Deprecation queue.** Review `.memory/DEPRECATED.md`: for each row whose remove-when condition is now met, remove the file + the row (verify the condition, don't trust the claim). Add rows for anything newly redundant spotted during the audit.
+
 3. **Project-local skill inventory.** `ls .kiro/skills/` — does anything repo-internal lack guidance? Conversely, is anything project-local that should be global (or vice versa)?
 
 Report the delta only; apply small doc fixes immediately (low-risk), ticket anything structural.
