@@ -675,7 +675,13 @@ def _python_grep(target_path, pattern, project_root=None, strip_comments=True, i
     if paths is None:
         paths = []
         for p in target_path.rglob("*"):
-            if p.is_file() and not (set(p.parts) & _SKIP_DIRS):
+            # Check only the relative path parts so system directories
+            # (e.g. Windows %TEMP% containing 'Temp') don't false-skip.
+            try:
+                rel_parts = set(p.relative_to(target_path).parts)
+            except ValueError:
+                rel_parts = set(p.parts)
+            if p.is_file() and not (rel_parts & _SKIP_DIRS):
                 paths.append(p)
     for p in paths:
         if include and not single_file and not _include_match(p, include, project_root):

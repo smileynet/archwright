@@ -14,6 +14,10 @@ node = "22"
 [env]
 # ★/— glyphs break on cp1252 consoles without this (.memory/lessons/utf8-encoding-explicit.md)
 PYTHONIOENCODING = "utf-8"
+# Python UTF-8 mode (PEP 686): open() defaults to UTF-8 instead of the system
+# locale (cp1252 on Windows). Without this, inline python3 -c "json.load(open(...))"
+# in the test suite misreads ★/— glyphs written as UTF-8 by the tools.
+PYTHONUTF8 = "1"
 # archwright-check.py honors this override (upstream 410623c); keeps behavior
 # checks working regardless of checkout path.
 ARCHWRIGHT_ALLOY_JAR = "{{config_root}}/.references/alloy6.jar"
