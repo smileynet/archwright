@@ -1095,6 +1095,34 @@ else
 fi
 rm -rf "$PS_DIR"
 
+# Invariant-description WARN (ticket 038 schema nudge): behavior invariants
+# without a plain-language description WARN (never fail); described ones don't.
+ID_DIR=$(mktemp -d)
+cat > "$ID_DIR/inv-desc.yaml" <<'EOF'
+kind: behavior
+id: inv-desc-probe
+from_patterns: ["pattern:x"]
+protects_experience: "test"
+initial: a
+states: [a]
+invariants:
+  - id: bare-inv
+    type: state
+    predicate: "a"
+  - id: described-inv
+    type: state
+    predicate: "a"
+    description: "plain words a cold reader can follow"
+EOF
+ID_OUT=""; rc=0; ID_OUT=$(python3 "$VALIDATE" "$ID_DIR/inv-desc.yaml" 2>&1) || rc=$?
+if [ "$rc" -eq 0 ] && echo "$ID_OUT" | grep -q "invariant 'bare-inv' has no 'description'" \
+   && ! echo "$ID_OUT" | grep -q "invariant 'described-inv'"; then
+  report PASS "validate: behavior invariant without description WARNs (only the bare one), exit 0"
+else
+  report FAIL "validate: behavior invariant without description WARNs (only the bare one), exit 0" "exit=$rc"
+fi
+rm -rf "$ID_DIR"
+
 echo ""
 echo "=== from_model Resolution: Boundary Producers + Folds (ticket 013) ==="
 # Boundary entities named as producers in contract_candidates are valid

@@ -1,0 +1,320 @@
+# Domain model — archwright report system (ticket 038, model phase)
+# Consumes design/discovery/ui/model-seed.md (approved seed; anchors carried per element).
+# All actors are (planned) — no implementation exists; spec projections carry target_status: pending.
+system: report
+domain: web
+
+experiences:
+  - id: exp-glance-verdict
+    desire: cold-reader-comprehension
+    who: reviewer/lead (cold reader)
+    what_user_sees: "Opening the report, they see how the app behaves (the diagram) and whether it's in good shape (the verdict) without knowing archwright exists."
+    protected_by:
+      - spec: "contract:model-view-block"
+        how: "guarantees plain labels + per-element verification rollups exist for every diagram element"
+      - spec: "constraint:vocabulary-map-surface"
+        how: "keeps methodology vocabulary off the surface they read"
+  - id: exp-know-what-to-do
+    desire: actionable-without-literacy
+    who: developer
+    what_user_sees: "Each flagged item states what's wrong and one recommended action in product language; the affected step is marked on the diagram."
+    protected_by:
+      - spec: "contract:asks-block"
+        how: "every ask carries options/recommendation/rationale derived at generation"
+      - spec: "constraint:violations-pin-to-diagram"
+        how: "failures are locatable on the same map in one step"
+  - id: exp-decisions-wait
+    desire: human-owns-judgment
+    who: developer/operator
+    what_user_sees: "Judgment calls sit at the top waiting for them; nothing ambiguous was decided on their behalf, regardless of configuration."
+    protected_by:
+      - spec: "behavior:ask-lifecycle"
+        how: "no path from decision to auto-approved exists in the ask state machine"
+      - spec: "constraint:decisions-never-auto"
+        how: "generator code cannot classify auto-approvable items as decisions or vice versa silently"
+  - id: exp-honest-green
+    desire: trust-through-disclosure
+    who: reviewer/lead (cold reader)
+    what_user_sees: "An all-clear page that still says what couldn't be checked and what debt was accepted, with reasons."
+    protected_by:
+      - spec: "constraint:allclear-discloses-gaps"
+        how: "generation fails the honesty rule if skips/baseline entries exist but no disclosure section renders"
+  - id: exp-loop-closes
+    desire: agent-closes-the-loop
+    who: developer
+    what_user_sees: "They click through asks, save one file, and their agent picks up every answer — no re-explaining decisions in chat."
+    protected_by:
+      - spec: "contract:response-file"
+        how: "every recorded response is keyed by stable ask-id + run identity the agent can consume"
+      - spec: "constraint:projections-one-way"
+        how: "what the agent reads (JSON) and what the human saw (web/md) cannot diverge"
+
+domain_vocabulary:
+  - domain_name: "Report Builder"
+    implementation_name: "report-generator (planned)"
+    role: "Turns a check run into the three surfaces; applies vocabulary, derives asks, renders the behavior map"
+  - domain_name: "The Report"
+    implementation_name: "report-page (planned)"
+    role: "The static page a human opens, reads, and answers"
+  - domain_name: "An Ask"
+    implementation_name: "ask-card (planned)"
+    role: "One item needing a human response — a decision, an approval, or a suggestion"
+
+actors:
+  - id: report-generator
+    name: "report-generator (planned)"
+    domain_name: "Report Builder"
+    seed_anchors: [wf-projections#D001, design-system#D001, design-system#D004, wf-all-clear#D004]
+    owns:
+      - posture: "enum: all-clear | needs-attention | tool-error | empty-project"   # label: "what kind of page to build"
+      - derived_blocks: "model_view + asks (transient during build)"
+    accepts_events:
+      - GENERATE { canonical_doc, models_dir, config }    # label: "build the report"
+    emits_events:
+      - REPORT_WRITTEN { web, md, json_bundle }           # label: "report ready"
+      - GENERATION_FAILED { reason }                      # label: "couldn't build"
+    lifecycle:
+      invoked_by: "check run completion (CI or local)"
+      active_during: "one generation pass; exits after writing"
+    persistence: transient
+    states:
+      - id: idle
+        label: "waiting"
+      - id: loading
+        label: "reading the check run"
+      - id: deriving
+        label: "working out the asks and the map"
+      - id: rendering
+        label: "building the pages"
+      - id: written
+        label: "report ready"
+      - id: failed
+        label: "couldn't build"
+    invariants:
+      - "every surface datum exists in the canonical JSON bundle (pure projection)"
+      - "every ask-source signal (violation, ledger candidate, baseline proposal, persistent skip) maps to exactly one ask-type"
+      - "auto-approve collapses approvals only — decisions and suggestions are untouched by config"
+      - "all-clear posture with skips/baseline entries present renders disclosure sections"
+      - "needs-attention posture renders the same diagram with badges, never a separate list-only view"
+      - "every surface phrase for an internal term comes from the vocabulary map"
+    user_facing_invariants:
+      - "The web page, the markdown, and the JSON never disagree"
+      - "Nothing ambiguous is ever answered by a setting"
+      - "A green page still tells you what it couldn't check"
+
+  - id: report-page
+    name: "report-page (planned)"
+    domain_name: "The Report"
+    seed_anchors: [design-system#D005, wf-overview#D006, wf-overview (screen table)]
+    owns:
+      - responses: "map ask-id -> recorded response (in-page, volatile until export)"
+      - export_state: "whether a response file has been saved this session"
+    accepts_events:
+      - APPROVE_FIX { ask_id }                        # label: "approve the fix"
+      - CHOOSE_OPTION { ask_id, option }              # label: "pick an option"
+      - FREEFORM_RESPONSE { ask_id, text }            # label: "answer in your own words"
+      - REROUTE_TO_DECISION { ask_id }                # label: "review / amend the rule"
+      - REVEAL_RATIONALE { ask_id }                   # label: "why we recommend this"
+      - OPEN_DETAIL { element_or_ask }                # label: "drill in"
+      - SAVE_RESPONSES {}                             # label: "save responses for the agent"
+    emits_events:
+      - RESPONSE_FILE_SAVED { path }                  # label: "answers handed to the agent"
+    lifecycle:
+      invoked_by: "human opens the HTML artifact"
+      active_during: "browser session; state is volatile until export"
+    persistence: session-scoped
+    states:
+      - id: pristine
+        label: "just reading"
+      - id: responding
+        label: "answers in progress"    # response bar visible (wf-overview#D006)
+      - id: exported
+        label: "answers saved"
+    invariants:
+      - "no network I/O in any state (opens from file://)"
+      - "every control interaction lands in the responses map before anything else"
+      - "export writes all accumulated responses in one file with run identity"
+      - "further responses after export return the page to responding (re-export produces a superseding file)"
+    user_facing_invariants:
+      - "Nothing you click is sent anywhere — the saved file is the only output"
+      - "You can answer in any order and save once"
+
+  - id: ask-card
+    name: "ask-card (planned, spawned per ask)"
+    domain_name: "An Ask"
+    seed_anchors: [design-system#D003, design-system#D004, wf-all-clear#D003, wf-issue-detail#D002, wf-issue-detail#D003]
+    owns:
+      - ask_type: "enum: decision | approval | suggestion"
+      - response: "the recorded answer, if any"
+    accepts_events:
+      - APPROVE_FIX {}            # label: "approve the fix"       (approvals)
+      - CHOOSE_OPTION { option }  # label: "pick an option"        (decisions)
+      - FREEFORM_RESPONSE { text }# label: "answer in your own words" (decisions)
+      - REROUTE_TO_DECISION {}    # label: "review / amend the rule"  (approvals -> decisions)
+      - DISMISS {}                # label: "not now"               (suggestions)
+    emits_events:
+      - RESPONSE_RECORDED { ask_id, response }   # label: "answer noted"
+    lifecycle:
+      invoked_by: report-page
+      active_during: "page session (spawned from the asks block at load)"
+    persistence: transient
+    states:
+      - id: derived
+        label: "raised by the check run"       # generation-time
+      - id: auto-approved
+        label: "signed off by your settings"   # approvals only, config on, at generation
+      - id: presented
+        label: "waiting for you"
+      - id: answered
+        label: "answered"
+      - id: rerouted
+        label: "sent back as a judgment call"  # approval reclassified as decision
+    invariants:
+      - "derived -> auto-approved requires ask_type == approval AND auto-approve config on (generation-time transition)"
+      - "ask_type == decision has NO path to auto-approved"
+      - "ask_type == suggestion never blocks the verdict and has no auto path"
+      - "rerouted asks re-present as decisions and their reroute is itself a recorded response"
+    user_facing_invariants:
+      - "A judgment call always waits for you, whatever your settings"
+      - "If you think the rule is wrong, saying so is one click and it's recorded"
+
+boundary_entities:
+  - id: vocabulary-map
+    classification: configuration-authority
+    seed_anchors: [design-system#D002, design-system (tokens.vocabulary)]
+    provides: "internal-term -> surface-phrase token table (from the design system)"
+    consumed_by: [report-generator]
+    note: "producer of contract:vocabulary-map candidate"
+  - id: auto-approve-config
+    classification: configuration-authority
+    seed_anchors: [design-system#D004]
+    provides: "per-user/machine approval delegation settings (mise.local.toml; off by default)"
+    consumed_by: [report-generator]
+  - id: check-dispatcher
+    classification: boundary-service
+    seed_anchors: [wf-projections#D001]
+    provides: "the canonical run document (CK-03 shape, existing tool archwright-check.py)"
+    consumed_by: [report-generator]
+    note: "external to this model — existing, unchanged"
+  - id: consuming-agent
+    classification: boundary-service
+    seed_anchors: [design-system#D001, design-system#D005]
+    provides: "consumes json bundle + response file; continues the pipeline"
+    consumed_by: []
+    note: "the archwright agent itself — external consumer, out of model scope"
+
+composition:
+  root: null
+  rationale: >
+    Flat, with two temporal stages connected by artifacts rather than lifecycle:
+    report-generator runs at build time and exits; report-page runs at view time
+    in a browser. They never coexist — the report bundle is the only link.
+    report-page spawns ask-card children from the asks block at load.
+  stages:
+    - stage: generation
+      actors: [report-generator]
+      inputs: [check-dispatcher, vocabulary-map, auto-approve-config]
+      output: "report bundle (web, md, json+blocks)"
+    - stage: consumption
+      actors: [report-page, ask-card]
+      inputs: ["report bundle"]
+      output: "response file"
+
+event_flows:
+  - { from: check-dispatcher, to: report-generator, event: canonical-doc, note: "CK-03 document (read)" }
+  - { from: vocabulary-map, to: report-generator, event: token-table, note: "read" }
+  - { from: auto-approve-config, to: report-generator, event: delegation-settings, note: "read" }
+  - { from: report-generator, to: report-page, event: report-bundle, note: "via artifact (web surface + asks/model_view blocks)" }
+  - { from: report-generator, to: consuming-agent, event: report-bundle, note: "via artifact (json + md surfaces)" }
+  - { from: report-page, to: ask-card, event: spawn-from-asks-block }
+  - { from: ask-card, to: report-page, event: RESPONSE_RECORDED }
+  - { from: report-page, to: consuming-agent, event: response-file, note: "via artifact — the only return channel" }
+
+contract_candidates:
+  - event: model-view-block
+    producer: report-generator
+    consumers: [report-page, consuming-agent]
+    seed_anchors: [wf-projections#D001, wf-all-clear#D004]
+  - event: asks-block
+    producer: report-generator
+    consumers: [report-page, consuming-agent]
+    seed_anchors: [design-system#D003, wf-all-clear#D003]
+  - event: response-file
+    producer: report-page
+    consumers: [consuming-agent]
+    seed_anchors: [design-system#D005, wf-overview#D006]
+    note: "protocol cluster owner — the four response legs below fold into this spec (C7 exception: one protocol, one authority actor)"
+  - event: approve-fix
+    producer: ask-card
+    consumers: [consuming-agent]
+    folded_into: response-file
+    seed_anchors: [wf-overview (events), wf-issue-detail#D003]
+  - event: choose-option
+    producer: ask-card
+    consumers: [consuming-agent]
+    folded_into: response-file
+    seed_anchors: [wf-overview#D005]
+  - event: freeform-response
+    producer: ask-card
+    consumers: [consuming-agent]
+    folded_into: response-file
+    seed_anchors: [wf-overview#D005]
+  - event: reroute-to-decision
+    producer: ask-card
+    consumers: [consuming-agent]
+    folded_into: response-file
+    seed_anchors: [wf-issue-detail#D002, wf-issue-detail#D003]
+  - event: vocabulary-map
+    producer: vocabulary-map
+    consumers: [report-generator]
+    seed_anchors: [design-system#D002]
+
+spec_projections:
+  # All target_status: pending — the report has no implementation yet (planned actors).
+  - spec: "behavior:ask-lifecycle"
+    from: "ask-card state machine"
+    pattern: three-ask-types
+    target_status: pending
+  - spec: "contract:model-view-block"
+    from: "contract candidate model-view-block"
+    pattern: [canonical-doc-projections, behavior-first-front-door]
+    target_status: pending
+  - spec: "contract:asks-block"
+    from: "contract candidate asks-block"
+    pattern: [canonical-doc-projections, three-ask-types]
+    target_status: pending
+  - spec: "contract:response-file"
+    from: "contract candidate response-file (+ 4 folded legs)"
+    pattern: static-report-response-file
+    target_status: pending
+  - spec: "contract:vocabulary-map"
+    from: "contract candidate vocabulary-map"
+    pattern: plain-surface-progressive-disclosure
+    target_status: pending
+  - spec: "constraint:projections-one-way"
+    from: "report-generator invariant: pure projection"
+    pattern: canonical-doc-projections
+    target_status: pending
+  - spec: "constraint:vocabulary-map-surface"
+    from: "report-generator invariant: vocabulary map applied"
+    pattern: plain-surface-progressive-disclosure
+    target_status: pending
+  - spec: "constraint:decisions-never-auto"
+    from: "ask-card invariant: decision has no auto path"
+    pattern: three-ask-types
+    target_status: pending
+  - spec: "constraint:no-server-dependency"
+    from: "report-page invariant: no network I/O"
+    pattern: static-report-response-file
+    target_status: pending
+  - spec: "constraint:violations-pin-to-diagram"
+    from: "report-generator invariant: same diagram, badges only"
+    pattern: behavior-first-front-door
+    target_status: pending
+  - spec: "constraint:allclear-discloses-gaps"
+    from: "report-generator invariant: disclosure sections render"
+    pattern: honest-all-clear
+    target_status: pending
+
+conventions:
+  report_home: "design/report/ in the target project, gitignored — regenerable output plus the response-file inbox; the agent consumes responses from there"
