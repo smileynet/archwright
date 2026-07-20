@@ -22,6 +22,20 @@ if ! python3 -c 'pass' >/dev/null 2>&1; then
   fi
 fi
 
+# Windows: Cygwin/MSYS bash's /tmp and Python's tempfile.gettempdir() may diverge
+# (bash → /tmp = C:\Users\...\AppData\Local\Temp via Cygwin map; Python → C:\tmp).
+# Force mktemp to use Python's temp so inline `python3 -c "open('$path')"` works.
+# The path must use forward slashes — backslashes in Python string literals become
+# escape sequences (\U → invalid unicode escape, \A → invalid, etc.).
+if [ -z "${TMPDIR:-}" ]; then
+  _PY_TMP=$(python3 -c 'import tempfile, os; t=tempfile.gettempdir(); print(t.replace(os.sep, "/") if os.name=="nt" else t)' 2>/dev/null)
+  if [ -n "$_PY_TMP" ] && [ -d "$_PY_TMP" ]; then
+    export TMPDIR="$_PY_TMP"
+  fi
+fi
+# Ensure all paths derived from mktemp use forward slashes (Cygwin mktemp already
+# does; the guard above ensures the prefix matches Python's view of the filesystem).
+
 report() {
   if [ "$1" = "PASS" ]; then
     echo "  ✓ $2"
