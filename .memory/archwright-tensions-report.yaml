@@ -1,0 +1,98 @@
+# Tension map — area: report (archwright report UI)
+# Clustered 2026-07-20 from .memory/archwright-forces-report.yaml (ticket 038, tensions phase).
+# Five tensions pre-named by design-system.md Graduates-to-Patterns; one revealed by clustering.
+# Consumer: archwright-resolve (batched confirmation — all resolved), then archwright-formalize.
+area: report
+
+tensions:
+  - id: readability-vs-machine-canonicality
+    desire: "cold-reader-comprehension"
+    constraint: "machine-stable-canonical"
+    contributing: ["agent-closes-the-loop"]
+    statement: "Humans want a readable, layered report, but agents require one stable canonical document whose shape never varies by audience."
+    status: resolved
+    formalization: decided-not-formalized
+    resolution_source: "discovery:design-system#D001; discovery:wf-projections#D001"
+    resolution_gist: "Three-surface architecture: JSON canonical; web and markdown are one-way projections regenerated from it, never edited sideways."
+    pattern_id: null
+    open_questions: []
+
+  - id: outsider-accessibility-vs-expert-precision
+    desire: "actionable-without-literacy"
+    constraint: "expert-precision-available"
+    contributing: ["plain-language-surface", "cold-reader-comprehension"]
+    statement: "The surface must read in product language for cold readers, but experts need exact methodology terms (spec ids, confidence marks, check mechanics) to act precisely."
+    status: resolved
+    formalization: decided-not-formalized
+    resolution_source: "discovery:design-system#D002"
+    resolution_gist: "Progressive disclosure: plain-language surface with a machine-readable vocabulary map; methodology vocabulary only inside fold-out detail layers."
+    pattern_id: null
+    open_questions: []
+
+  - id: agent-autonomy-vs-human-oversight
+    desire: "agent-closes-the-loop"
+    constraint: "hitl-hard-floor"
+    contributing: ["human-owns-judgment", "per-user-delegation"]
+    statement: "Delegating routine sign-offs makes the loop efficient, but judgment calls and firm-rule changes must never be resolvable without a human."
+    status: resolved
+    formalization: decided-not-formalized
+    resolution_source: "discovery:design-system#D003; discovery:design-system#D004; discovery:wf-all-clear#D003"
+    resolution_gist: "Three ask-types: DECISIONS (never auto-resolved), APPROVALS (auto-approvable per-user via mise.local, off by default), SUGGESTIONS (never blocking, never auto-executed)."
+    pattern_id: null
+    open_questions:
+      - "Auto-approve config shape: exact mise variable name/values; whether scoped (e.g. code-fixes only) — wf-overview Not-Resolved, settle during model/contract"
+
+  - id: interactivity-vs-zero-infrastructure
+    desire: "human-owns-judgment"
+    constraint: "zero-infrastructure-artifact"
+    contributing: ["in-report-response-capture", "agent-closes-the-loop"]
+    statement: "Recording human responses demands interaction, but the report must remain a static self-contained artifact with no server or build step."
+    status: resolved
+    formalization: decided-not-formalized
+    resolution_source: "discovery:design-system#D005; discovery:wf-overview#D006"
+    resolution_gist: "Static HTML whose controls accumulate state in-page and export one structured response file — the only return channel; live GUI explicitly backlogged."
+    pattern_id: null
+    open_questions:
+      - "Response-file schema details: versioning, partial responses, staleness when code moved since the run — deferred to contract phase (ticket 038 scope)"
+      - "Ask-id stability across runs: direction is aw/v1 fingerprint reuse (model-seed Derived Data), exact semantics to contract phase (stable-ask-identity force)"
+
+  - id: comprehension-first-vs-verification-first
+    desire: "cold-reader-comprehension"
+    constraint: "fault-location-one-step"
+    contributing: ["actionable-without-literacy", "trust-through-disclosure"]
+    statement: "The report exists to convey verification results, but leading with check status makes the surface unreadable to anyone who doesn't already know what's being checked."
+    status: resolved
+    formalization: decided-not-formalized
+    resolution_source: "discovery:design-system#D006; discovery:wf-all-clear#D004; discovery:wf-all-clear#D005"
+    resolution_gist: "Behavior-first IA: the state-machine diagram is the constant front door; verification badges attach to its elements and violations pin to it; drill order happens → rules → protects → folded design story."
+    pattern_id: null
+    open_questions:
+      - "Front-door fallback for projects with no behavior model (constraint/dependency rules only) — wf-all-clear Not-Resolved, model phase must answer"
+      - "Multi-actor projects: several state machines — which leads, tabs, or composition view — wf-all-clear Not-Resolved, model phase must answer"
+
+  - id: reassurance-vs-honest-disclosure
+    desire: "cold-reader-comprehension"
+    constraint: "gaps-share-the-verdict"
+    contributing: ["trust-through-disclosure"]
+    statement: "A cold reader wants a trust verdict in one glance, but an all-clear that hides coverage gaps and accepted debt overstates trust."
+    status: resolved
+    formalization: decided-not-formalized
+    resolution_source: "discovery:wf-all-clear#D002"
+    resolution_gist: "Verdict line stays one-glance, but 'what isn't verified' and accepted-debt sections are mandatory surface content in all-clear — same prominence as verified content, never folded."
+    pattern_id: null
+    open_questions:
+      - "Not in the design-system Graduates-to-Patterns table — formalize phase to decide: own pattern, or fold into comprehension-first-vs-verification-first as a consequence"
+
+# Forces participating in no tension (bounding without conflict — normal):
+#   status-never-color-alone (hard, WCAG) — unconditional constraint, no desire pushes against it
+#   stable-ask-identity — serves agent-closes-the-loop; its pressure (code churn) is tracked as
+#     an open question under interactivity-vs-zero-infrastructure rather than an invented tension
+
+summary:
+  total: 6
+  resolved: 6
+  partially_resolved: 0
+  open: 0
+  formalized: 0
+  needs_formalization: 6
+  needs_grilling: 0
