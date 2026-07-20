@@ -456,6 +456,15 @@ def validate_file(path):
             "product-force id, so the spec traces to what users feel"
         )
 
+    if kind == "behavior":
+        for inv in data.get("invariants") or []:
+            if isinstance(inv, dict) and not inv.get("description"):
+                warnings.append(
+                    f"invariant '{inv.get('id', '?')}' has no 'description' — the report "
+                    "renders invariants as plain-language statements (design-system#D002); "
+                    "add one sentence a cold reader can follow"
+                )
+
     return ("pass" if not errors else "fail"), errors, warnings
 
 
