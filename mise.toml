@@ -34,6 +34,10 @@ run = "curl -L --create-dirs -o {{config_root}}/.references/alloy6.jar https://g
 description = "Schema-validate patterns/specs: mise run validate -- <files...>"
 run = "python tools/archwright-validate.py"
 
+[tasks.ship]
+description = "Commit staged changes + push if upstream is clean: mise run ship -- \"message\""
+run = "bash tools/ship.sh"
+
 [tasks.validate-links]
 description = "Link-graph validation: mise run validate-links -- <design-dir>"
 run = "python tools/archwright-validate.py --links"

@@ -1867,6 +1867,19 @@ else
 fi
 rm -rf "$EX_DIR" "$RG_TMP"
 
+# Model YAML parse errors fail --links loudly (guidance sync 2026-07-21): a
+# silently-skipped broken model also disabled from_model resolution (vacuous).
+MV_DIR=$(mktemp -d)
+mkdir -p "$MV_DIR/design/models"
+printf 'actors:\n  - id: x\n bad: {' > "$MV_DIR/design/models/broken.yaml"
+rc=0; MV_OUT=$(python3 "$VALIDATE" --links "$MV_DIR/design" 2>&1) || rc=$?
+if [ $rc -eq 1 ] && echo "$MV_OUT" | grep -q "model YAML parse error"; then
+  report PASS "validate: broken model YAML FAILs --links loudly (never silent-skip)"
+else
+  report FAIL "validate: broken model YAML FAILs --links loudly (never silent-skip)" "exit=$rc"
+fi
+rm -rf "$MV_DIR"
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
