@@ -1,0 +1,88 @@
+# Contract: the model_view derived block (report bundle)
+# From model candidate 'model-view-block' [wf-projections#D001, wf-all-clear#D004]
+kind: contract
+id: model-view-block
+from_patterns:
+  - "pattern:canonical-doc-projections"
+  - "pattern:behavior-first-front-door"
+from_model: "model:report-generator"
+confidence: "★"
+
+protects_experience: "exp-glance-verdict"
+user_story: "Opening the report, a cold reader sees how the app behaves as a labeled diagram with verification attached to each element."
+
+events:
+  model-view-block:
+    producer: report-generator
+    consumers: [report-page, consuming-agent]
+    stability: public
+    payload:
+      source_model:
+        type: string
+        required: true
+        description: "Path of the design/models YAML this view was built from"
+      front_door:
+        type: enum
+        required: true
+        values: [behavior-diagram, composition-view, promise-grouped-list]
+        description: "Which front-door mode applies (model decision 1 & 2: single machine, multi-actor composition, or no-model fallback)"
+      states:
+        type: list
+        required: true
+        description: "One entry per model state (see sub_schemas.ViewElement)"
+      transitions:
+        type: list
+        required: true
+        description: "One entry per model transition (see sub_schemas.ViewElement; from/to/event set)"
+
+sub_schemas:
+  ViewElement:
+    fields:
+      id:
+        type: string
+        required: true
+        description: "Model element id (state or transition key)"
+      label:
+        type: string
+        required: true
+        description: "Plain-language label (model label: field, else vocabulary-map fallback) — surface never shows bare ids"
+        from_force: plain-language-surface
+      prose:
+        type: string
+        required: false
+        description: "What-happens-here sentence for behavior detail (wf-behavior-detail#D001)"
+      rollup:
+        type: map
+        required: true
+        description: "Per-element verification rollup: counts per status (pass/fail/warn/skip/pending) over joined specs"
+        from_force: fault-location-one-step
+      rules:
+        type: list
+        required: true
+        description: "Joined spec refs with status + surface statement — the 'rules that apply here' rows"
+      protects:
+        type: list
+        required: false
+        description: "Force/experience ids this element serves (the 'what this protects' section)"
+      from_state:
+        type: string
+        required: false
+        nullable: true
+        description: "Transitions only: source state id"
+      to_state:
+        type: string
+        required: false
+        nullable: true
+        description: "Transitions only: target state id"
+
+lifecycle:
+  - state: "produced"
+    by: "component:report-generator"
+    invariant: "every model state/transition appears exactly once; every element has a label and a rollup (invariant 1: pure projection of canonical doc + model)"
+  - state: "consumed"
+    by: "component:report-page"
+    invariant: "diagram renders every element; failing elements marked on the SAME diagram (constraint:violations-pin-to-diagram)"
+
+links:
+  - target: "pattern:behavior-first-front-door"
+    type: produced-by
