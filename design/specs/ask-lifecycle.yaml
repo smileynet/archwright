@@ -1,0 +1,134 @@
+# Behavior: ask lifecycle — the hard floor as a state machine
+# From model actor 'ask-card' (ticket 038, derive phase).
+kind: behavior
+id: ask-lifecycle
+from_patterns:
+  - "pattern:three-ask-types"
+
+protects_experience: "exp-decisions-wait"
+user_story: "A judgment call always waits for the human, whatever their auto-approve settings; saying 'the rule is wrong' is one recorded click."
+
+context:
+  variables:
+    ask_type:
+      type: enum
+      values: [decision, approval, suggestion]
+      initial: approval
+      from_force: hitl-hard-floor
+    auto_cfg:
+      type: enum
+      values: [on_, off_]
+      initial: off_
+      from_force: per-user-delegation
+
+initial: derived
+
+states:
+  derived:
+    type: atomic
+    "on":
+      CONFIG_ON:
+        target: derived
+        assign:
+          auto_cfg: on_
+        from_force: per-user-delegation
+        from_pattern: three-ask-types
+      AUTO_APPROVE:
+        target: auto_approved
+        guard:
+          predicate: "ask_type == 'approval' and auto_cfg == 'on_'"
+          from_force: hitl-hard-floor
+          confidence: "★★"
+        from_force: per-user-delegation
+        from_pattern: three-ask-types
+      PRESENT:
+        target: presented
+        from_pattern: three-ask-types
+    from_pattern: three-ask-types
+
+  presented:
+    type: atomic
+    "on":
+      RESPOND:
+        target: answered
+        from_force: human-owns-judgment
+        from_pattern: three-ask-types
+      REROUTE:
+        target: rerouted
+        guard:
+          predicate: "ask_type == 'approval'"
+          from_force: human-owns-judgment
+          confidence: "★"
+        assign:
+          ask_type: decision
+        from_pattern: three-ask-types
+    from_pattern: three-ask-types
+
+  rerouted:
+    type: atomic
+    "on":
+      REPRESENT:
+        target: presented
+        from_pattern: three-ask-types
+    invariant:
+      predicate: "ask_type == 'decision'"
+      confidence: "★★"
+      from_force: human-owns-judgment
+    from_pattern: three-ask-types
+
+  answered:
+    type: final
+    "on": {}
+    from_pattern: three-ask-types
+
+  auto_approved:
+    type: final
+    "on": {}
+    from_pattern: three-ask-types
+
+invariants:
+  - id: auto-only-approvals
+    type: temporal
+    predicate: "always (auto_approved implies ask_type == 'approval')"
+    alloy: "always (M.current in AutoApproved implies M.askType = AskType_Approval)"
+    confidence: "★★"
+    from_force: hitl-hard-floor
+    from_pattern: three-ask-types
+    description: "Nothing ambiguous is ever signed off by a setting — only routine approvals can be auto-approved."
+  - id: reroute-makes-decision
+    type: temporal
+    predicate: "always (rerouted implies ask_type == 'decision')"
+    alloy: "always (M.current in Rerouted implies M.askType = AskType_Decision)"
+    confidence: "★★"
+    from_force: human-owns-judgment
+    from_pattern: three-ask-types
+    description: "Telling the report 'the rule is wrong' turns the item into a judgment call — it can never slide back to a routine sign-off."
+
+check:
+  trace:
+    events: [CONFIG_ON, AUTO_APPROVE, PRESENT, RESPOND, REROUTE, REPRESENT]
+    state_vars: [ask_type, auto_cfg]
+    invariants: [auto-only-approvals, reroute-makes-decision]
+  model:
+    backend: alloy
+    scope: 4
+    steps: 8
+
+links:
+  - target: "contract:asks-block"
+    type: consumes
+  - target: "contract:response-file"
+    type: consumes
+  - target: "constraint:decisions-never-auto"
+    type: constrained-by
+
+abstraction_notes:
+  included:
+    - "One ask's lifecycle from derivation to terminal state, with type reclassification on reroute"
+    - "Auto-approve gating as a context variable (generation-time setting)"
+  excluded:
+    - "Payload content (contract:asks-block owns shapes)"
+    - "Scoped auto-approve (code-fixes vs all) — modeled as a single on/off; scoping restricts WHICH approvals see auto_cfg == on_, which cannot widen the invariant"
+    - "Suggestion dismissal (no state impact beyond answered)"
+  justification: "The protected property is type-gated autonomy — payloads and scoping granularity cannot violate it."
+  scope_limit: "Alloy scope 4, 8 steps — one ask instance; the invariants are per-ask and compose trivially."

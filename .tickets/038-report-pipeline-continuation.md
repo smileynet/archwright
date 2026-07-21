@@ -1,7 +1,7 @@
 ---
 id: 038
 title: "Report pipeline continuation: model/contract/derive from the ui discovery seed"
-status: open
+status: done
 blocked_by: []
 ---
 
