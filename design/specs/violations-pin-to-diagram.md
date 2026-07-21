@@ -9,7 +9,7 @@ user_story: "When something fails, the same map the reader already knows shows w
 check:
   method: script
   target: "design/report/report.json"
-  target_status: pending  # No generated bundle yet. Activates on first generation.
+  target_status: pending  # Targets the generated bundle (design/report/, gitignored) — absent on fresh clones. Enforced both-directions in the fixture suite against a suite-generated bundle (ticket 041).
   command: >-
     python3 -c "import json,sys; d=json.load(open('design/report/report.json'));
     mv=d.get('model_view') or {}; asks=(d.get('asks') or {}).get('asks') or [];

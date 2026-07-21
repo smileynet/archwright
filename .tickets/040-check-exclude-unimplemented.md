@@ -1,7 +1,7 @@
 ---
 id: "040"
 title: "Constraint check `exclude` field is documented but unimplemented"
-status: open
+status: done
 blocked_by: []
 ---
 

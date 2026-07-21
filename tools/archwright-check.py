@@ -742,6 +742,18 @@ def _check_grep(check, spec_id, confidence, project_root):
         return [{"invariant": spec_id, "status": "error",
                  "message": "include: applies to declarative target+pattern checks only — "
                             "fold the filter into the command itself"}]
+    # exclude: path-substring filter (ticket 040 — was documented but unimplemented;
+    # a silently-ignored field is worse than a rejected one).
+    exclude = check.get("exclude")
+    if isinstance(exclude, str):
+        exclude = [exclude]
+    if exclude is not None and (not isinstance(exclude, list) or not all(isinstance(s, str) for s in exclude)):
+        return [{"invariant": spec_id, "status": "error",
+                 "message": "exclude: must be a path-substring string or list of strings"}]
+    if exclude and command:
+        return [{"invariant": spec_id, "status": "error",
+                 "message": "exclude: applies to declarative target+pattern checks only — "
+                            "fold the filter into the command itself"}]
 
     if command:
         # Custom command: prefer bash (grep/coreutils available), fall back to system shell.
@@ -789,6 +801,11 @@ def _check_grep(check, spec_id, confidence, project_root):
                 if m:
                     all_matches.append(m)
             matches = "\n".join(all_matches)
+            if exclude:
+                kept = [line for line in matches.splitlines()
+                        if line.strip() and not any(
+                            sub in line.split(":", 1)[0].replace("\\", "/") for sub in exclude)]
+                matches = "\n".join(kept)
         except re.error as e:
             return [{"invariant": spec_id, "status": "error",
                      "message": f"invalid pattern: {e}"}]
@@ -925,6 +942,13 @@ def _check_semgrep(check, spec_id, confidence, project_root):
     if expect not in ("absent", "present"):
         return [{"invariant": spec_id, "status": "error",
                  "message": f"semgrep: unknown expect value '{expect}' — must be absent|present"}]
+
+    # Ticket 040: exclude is implemented for grep only. A silently-ignored
+    # field is worse than a rejected one — error loudly until implemented here.
+    if check.get("exclude") is not None:
+        return [{"invariant": spec_id, "status": "error",
+                 "message": "exclude: not implemented for semgrep checks — use include: "
+                            "globs or narrow the target (grep checks support exclude)"}]
 
     target_path = project_root / target
     if not target_path.exists():
@@ -1201,6 +1225,15 @@ class Untranslatable:
         raise TypeError(f"Untranslatable predicate used as bool: {self.reason}")
 
 
+def _unquote(token):
+    """Strip matching quotes from an enum literal ('approval' / "approval") —
+    the quoted form is what the Alloy backend requires in guards, so the trace
+    evaluator must accept the same syntax (ticket 041 field finding)."""
+    if len(token) >= 2 and token[0] == token[-1] and token[0] in ("'", '"'):
+        return token[1:-1]
+    return token
+
+
 def translate_predicate(pred, state, current_spec_state=None):
     """Evaluate a spec predicate against a state dict.
 
@@ -1277,20 +1310,20 @@ def translate_predicate(pred, state, current_spec_state=None):
         match = re.match(r"(\w+)\s+in\s+\{([^}]+)\}", pred)
         if match:
             var = match.group(1)
-            values = [v.strip() for v in match.group(2).split(",")]
+            values = [_unquote(v.strip()) for v in match.group(2).split(",")]
             actual = str(state.get(var, ""))
             return actual in values
 
     if " == " in pred:
         lhs, rhs = pred.split(" == ", 1)
-        lval = str(state.get(lhs.strip(), lhs.strip()))
-        rval = str(state.get(rhs.strip(), rhs.strip()))
+        lval = str(state.get(lhs.strip(), _unquote(lhs.strip())))
+        rval = str(state.get(rhs.strip(), _unquote(rhs.strip())))
         return lval == rval
 
     if " != " in pred:
         lhs, rhs = pred.split(" != ", 1)
-        lval = str(state.get(lhs.strip(), lhs.strip()))
-        rval = str(state.get(rhs.strip(), rhs.strip()))
+        lval = str(state.get(lhs.strip(), _unquote(lhs.strip())))
+        rval = str(state.get(rhs.strip(), _unquote(rhs.strip())))
         return lval != rval
 
     # Numeric comparisons (<=, >=, <, >) — var-to-var or var-to-literal.
@@ -1308,7 +1341,7 @@ def translate_predicate(pred, state, current_spec_state=None):
                     f"non-numeric operands in comparison: '{pred}'")
 
     # Bare identifier: state name reference
-    if current_spec_state is not None and re.match(r"^[a-z][a-z0-9-]*$", pred):
+    if current_spec_state is not None and re.match(r"^[a-z][a-z0-9_-]*$", pred):
         return pred == current_spec_state
 
     if pred in state:

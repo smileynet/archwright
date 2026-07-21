@@ -9,7 +9,6 @@ user_story: "The report opens from a file anywhere — CI artifact, laptop, air-
 check:
   method: grep
   target: "tools/report/templates/"
-  target_status: pending  # Report page templates/JS don't exist yet. Activates when they land.
   pattern: "fetch\\(|XMLHttpRequest|WebSocket|EventSource|navigator\\.sendBeacon|<script[^>]+src=[\"']https?:|<link[^>]+href=[\"']https?:"
   include: ["*.html", "*.js", "*.j2", "*.tmpl"]
   expect: absent

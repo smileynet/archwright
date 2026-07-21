@@ -9,7 +9,6 @@ user_story: "A cold reader never meets methodology jargon on the surface — int
 check:
   method: grep
   target: "tools/report/templates/"
-  target_status: pending  # Report templates don't exist yet. Activates when they land; packaging decision (ships-with-core vs separate tool) may relocate the target.
   pattern: "remaining_delta|baselined|fix-implementation|fix-spec|fix-check|evidence_ledger|from_force|from_pattern"
   include: ["*.html", "*.j2", "*.tmpl"]
   exclude: ["disclosure", "detail-fold"]

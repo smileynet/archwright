@@ -149,7 +149,7 @@ actors:
     accepts_events:
       - APPROVE_FIX {}            # label: "approve the fix"       (approvals)
       - CHOOSE_OPTION { option }  # label: "pick an option"        (decisions)
-      - FREEFORM_RESPONSE { text }# label: "answer in your own words" (decisions)
+      - FREEFORM_RESPONSE { text } # label: "answer in your own words" (decisions)
       - REROUTE_TO_DECISION {}    # label: "review / amend the rule"  (approvals -> decisions)
       - DISMISS {}                # label: "not now"               (suggestions)
     emits_events:

@@ -1,0 +1,13 @@
+<!-- disclosure partial: the ONLY template layer where internal vocabulary may
+     render (constraint:vocabulary-map-surface excludes paths containing
+     'disclosure'). Renders inside <details> folds. -->
+<details class="detail-fold">
+  <summary>$summary</summary>
+  <div class="disclosure-body">
+    <p class="meta">check internals — spec <code>$spec_id</code>, confidence $confidence_glyph,
+    suggested route <code>$suggested_route</code>, fingerprint <code>$fingerprint</code></p>
+    <p>why this rule exists: force <code>$from_force</code> › pattern <code>$from_pattern</code>
+    › spec <code>$spec_id</code></p>
+    <pre>$evidence</pre>
+  </div>
+</details>

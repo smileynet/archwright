@@ -9,7 +9,7 @@ user_story: "A green page still tells you what it couldn't check and what debt w
 check:
   method: script
   target: "design/report/report.json"
-  target_status: pending  # No generated bundle yet. Activates on first generation.
+  target_status: pending  # Targets the generated bundle (design/report/, gitignored) — absent on fresh clones. Enforced both-directions in the fixture suite against a suite-generated bundle (ticket 041).
   command: >-
     python3 -c "import json; d=json.load(open('design/report/report.json'));
     gaps=(d.get('skips') or []) or (d.get('baseline_entries') or []);

@@ -1,0 +1,36 @@
+# Default vocabulary map — internal term -> surface phrase.
+# Source of truth: design/discovery/ui/design-system.md tokens.vocabulary
+# (contract:vocabulary-map). A target project may override with its own file.
+tokens:
+  violation: "needs attention"
+  baselined: "known issue (accepted)"
+  skip: "couldn't be checked"
+  pending: "check not built yet"
+  remaining_delta: "issues to fix"
+  fix-implementation: "fix the code"
+  fix-spec: "revisit this design rule"
+  fix-check: "the check itself is broken"
+  "confidence ★★": "firm rule — needs your sign-off to change"
+  "confidence ★": "strong guideline"
+  "confidence —": "advisory"
+  force: "why this rule exists"
+  evidence_ledger: "rules earning (or losing) trust"
+  # generation additions (same table discipline — surface phrases only)
+  decision: "decision needs you"
+  approval: "approval waiting"
+  suggestion: "suggestion"
+  all-clear: "All clear — the app behaves as designed"
+  needs-attention: "needs attention"
+  tool-error: "the check tooling hit a problem — results are incomplete"
+  empty-project: "nothing to check yet — no design rules found"
+status_roles:
+  pass:    { color_role: success, glyph: "✓" }
+  fail:    { color_role: danger,  glyph: "✗" }
+  warn:    { color_role: warning, glyph: "⚠" }
+  skip:    { color_role: neutral, glyph: "○" }
+  pending: { color_role: info,    glyph: "…" }
+confidence_glyphs: { high: "★★", medium: "★", advisory: "—" }
+confidence_phrases:
+  "★★": "firm rule — needs your sign-off to change"
+  "★": "strong guideline"
+  "—": "advisory"

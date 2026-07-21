@@ -15,3 +15,4 @@ skills/archwright-survey/references/glossary.md
 
 # Machine-local real-name denylist for sanitize-check (real<->alias map lives in recall, never in the repo)
 .sanitization-denylist
+design/report/
