@@ -2,15 +2,56 @@
 id: "042"
 title: "Adopt tkt natively: prefer it when on PATH, align ticket conventions regardless"
 status: open
-blocked_by: ["040"]
+blocked_by: []
 ---
 
 # Adopt tkt natively: prefer it when on PATH, align ticket conventions regardless
 
+Cross-repo counterpart of crew-research ticket 41 (tkt rollout). tkt is the git-native
+ticket CLI at crew-research `tools/tkt`, built against the shared frontmatter contract
+both repos already satisfy (archwright's 40 tickets verified: parse clean, frontier
+computes correctly, round-trips are byte-identical — 2026-07-21).
+
+## Why
+
+Operator directive 2026-07-21: "archwright will need to rebase to prefer tkt native
+approach when available, and that it aligns regardless." Two collision incidents here
+(005 double-implementation, 009/010 id race) are the motivating evidence; tkt's claim
+loop (fetch → scan local+origin → create → commit → push, bounded renumber-retry) is the
+mechanical fix. This ticket was itself allocated by `tkt new` from this repo — the
+archwright-side birth run.
+
 ## What to build
 
-TBD
+1. **Prefer tkt when on PATH.** Wherever this repo's guidance describes ticket work
+   (AGENTS.md, PLAN.md conventions, any concurrent-sessions guard notes), route to tkt
+   commands first — `tkt ready` / `tkt new` / `tkt claim` / `tkt close` / `tkt validate` —
+   with the manual protocol retained as explicit fallback-when-absent. Install note:
+   `uv tool install <crew-research>/tools/tkt` (interim: `PYTHONPATH=<crew>/tools/tkt
+   python3 -m tkt.cli`).
+2. **Align regardless.** Document the shared contract as THIS repo's ticket convention,
+   independent of the tool being installed: status vocabulary `open | in_progress | done`
+   (in_progress = claimed WIP, new here — today only claim commits mark WIP), quoted-or-
+   unquoted text ids matching filename prefix, `blocked_by` done-gating, claim-before-
+   allocate via fetch+rescan+push. Hand-done ticket work follows the same shapes tkt
+   would produce.
+3. **Wire validation.** `tkt validate` (or its exit-code contract) added to a mise task /
+   the fixture-suite runway so contract drift and decay findings (25 current unchecked-AC
+   warnings) surface mechanically. Decide whether warnings stay advisory here.
+4. **PLAN.md seam note.** PLAN.md remains the authoritative status narrative (its own
+   rule); record that ticket frontmatter is the machine-readable layer tkt computes from,
+   and that a future drift-check (crew ticket 41's sync-plan) may watch the seam.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] AGENTS.md (or the conventions doc it points to) prefers tkt commands with manual
+      fallback; install/interim invocation documented
+- [ ] Shared contract documented as repo convention (incl. in_progress adoption)
+- [ ] `tkt validate` runs green here via a mise task (warnings advisory unless decided
+      otherwise)
+- [ ] Existing tickets remain valid unchanged (zero migration)
+
+## Out of scope
+
+- tkt feature work (renumber, sync-plan, batch create — crew ticket 41)
+- Fixing this repo's 25 unchecked-AC decay warnings (separate cleanup if wanted)
