@@ -124,7 +124,7 @@ Before committing a spec:
 - `expect: absent` — constraint holds if grep finds zero matches after exclude filtering.
 - `expect: present` — constraint holds if grep finds at least one match.
 - `expect: only-in` — matches must appear only in files whose path contains the `only_in` substring.
-- `exclude` — string or list of path substrings. Matches in files containing any exclude substring are removed before interpretation. Use for: the authorized writer itself, data model declarations, read-only consumers.
+- `exclude` — string or list of path substrings (grep only — semgrep checks reject it loudly; use include: globs there). Matches whose file path contains any exclude substring are removed before interpretation. Use for: the authorized writer itself, data model declarations, read-only consumers.
 
 ### script
 

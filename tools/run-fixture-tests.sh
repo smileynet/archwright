@@ -1681,5 +1681,192 @@ fi
 rm -rf "$DG_TMP"
 
 echo ""
+echo "=== Report Generator Conformance (ticket 041) ==="
+# Extension Protocol rule 4: every checker proven on a VIOLATING case too.
+RG_TMP=$(mktemp -d)
+RG="$TOOLS/report/generate.py"
+
+# Minimal canonical doc with one non-escalating violation + one skip.
+cat > "$RG_TMP/check.json" <<'EOF'
+{"status":"fail","scope":{"mode":"static","specs_checked":2},
+ "violations":[{"spec_id":"demo-rule","spec_kind":"constraint","spec_path":"design/specs/demo-rule.md",
+   "invariant":"demo-rule","confidence":"★","severity":"warning","escalate":false,
+   "message":"Demo violation for conformance","evidence":["src/x.py:1:bad()"],
+   "fingerprints":["abcdef0123456789_1"],"from_pattern":"pattern:p","from_force":"f",
+   "suggested_route":"fix-implementation",
+   "contrast_pair":{"expected":"the design says X","actual":"the code does Y"}}],
+ "errors":[],"skips":[{"spec_id":"gap-rule","spec_path":"design/specs/gap-rule.md",
+   "invariant":"gap-rule","reason":"backend unavailable"}],
+ "coverage":{"checked":2,"passed":0,"failed":1,"skipped":1,"errors":0,"pending":0},
+ "remaining_delta":1,"fingerprint_algo":"aw/v1","code_state":{"commit":"deadbeef","dirty":false}}
+EOF
+mkdir -p "$RG_TMP/design/models"
+
+# Generation: needs-attention posture, bundle written.
+rc=0; python3 "$RG" --check-json "$RG_TMP/check.json" --design "$RG_TMP/design" --project demo >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 0 ] && [ -f "$RG_TMP/design/report/report.html" ] && [ -f "$RG_TMP/design/report/REPORT.md" ] \
+   && [ -f "$RG_TMP/design/report/report.json" ]; then
+  report PASS "report: bundle generated (html+md+json) from a violating doc"
+else
+  report FAIL "report: bundle generated (html+md+json) from a violating doc" "exit=$rc"
+fi
+rc=0; python3 -c "
+import json,sys
+d=json.load(open('$RG_TMP/design/report/report.json'))
+asks=d['asks']; assert asks['posture']=='needs-attention', asks['posture']
+a=[x for x in asks['asks'] if x['source']['kind']=='violation'][0]
+assert a['ask_type']=='approval' and a['ask_id']=='abcdef0123456789_1', a
+sugg=[x for x in asks['asks'] if x['ask_type']=='suggestion']; assert sugg, 'skip did not become suggestion'
+" 2>/dev/null || rc=$?
+if [ $rc -eq 0 ]; then
+  report PASS "report: asks derivation (violation->approval w/ fingerprint ask-id, skip->suggestion, posture)"
+else
+  report FAIL "report: asks derivation (violation->approval w/ fingerprint ask-id, skip->suggestion, posture)" "exit=$rc"
+fi
+
+# Escalating violation -> decision; ARCHWRIGHT_AUTO_APPROVE never touches it.
+python3 - "$RG_TMP/check.json" <<'EOF'
+import json,sys
+d=json.load(open(sys.argv[1])); d['violations'][0]['escalate']=True; d['violations'][0]['confidence']='★★'
+json.dump(d, open(sys.argv[1],'w'))
+EOF
+rc=0; ARCHWRIGHT_AUTO_APPROVE=all python3 "$RG" --check-json "$RG_TMP/check.json" --design "$RG_TMP/design" --project demo >/dev/null 2>&1 || rc=$?
+rc2=0; python3 -c "
+import json
+d=json.load(open('$RG_TMP/design/report/report.json'))
+a=[x for x in d['asks']['asks'] if x['source']['kind']=='violation'][0]
+assert a['ask_type']=='decision' and a['auto_approved']==False, a
+assert d['asks']['posture']=='needs-attention'
+" 2>/dev/null || rc2=$?
+if [ $rc -eq 0 ] && [ $rc2 -eq 0 ]; then
+  report PASS "report: escalate->decision; AUTO_APPROVE=all never auto-approves a decision (hard floor)"
+else
+  report FAIL "report: escalate->decision; AUTO_APPROVE=all never auto-approves a decision (hard floor)" "exit=$rc/$rc2"
+fi
+
+# Vocabulary completeness: unknown internal term = generation error (exit 2).
+python3 - "$RG_TMP/check.json" <<'EOF'
+import json,sys
+d=json.load(open(sys.argv[1])); d['violations'][0]['suggested_route']='fix-implementation'; d['violations'][0]['confidence']='☆'
+json.dump(d, open(sys.argv[1],'w'))
+EOF
+rc=0; python3 "$RG" --check-json "$RG_TMP/check.json" --design "$RG_TMP/design" --project demo >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 2 ]; then
+  report PASS "report: untranslated term is a generation ERROR (vocabulary completeness), exit 2"
+else
+  report FAIL "report: untranslated term is a generation ERROR (vocabulary completeness), exit 2" "exit=$rc"
+fi
+
+# Bundle constraints both directions: run the 3 bundle-targeting specs against
+# a good bundle (pass) and a corrupted one (fail) — pending flags stripped.
+python3 - "$RG_TMP/check.json" <<'EOF'
+import json,sys
+d=json.load(open(sys.argv[1])); d['violations']=[]; d['status']='pass'
+json.dump(d, open(sys.argv[1],'w'))
+EOF
+mkdir -p "$RG_TMP/proj/design/specs" "$RG_TMP/proj/design/report"
+python3 "$RG" --check-json "$RG_TMP/check.json" --design "$RG_TMP/proj/design" --project demo >/dev/null 2>&1
+for s in projections-one-way allclear-discloses-gaps violations-pin-to-diagram; do
+  sed '/target_status: pending/d' "$TOOLS/../design/specs/$s.md" > "$RG_TMP/proj/design/specs/$s.md"
+done
+rc=0; python3 "$CHECK" --static "$RG_TMP/proj/design/specs" --target "$RG_TMP/proj" >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 0 ]; then
+  report PASS "report: bundle constraints PASS on a good bundle (activated, no pending)"
+else
+  report FAIL "report: bundle constraints PASS on a good bundle (activated, no pending)" "exit=$rc"
+fi
+# Corrupt: strip the banner + hide the disclosure section on an all-clear page with skips.
+python3 - <<EOF
+from pathlib import Path
+p = Path("$RG_TMP/proj/design/report")
+html = p.joinpath("report.html").read_text(encoding="utf-8")
+html = html.replace("generated by archwright-report — do not edit", "hand edited")
+html = html.replace("WHAT ISN'T VERIFIED", "hidden").replace("couldn't be checked", "fine")
+p.joinpath("report.html").write_text(html, encoding="utf-8")
+md = p.joinpath("REPORT.md").read_text(encoding="utf-8")
+p.joinpath("REPORT.md").write_text(md.replace("generated by archwright-report — do not edit", "x"), encoding="utf-8")
+EOF
+rc=0; OUT=$(python3 "$CHECK" --static "$RG_TMP/proj/design/specs" --target "$RG_TMP/proj" 2>&1) || rc=$?
+if [ $rc -eq 1 ] && echo "$OUT" | grep -q "projections-one-way" && echo "$OUT" | grep -q "allclear-discloses-gaps"; then
+  report PASS "report: corrupted bundle FAILs banner + disclosure constraints (non-vacuous)"
+else
+  report FAIL "report: corrupted bundle FAILs banner + disclosure constraints (non-vacuous)" "exit=$rc"
+fi
+
+# Reducer trace round-trip: the REAL page reducer's trace satisfies behavior:ask-lifecycle.
+if command -v node >/dev/null 2>&1; then
+  RT_ABS="$(cd "$TOOLS" && pwd)"
+  rc=0; node -e "
+const R = require('$RT_ABS/report/templates/page.js');
+const a = R.newAsk('approval','off_');
+['PRESENT','REROUTE','REPRESENT','RESPOND'].forEach(e => { if (!R.send(a,e)) throw new Error(e); });
+const c = R.newAsk('decision','on_');
+if (R.send(c,'AUTO_APPROVE')) { console.error('HARD FLOOR BREACH'); process.exit(1); }
+require('fs').writeFileSync('$RG_TMP/trace.json', JSON.stringify(a.trace));
+const page = R.newPage({commit:'deadbeef',dirty:false});
+R.pageRecord(page,'abcdef0123456789_1',{kind:'approve-fix'});
+const f = JSON.parse(R.exportResponses(page));
+if (f.schema_version!==1 || !f.run || !f.responded_at || !f.responses['abcdef0123456789_1']) process.exit(1);
+" 2>/dev/null || rc=$?
+  rc2=0; python3 "$CHECK" --trace "$TOOLS/../design/specs/ask-lifecycle.yaml" "$RG_TMP/trace.json" >/dev/null 2>&1 || rc2=$?
+  if [ $rc -eq 0 ] && [ $rc2 -eq 0 ]; then
+    report PASS "report: page reducer trace validates vs ask-lifecycle; decision auto rejected; response export shape v1"
+  else
+    report FAIL "report: page reducer trace validates vs ask-lifecycle; decision auto rejected; response export shape v1" "exit=$rc/$rc2"
+  fi
+else
+  report SKIP "report: page reducer trace round-trip (node unavailable)"
+fi
+
+# Quoted enum literals in trace guards (the fix this build exposed): a guard
+# written as ask_type == 'approval' must evaluate, not silently fail.
+rc=0; python3 -c "
+import sys; sys.path.insert(0, '$TOOLS')
+mod = __import__('archwright-check'.replace('-','_'))
+" 2>/dev/null || rc=$?
+QT_OUT=$(python3 "$CHECK" --trace "$TOOLS/../design/specs/ask-lifecycle.yaml" "$RG_TMP/trace.json" --json 2>/dev/null)
+if echo "$QT_OUT" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+assert d['status']=='pass' and not d.get('skips'), d
+" 2>/dev/null; then
+  report PASS "trace: quoted enum literals in guards evaluate (no skips, no silent guard failure)"
+else
+  report FAIL "trace: quoted enum literals in guards evaluate (no skips, no silent guard failure)"
+fi
+
+# exclude filtering (ticket 040): same spec passes WITH exclude, fails WITHOUT.
+EX_DIR=$(mktemp -d)
+mkdir -p "$EX_DIR/proj/src" "$EX_DIR/proj/tests" "$EX_DIR/specs"
+echo "forbidden_call()" > "$EX_DIR/proj/tests/test_x.py"
+echo "clean()" > "$EX_DIR/proj/src/main.py"
+cat > "$EX_DIR/specs/with-exclude.md" <<'EOF'
+---
+kind: constraint
+id: with-exclude
+from_patterns: ["pattern:p"]
+confidence: "★"
+protects_experience: "test"
+user_story: "test"
+check:
+  method: grep
+  target: "."
+  pattern: "forbidden_call"
+  exclude: ["tests/"]
+  expect: absent
+---
+# t
+EOF
+sed 's/id: with-exclude/id: without-exclude/; /exclude: \["tests\/"\]/d' "$EX_DIR/specs/with-exclude.md" > "$EX_DIR/specs/without-exclude.md"
+rc1=0; python3 "$CHECK" "$EX_DIR/specs/with-exclude.md" --target "$EX_DIR/proj" >/dev/null 2>&1 || rc1=$?
+rc2=0; python3 "$CHECK" "$EX_DIR/specs/without-exclude.md" --target "$EX_DIR/proj" >/dev/null 2>&1 || rc2=$?
+if [ $rc1 -eq 0 ] && [ $rc2 -eq 1 ]; then
+  report PASS "check: exclude filters matches (passes with, FAILS without — ticket 040, non-vacuous)"
+else
+  report FAIL "check: exclude filters matches (passes with, FAILS without — ticket 040, non-vacuous)" "with=$rc1 without=$rc2"
+fi
+rm -rf "$EX_DIR" "$RG_TMP"
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

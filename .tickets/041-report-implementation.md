@@ -1,7 +1,7 @@
 ---
 id: 041
 title: "Implement the archwright report generator against the ticket-038 specs"
-status: open
+status: done
 blocked_by: []
 ---
 

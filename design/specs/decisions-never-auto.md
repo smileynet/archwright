@@ -9,8 +9,7 @@ user_story: "Nothing ambiguous is ever answered by a setting — judgment calls 
 check:
   method: grep
   target: "tools/report/"
-  target_status: pending  # Asks-derivation code doesn't exist yet. Activates when it lands.
-  pattern: "ask_type\\s*==\\s*[\"']approval[\"'].*auto_approved|auto_approved.*ask_type\\s*==\\s*[\"']approval[\"']"
+  pattern: "ask_type\\s*===?\\s*(ASK_APPROVAL|[\"']approval[\"']).*auto|auto.*ask_type\\s*===?\\s*(ASK_APPROVAL|[\"']approval[\"'])"
   include: ["*.py", "*.ts", "*.js"]
   expect: present
 links:

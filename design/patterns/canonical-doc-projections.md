@@ -12,6 +12,7 @@ resolves_into:
   - "contract:model-view-block"
   - "contract:asks-block"
   - "constraint:projections-one-way"
+  - "dependency:report-reads-canonical-only"
 ---
 
 # Canonical Document, Projected Surfaces
