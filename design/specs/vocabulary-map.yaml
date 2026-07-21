@@ -1,0 +1,49 @@
+# Contract: the vocabulary map — internal-term -> surface-phrase token table
+# From model candidate 'vocabulary-map' [design-system#D002]; producer is the
+# vocabulary-map configuration authority (boundary entity named as producer —
+# valid from_model target per ticket 013).
+kind: contract
+id: vocabulary-map
+from_patterns:
+  - "pattern:plain-surface-progressive-disclosure"
+from_model: "model:vocabulary-map"
+confidence: "★"
+
+protects_experience: "exp-glance-verdict"
+user_story: "Every surface phrase a reader meets is deliberate product language — the same phrase for the same thing on web, markdown, and in agent quotes."
+
+events:
+  vocabulary-map:
+    producer: vocabulary-map
+    consumers: [report-generator]
+    stability: internal
+    payload:
+      tokens:
+        type: map
+        required: true
+        description: "internal_term -> surface_phrase (source of truth: design-system tokens.vocabulary). Machine-readable so surfaces render from it, never hand-translate."
+      status_roles:
+        type: map
+        required: true
+        description: "status -> {color_role, glyph} pairs — color never alone (status-never-color-alone, WCAG 2.2 SC 1.4.1)"
+      confidence_glyphs:
+        type: map
+        required: true
+        description: "confidence -> glyph (★★/★/—) for DISCLOSURE layers only; the surface uses tokens (firm rule / strong guideline / advisory)"
+
+lifecycle:
+  - state: "produced"
+    by: "component:vocabulary-map"
+    invariant: >-
+      Completeness: every internal term the generator can emit on a surface — all check
+      statuses (pass/fail/warn/skip/pending), all routes (fix-implementation/fix-spec/
+      fix-check), all confidence values, all ask-type names — has a token entry. An
+      untranslated term is a generation-time error, not a silent passthrough
+      (plain-surface-progressive-disclosure: translation cost is paid up front).
+  - state: "consumed"
+    by: "component:report-generator"
+    invariant: "surface layers use only surface_phrase values; internal terms appear solely inside disclosure elements (constraint:vocabulary-map-surface)"
+
+links:
+  - target: "pattern:plain-surface-progressive-disclosure"
+    type: produced-by

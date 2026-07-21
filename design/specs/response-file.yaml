@@ -1,0 +1,100 @@
+# Contract: the response file — the report's only return channel
+# From model candidate 'response-file' [design-system#D005, wf-overview#D006].
+# PROTOCOL CLUSTER (C7 exception): the four in-page response legs
+# (approve-fix, choose-option, freeform-response, reroute-to-decision) are
+# folded into this spec (model candidates carry folded_into: response-file) —
+# one protocol, one authority actor (report-page), legs evolve in lockstep.
+# Settles (seed TODOs): schema versioning, partial responses, staleness/conflicts.
+kind: contract
+id: response-file
+from_patterns:
+  - "pattern:static-report-response-file"
+  - "pattern:three-ask-types"
+from_model: "model:report-page"
+confidence: "★"
+
+protects_experience: "exp-loop-closes"
+user_story: "The human answers asks in the page, saves one file, and their agent picks up every answer without re-explaining."
+
+events:
+  response-file:
+    producer: report-page
+    consumers: [consuming-agent]
+    stability: public
+    payload:
+      schema_version:
+        type: int
+        required: true
+        initial: 1
+        description: "Envelope versioning (settled): strategy = envelope; consumers reject versions they don't know rather than guessing"
+      run:
+        type: map
+        required: true
+        description: "Run identity the answers apply to — {commit, dirty}, copied from the canonical doc's code_state (ticket 018). dirty: true runs make responses advisory, matching commit-binding's signoff stance."
+      responded_at:
+        type: string
+        required: true
+        description: "ISO-8601 export timestamp. Conflict rule (settled): re-export supersedes — for the same run identity, the newest responded_at file is authoritative in full; files are never merged."
+      responses:
+        type: map
+        required: true
+        description: "ask_id -> Response (see sub_schemas.Response). Partial responses (settled): allowed — absent ask_id means unanswered, never implied consent. An empty map is a valid (if pointless) file."
+
+sub_schemas:
+  Response:
+    fields:
+      kind:
+        type: enum
+        required: true
+        values: [approve-fix, choose-option, freeform, reroute-to-decision, dismiss]
+        description: "Which leg produced this entry — the four page legs plus suggestion dismissal"
+        from_force: in-report-response-capture
+      option_id:
+        type: string
+        required: false
+        nullable: true
+        description: "choose-option only: the selected option's id from the ask's options list"
+      text:
+        type: string
+        required: false
+        nullable: true
+        description: "freeform only: the human's own words (wf-overview#D005 'something else')"
+      note:
+        type: string
+        required: false
+        nullable: true
+        description: "Optional context on any leg (e.g. why an approval was rerouted)"
+
+lifecycle:
+  - state: "produced"
+    by: "component:report-page"
+    invariant: "every recorded in-page interaction of a response kind is present; run identity copied unmodified from the bundle"
+  - state: "consumed"
+    by: "component:consuming-agent"
+    invariant: >-
+      Staleness (settled): judged per-ask at consumption — if the ask_id still exists in the
+      LATEST run's asks block, the response applies; if absent, the response is moot (issue
+      resolved or reshaped) and the agent drops it silently. Decision responses are consumed
+      as ratified human decisions; reroute-to-decision entries reclassify the ask in the next
+      generation. Every consumed-or-moot response is acknowledged in the agent's next digest.
+
+persistence:
+  persisted:
+    - schema_version
+    - run
+    - responded_at
+    - responses
+  rationale: >-
+    The file IS the persistence of report-page's session state — the only state that
+    survives the browser session, by design (design-system#D005). After consumption it is
+    stale by construction; history lives in what the agent did with it. Report home:
+    design/report/ (gitignored), per the model's conventions.
+  versioning:
+    strategy: envelope
+    current_version: 1
+
+links:
+  - target: "behavior:ask-lifecycle"
+    type: produced-by
+  - target: "pattern:static-report-response-file"
+    type: produced-by

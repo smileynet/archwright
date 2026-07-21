@@ -1,0 +1,101 @@
+# Contract: the asks derived block (report bundle)
+# From model candidate 'asks-block' [design-system#D003, wf-all-clear#D003]
+# Settles (seed TODO): ask-id scheme; auto-approve variable name + scoping.
+kind: contract
+id: asks-block
+from_patterns:
+  - "pattern:canonical-doc-projections"
+  - "pattern:three-ask-types"
+from_model: "model:report-generator"
+confidence: "★★"
+
+protects_experience: "exp-know-what-to-do"
+user_story: "Each flagged item tells the reader what's wrong and what to do in product language; judgment calls are never pre-answered."
+
+events:
+  asks-block:
+    producer: report-generator
+    consumers: [report-page, consuming-agent]
+    stability: public
+    payload:
+      counts:
+        type: map
+        required: true
+        description: "Verdict-line counts per ask_type: decisions, approvals (incl. auto_approved count), suggestions"
+      auto_approve:
+        type: enum
+        required: true
+        values: [off, code-fixes, all]
+        description: "Effective auto-approve setting at generation. Config source: ARCHWRIGHT_AUTO_APPROVE in mise.local.toml [env] — off (default) | code-fixes (only fix-the-code approvals) | all (all approvals). Decisions/suggestions unaffected by ANY value (hitl-hard-floor)."
+        from_force: per-user-delegation
+      asks:
+        type: list
+        required: true
+        description: "One entry per ask (see sub_schemas.Ask)"
+
+sub_schemas:
+  Ask:
+    fields:
+      ask_id:
+        type: string
+        required: true
+        description: >-
+          Stable identity across runs (seed TODO settled): violation-sourced asks REUSE the
+          aw/v1 fingerprint verbatim (line-number-free by construction); other sources use a
+          source-prefixed stable key — evidence:<fingerprint>, baseline:<fingerprint>,
+          skip:<spec_id>. Same underlying issue = same ask_id across runs and code movement.
+        from_force: stable-ask-identity
+      ask_type:
+        type: enum
+        required: true
+        values: [decision, approval, suggestion]
+        description: "Exactly one type per ask (three-ask-types); decisions are never auto-resolvable"
+        from_force: hitl-hard-floor
+      title:
+        type: string
+        required: true
+        description: "Surface phrase (vocabulary map applied) — one sentence stating the situation"
+      contrast_pair:
+        type: map
+        required: false
+        nullable: true
+        description: "The-design-says / the-code-does pair (wf-overview#D002); null for non-violation sources"
+      options:
+        type: list
+        required: false
+        description: "Decisions only: 2-3 options in product language, each {id, label, recommended: bool} (wf-overview#D005)"
+      recommendation:
+        type: map
+        required: false
+        nullable: true
+        description: "{action, rationale} — required for approvals; marked-among-options for decisions where research supports one; null for genuinely ambiguous"
+      confidence_phrase:
+        type: string
+        required: true
+        description: "Vocabulary-map rendering of the rule's confidence (firm rule / strong guideline / advisory)"
+      source:
+        type: map
+        required: true
+        description: "{kind: violation|evidence-candidate|baseline-proposal|persistent-skip, ref} — the canonical-doc signal this ask derives from; every signal class maps to exactly one ask (generator invariant 2)"
+      auto_approved:
+        type: bool
+        required: true
+        initial: false
+        description: "True only when ask_type == approval AND the effective setting covers it; rendered as the collapsed log line"
+      diagram_ref:
+        type: string
+        required: false
+        nullable: true
+        description: "model_view element id this ask pins to (constraint:violations-pin-to-diagram)"
+
+lifecycle:
+  - state: "produced"
+    by: "component:report-generator"
+    invariant: "no entry with ask_type == decision or suggestion has auto_approved == true (constraint:decisions-never-auto); every canonical-doc ask-source signal is represented"
+  - state: "consumed"
+    by: "component:report-page"
+    invariant: "decisions render above approvals; suggestions never affect the verdict"
+
+links:
+  - target: "pattern:three-ask-types"
+    type: produced-by
