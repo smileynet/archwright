@@ -142,7 +142,7 @@ Before committing a spec:
 ### Predicate syntax (behavior spec guards/invariants)
 
 Supported operators:
-- `X == Y` — equality (variable lookup or literal)
+- `X == Y` — equality (variable lookup or literal; enum literals may be quoted — `ask_type == 'approval'` — and MUST be for the Alloy backend; trace mode accepts the same quoted form since 2026-07-21)
 - `X != Y` — inequality
 - `X in {a, b, c}` — set membership
 - `not P` — negation

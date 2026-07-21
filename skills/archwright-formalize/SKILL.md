@@ -44,7 +44,8 @@ kind: pattern
 id: <slug>
 name: "<Human Name>"
 scale: <scale>
-confidence: pending  # Set after prior art research (Step 5)
+confidence: "—"      # Placeholder until prior art research (Step 5) — the validator
+                     # accepts only ★★/★/—, never `pending` (field finding, 2026-07-21)
 status: active       # active | fog | gated | deprecated. gated = resolution RATIFIED,
                      # activation gated on a named event — add gated_on: "<unblocking event>".
                      # NEVER repurpose fog for a ratified deferral: fog means unresolved
@@ -181,6 +182,8 @@ When formalizing from a tension map, close the loop before finishing: every tens
 ### 9. Skeleton spec gate
 
 After writing the pattern, derive ONE minimal skeleton spec — the simplest static check that validates the pattern's Resolution section. Run it immediately.
+
+**Greenfield escape (field finding, 2026-07-21):** when ALL of the pattern's `resolves_into` targets describe code that doesn't exist yet (planned actors, no implementation), skip the skeleton gate with a stated reason — there is nothing to check against. The derive phase carries the commitment instead via `check.target_status: pending` on every spec (pending-with-reason discipline). Do not write skeletons against imagined paths.
 
 **What a skeleton spec is:**
 - One constraint spec targeting the most obvious code location
