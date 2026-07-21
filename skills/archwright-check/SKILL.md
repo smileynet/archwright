@@ -67,6 +67,28 @@ archwright-check <spec>              # Full verification
 archwright-check --all design/specs/ # Check everything
 ```
 
+## Report Generation (interim ownership — ticket 041)
+
+After a check run, project the results into the human-facing report bundle:
+
+```bash
+python tools/archwright-check.py --static design/specs/ --target . --json > check.json
+python tools/report/generate.py --check-json check.json [--design design/] [--project <name>]
+```
+
+Output: `design/report/` (gitignored) — `report.html` (interactive surface),
+`REPORT.md` (mirror), `report.json` (canonical doc + `model_view`/`asks` blocks).
+Exit 0 = bundle written (posture printed); exit 2 = input error OR an
+untranslated vocabulary term (add the surface phrase to the token table —
+never bypass). `ARCHWRIGHT_AUTO_APPROVE` (off|code-fixes|all, mise.local.toml)
+collapses APPROVALS only — decisions/suggestions are structurally exempt.
+
+**Consuming a response file** (`design/report/responses.json`, contract:response-file):
+per-ask staleness — a response applies iff its ask_id exists in the LATEST run's
+asks block, else drop as moot; newest `responded_at` supersedes whole-file for
+the same run identity (never merge); `run.dirty: true` = advisory only.
+Acknowledge every consumed-or-moot response in the next span digest.
+
 ## Does NOT Cover
 
 - Writing patterns or specs (use `archwright-formalize` / `archwright-derive`)

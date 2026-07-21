@@ -484,7 +484,7 @@ def _collect_from_force_refs(node, out):
 def collect_model_index(directory):
     """Index actor ids + contract-candidate events from design/models/*.yaml.
 
-    Returns (model_ids, candidates, boundary_nonproducers, models_exist).
+    Returns (model_ids, candidates, boundary_nonproducers, models_exist, parse_errors).
     Enforcement follows the force-inventory pattern: no model files ->
     from_model refs are not checked.
 
@@ -501,13 +501,20 @@ def collect_model_index(directory):
     boundary_ids = set()
     producers = set()
     models_exist = False
+    parse_errors = []
 
     for path in directory.rglob("*"):
         if path.suffix not in (".yaml", ".yml") or "models" not in path.parts:
             continue
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except yaml.YAMLError:
+        except yaml.YAMLError as e:
+            # A broken model file must FAIL loudly: silently skipping it also
+            # disables from_model resolution (models_exist stays False), making
+            # the whole links pass partially vacuous (field incident 2026-07-21:
+            # a '}#' comment-spacing bug hid the report model from validation
+            # until the report generator crashed on it).
+            parse_errors.append(f"{path}: model YAML parse error: {e}")
             continue
         if not isinstance(data, dict) or "actors" not in data:
             continue
@@ -529,7 +536,7 @@ def collect_model_index(directory):
     model_ids |= boundary_ids & producers
     boundary_nonproducers = boundary_ids - producers - model_ids
 
-    return model_ids, candidates, boundary_nonproducers, models_exist
+    return model_ids, candidates, boundary_nonproducers, models_exist, parse_errors
 
 
 def collect_all_refs(directory):
@@ -637,9 +644,10 @@ def collect_discovery_graph(directory):
 def validate_links(directory):
     """Validate all cross-references resolve. Returns (errors, warnings)."""
     index, all_outgoing, force_outgoing, model_outgoing, event_coverage = collect_all_refs(directory)
-    model_ids, candidates, boundary_nonproducers, models_exist = collect_model_index(directory)
+    model_ids, candidates, boundary_nonproducers, models_exist, model_parse_errors = collect_model_index(directory)
     errors = []
     warnings = []
+    errors.extend(model_parse_errors)
 
     for source_path, target_ref in all_outgoing:
         if target_ref not in index:
