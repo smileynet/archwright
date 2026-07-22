@@ -34,6 +34,13 @@ run = "curl -L --create-dirs -o {{config_root}}/.references/alloy6.jar https://g
 description = "Schema-validate patterns/specs: mise run validate -- <files...>"
 run = "python tools/archwright-validate.py"
 
+[tasks."validate:tickets"]
+description = "Ticket corpus contract + decay check (tkt from crew-research; falls back to PYTHONPATH invocation)"
+run = """
+if command -v tkt >/dev/null; then tkt validate > /dev/null && echo "tickets valid"; \
+else PYTHONPATH="$HOME/code/crew-research/tools/tkt" python3 -m tkt.cli validate > /dev/null && echo "tickets valid"; fi
+"""
+
 [tasks.ship]
 description = "Commit staged changes + push if upstream is clean: mise run ship -- \"message\""
 run = "bash tools/ship.sh"
