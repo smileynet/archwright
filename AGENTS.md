@@ -199,6 +199,7 @@ mise run test                  # verify: suite green, 0 failed, 0 skipped (count
 | `smcat` (state-machine-cat) | model/diagram FSM rendering (optional) | `npm i -g state-machine-cat` — PNG output also needs Graphviz `dot` |
 | `merman-cli` | model/diagram Mermaid rendering (optional) | `cargo install merman-cli` (not in mise.toml — avoids pulling a Rust toolchain for an optional renderer) |
 | `semgrep` | review AST checks (optional) | `pipx install semgrep` |
+| `playwright` + chromium | report visual-conformance capture (optional, ticket 044) | `npm install && ./node_modules/.bin/playwright install chromium` — use `--registry=https://registry.npmjs.org/` if CodeArtifact auth is stale |
 
 Notes:
 - `archwright-check.py` locates the jar via `ARCHWRIGHT_ALLOY_JAR`, then script-relative `.references/alloy6.jar`, then the legacy `~/code/archwright/` path. Behavior checks report SKIP (exit 0) when it's absent — a coverage gap, not a pass.

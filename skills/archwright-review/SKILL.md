@@ -194,6 +194,15 @@ For each violation, read `from_pattern` + `from_force`:
 | `semgrep` | Structural (AST) checks | `pip install semgrep` or `pipx install semgrep` |
 | `archwright-check.py --trace` | Behavioral trace validation | In archwright/tools/ |
 | `archwright-check-compile` | Generate checks from intents | In archwright/tools/ — invocation + the six intent patterns documented in `archwright-derive` §Check Method Guidance |
+| `tools/report/capture.mjs` | Visual-conformance capture (report page) | Optional: `npm install` + `node_modules/.bin/playwright install chromium` (public registry if CodeArtifact auth is stale) |
+
+## Visual Conformance (review-track harness)
+
+Judging a RENDERED surface against ratified design decisions uses blind
+question-asking — never rubric verification (stated expectations corrupt VQA answers).
+Full method, loop, and incident-backed hard rules:
+[references/visual-conformance.md](references/visual-conformance.md). Battery of
+questions per project: `tools/report/visual-battery.md`.
 
 ## Does NOT
 
