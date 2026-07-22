@@ -83,7 +83,7 @@ actors:
       - id: loading
         label: "reading the check run"
       - id: deriving
-        label: "working out the asks and the map"
+        label: "working out what needs your attention"
       - id: rendering
         label: "building the pages"
       - id: written

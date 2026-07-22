@@ -147,6 +147,9 @@ def render_html(bundle, model, vocab, out_dir):
         if pendings:
             unverified.append('<p><span class="glyph status-pending">%s</span>%d rules: %s</p>'
                               % (vocab.status_glyph("pending"), len(pendings), _esc(vocab.surface("pending"))))
+            unverified.append('<ul class="meta">%s</ul>' % ''.join(
+                '<li>%s</li>' % _esc(s.get("spec_id") or s.get("reason") or "unnamed rule")
+                for s in pendings))
         for v in baselined:
             unverified.append('<p><span class="glyph status-warn">%s</span>%s — %s</p>'
                               % (vocab.status_glyph("warn"), _esc(vocab.surface("baselined")), _esc(v.get("message"))))
@@ -186,7 +189,7 @@ function saveResponses() {
 
     return _tpl("report.html").substitute(
         project=_esc(bundle["project"]), checked_at=_esc(bundle["generated_at"]),
-        run_label=_esc((run.get("commit") or "no-git")[:7] + (" (dirty)" if run.get("dirty") else "")),
+        run_label=_esc((run.get("commit") or "no-git")[:7] + (" · uncommitted changes present" if run.get("dirty") else "")),
         verdict_line=verdict, asks_section=asks_section, diagram_section=diagram_section,
         unverified_section=unverified_section, stability_section=stability_section,
         page_js=page_js, page_wiring=page_wiring)

@@ -69,7 +69,7 @@ def build_model_view(model, doc, vocab):
     if model is None:
         return {"front_door": "promise-grouped-list", "states": [], "transitions": [],
                 "source_model": None,
-                "note": "no behavior model found — promise-grouped fallback (model decision 1)"}
+                "note": "no behavior map available for this project yet"}
 
     actors = [a for a in (model.get("actors") or []) if a.get("states")]
     front_door = "behavior-diagram" if len(actors) == 1 else "composition-view"
@@ -96,7 +96,7 @@ def build_model_view(model, doc, vocab):
             })
     return {"front_door": front_door, "states": states, "transitions": transitions,
             "source_model": model.get("_path"),
-            "note": "v1 join granularity: rules roll up per actor, inherited by its elements"}
+            "note": "rules are grouped by the part of the app they check"}
 
 
 def _ask_id(source_kind, key):
