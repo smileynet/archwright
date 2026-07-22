@@ -12,8 +12,11 @@ edits go stale in ~/.kiro silently). Two lanes implementing one feature can be
 productive — the reconciliation unioned the better halves of each.
 
 Ticket allocation is also a race: both sessions claimed id 005 (different
-filenames, same feature). Guard: `git fetch` + rescan remote `.tickets/` BEFORE
-allocating an id; push the ticket promptly (a pushed ticket is a claim); on
-collision, merge content into the pushed/lower ticket and delete the duplicate.
+filenames, same feature). Guard (mechanized 2026-07-22, ticket 042): use `tkt`
+when on PATH — `tkt new` does fetch → true-max scan (local + origin) → create →
+commit → push in one step; `tkt claim` marks visible WIP. Manual fallback:
+`git fetch` + rescan remote `.tickets/` BEFORE allocating an id; push the
+ticket promptly (a pushed ticket is a claim); on collision, merge content into
+the pushed/lower ticket and delete the duplicate.
 Since 2026-07-17 sessions declare LANES (e.g. app/product vs archwright
 internals) — cross-lane wants become tickets, never direct edits.
