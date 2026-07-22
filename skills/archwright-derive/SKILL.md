@@ -29,6 +29,15 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 
 **When both exist:** The domain model is authoritative for actor boundaries, state machines, and composition. Patterns provide provenance (which force demanded what). Use both together — the model's invariant summary is the spec dispatch list.
 
+### 1b. Read reflections (lessons from prior derivation failures)
+
+Before generating anything, read BOTH sets (Reflections Protocol, `steering/archwright-conventions.md`):
+
+- **Global** (methodology-level, all projects): `.memory/reflections/global.md` in the archwright repo
+- **Project** (target-specific): `.memory/reflections/` in the target project, if present
+
+Apply active workarounds to the specs you write (e.g. R11: no literal `---` inside spec block scalars while ticket 039 is open — write fence patterns as `-\{3\}`); skip entries marked OBSOLETE. A missing reflections file is normal — skip silently, never an error.
+
 ### 2. Read the input
 
 **From patterns**, extract:

@@ -89,6 +89,15 @@ asks block, else drop as moot; newest `responded_at` supersedes whole-file for
 the same run identity (never merge); `run.dirty: true` = advisory only.
 Acknowledge every consumed-or-moot response in the next span digest.
 
+## Evidence Staleness (commit-binding, ADR 0009 / ticket 018)
+
+Every check `--json` document and evidence-ledger event carries `code_state: {commit, dirty}`. Staleness is judged at CONSUMPTION, by affectedness — never at append time:
+
+- Evidence recorded at commit C is FRESH iff the spec file and its `check.target` are unchanged since C (CK-19's affectedness predicate with `--base C`)
+- `dirty: true` = unverifiable for signoff-grade claims — treat as advisory
+- Git absent = null fields with a reason (a coverage note, never a crash)
+- Stale events are never deleted (append-only); pass streaks survive unrelated commits by design — hard EDA-style invalidation was rejected
+
 ## Does NOT Cover
 
 - Writing patterns or specs (use `archwright-formalize` / `archwright-derive`)
