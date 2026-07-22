@@ -1,7 +1,7 @@
 ---
 id: "042"
 title: "Adopt tkt natively: prefer it when on PATH, align ticket conventions regardless"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -44,14 +44,18 @@ archwright-side birth run.
 
 ## Acceptance criteria
 
-- [ ] AGENTS.md (or the conventions doc it points to) prefers tkt commands with manual
+- [x] AGENTS.md (or the conventions doc it points to) prefers tkt commands with manual
       fallback; install/interim invocation documented
-- [ ] Shared contract documented as repo convention (incl. in_progress adoption)
-- [ ] `tkt validate` runs green here via a mise task (warnings advisory unless decided
+- [x] Shared contract documented as repo convention (incl. in_progress adoption)
+- [x] `tkt validate` runs green here via a mise task (warnings advisory unless decided
       otherwise)
-- [ ] Existing tickets remain valid unchanged (zero migration)
+- [x] Existing tickets remain valid unchanged (zero migration)
 
 ## Out of scope
 
 - tkt feature work (renumber, sync-plan, batch create — crew ticket 41)
 - Fixing this repo's 25 unchecked-AC decay warnings (separate cleanup if wanted)
+
+## Resolution (2026-07-22)
+
+TBD
