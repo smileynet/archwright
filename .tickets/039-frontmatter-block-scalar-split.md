@@ -1,7 +1,7 @@
 ---
 id: "039"
 title: "extract_frontmatter truncates YAML block scalars containing '---'"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
