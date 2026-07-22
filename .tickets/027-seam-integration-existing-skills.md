@@ -24,8 +24,8 @@ ADR 0011 defines the discovery→verification seam, but no pipeline skill consum
 
 ## Acceptance criteria
 
-- [ ] Each skill above edited; "Does NOT" boundaries unchanged
-- [ ] No skill documents unshipped tooling (conservation rule interpretation lands with 026, not here)
-- [ ] deploy-skills run for non-kiro targets noted (kiro is symlinked)
+- [x] Each skill above edited; "Does NOT" boundaries unchanged
+- [x] No skill documents unshipped tooling (conservation rule interpretation lands with 026, not here)
+- [x] deploy-skills run for non-kiro targets noted (kiro is symlinked)
 
 Context: ADR 0011; grill Q4/Q6; spec `.memory/specs/discovery-track.md`.

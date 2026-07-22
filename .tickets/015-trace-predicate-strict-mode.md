@@ -47,10 +47,10 @@ Mirror the Alloy-side taint discipline (ticket 008) at the trace layer:
 
 ## Acceptance criteria
 
-- [ ] Untranslatable invariant predicate → listed in `invariants_skipped` with reason; not in `invariants_checked`
-- [ ] Untranslatable guard → transition accepted with a skip note in output, never a silent pass
-- [ ] Fixture suite gains golden checks for both (incl. the still-FAILs case)
-- [ ] `docs/`/AGENTS.md check-output contract (CK-03 schema) updated if the JSON shape grows a field
+- [x] Untranslatable invariant predicate → listed in `invariants_skipped` with reason; not in `invariants_checked`
+- [x] Untranslatable guard → transition accepted with a skip note in output, never a silent pass
+- [x] Fixture suite gains golden checks for both (incl. the still-FAILs case)
+- [x] `docs/`/AGENTS.md check-output contract (CK-03 schema) updated if the JSON shape grows a field
 
 ## Context
 

@@ -18,8 +18,8 @@ Resolution (2026-07-17): `mise run rehydrate-alloy` fetched the 6.2.0 dist jar (
 
 ## Acceptance criteria
 
-- [ ] `mise run test` → 22 passed / 0 failed / 0 skipped (behavior check active, not SKIP)
-- [ ] Works from a plain shell with no manual env setup
+- [x] `mise run test` → 22 passed / 0 failed / 0 skipped (behavior check active, not SKIP)
+- [x] Works from a plain shell with no manual env setup
 
 ## Gotchas (lessons.md)
 

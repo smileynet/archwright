@@ -43,4 +43,4 @@ Add to `tools/archwright-check.py`:
 - [ ] Reports covered/uncovered source files clearly
 - [ ] --json emits structured output
 - [ ] Handles missing target gracefully (exit 2 with message)
-- [ ] Suite green
+- [x] Suite green

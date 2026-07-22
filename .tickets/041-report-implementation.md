@@ -39,8 +39,8 @@ three planned actors (report-generator, report-page, ask-card), 4 contracts,
 
 ## Acceptance criteria
 
-- [ ] Generator produces a bundle for a real project (dogfood: archwright's own design/)
+- [x] Generator produces a bundle for a real project (dogfood: archwright's own design/)
 - [ ] All 6 constraint specs active (no pending) and green, each proven non-vacuous on a violating fixture
-- [ ] `behavior:ask-lifecycle` trace-validated against a real page interaction trace
-- [ ] Response file round-trip: export → agent consumes → digest acknowledges
-- [ ] Vocabulary-map completeness invariant enforced at generation (untranslated term = error)
+- [x] `behavior:ask-lifecycle` trace-validated against a real page interaction trace
+- [x] Response file round-trip: export → agent consumes → digest acknowledges
+- [x] Vocabulary-map completeness invariant enforced at generation (untranslated term = error)

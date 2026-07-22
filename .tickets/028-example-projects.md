@@ -51,8 +51,8 @@ an empty dir; nothing to browse or mechanically assert; survey is skill-driven).
 
 ## Acceptance criteria
 
-- [ ] Toy product exists at planned/partial/complete under `examples/`, sanitized, with per-state README
-- [ ] `examples/README.md` covers the lifecycle incl. state-0 greenfield entry path
-- [ ] Suite asserts expected validate/check results per state (incl. deliberate FAILs in partial)
-- [ ] Suite green; count updated in AGENTS.md Commands test row only
-- [ ] Top-level README or AGENTS.md points users at the examples
+- [x] Toy product exists at planned/partial/complete under `examples/`, sanitized, with per-state README
+- [x] `examples/README.md` covers the lifecycle incl. state-0 greenfield entry path
+- [x] Suite asserts expected validate/check results per state (incl. deliberate FAILs in partial)
+- [x] Suite green; count updated in AGENTS.md Commands test row only
+- [x] Top-level README or AGENTS.md points users at the examples

@@ -17,6 +17,6 @@ created: 2026-07-17
 
 ## Acceptance criteria
 
-- [ ] AGENTS.md documents mise bootstrap + fallback
-- [ ] Skill files updated and deployed (verify deployed copy contains the change)
-- [ ] Committed + pushed
+- [x] AGENTS.md documents mise bootstrap + fallback
+- [x] Skill files updated and deployed (verify deployed copy contains the change)
+- [x] Committed + pushed

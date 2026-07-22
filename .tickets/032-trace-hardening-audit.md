@@ -34,6 +34,6 @@ Common categories from that review:
 
 ## Acceptance criteria
 
-- [ ] Each of the 7 findings documented as: already-present / ported / not-applicable
-- [ ] Any ported fixes follow upstream's patterns (error shape, exit codes, evidence recording)
-- [ ] Suite green (incl. trace-strict fixture)
+- [x] Each of the 7 findings documented as: already-present / ported / not-applicable
+- [x] Any ported fixes follow upstream's patterns (error shape, exit codes, evidence recording)
+- [x] Suite green (incl. trace-strict fixture)

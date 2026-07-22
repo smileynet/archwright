@@ -32,9 +32,9 @@ expressed without a false FAIL.
 
 - [ ] DemoAR `design/` link check passes with from_model pointing at
       content-authority (no spec edit required)
-- [ ] A from_model ref to a nonexistent id still FAILs (no vacuous acceptance)
-- [ ] Fixture suite gains a violating scenario that FAILs (conformance-at-birth rule)
-- [ ] Folded-candidate convention documented or annotated
+- [x] A from_model ref to a nonexistent id still FAILs (no vacuous acceptance)
+- [x] Fixture suite gains a violating scenario that FAILs (conformance-at-birth rule)
+- [x] Folded-candidate convention documented or annotated
 
 ## Close-out (2026-07-18)
 

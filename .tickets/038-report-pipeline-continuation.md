@@ -31,6 +31,6 @@ report home dir in target projects.
 
 ## Acceptance criteria
 
-- [ ] design/forces/, patterns/, models/, specs/ populated for the report; --links passes
-- [ ] Conservation holds: every model/contract element cites its ledger anchors
-- [ ] Session TODOs triaged: consumed by the model or explicitly deferred
+- [x] design/forces/, patterns/, models/, specs/ populated for the report; --links passes
+- [x] Conservation holds: every model/contract element cites its ledger anchors
+- [x] Session TODOs triaged: consumed by the model or explicitly deferred

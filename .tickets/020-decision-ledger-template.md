@@ -12,8 +12,8 @@ blocked_by: []
 Q2: category enum = core 5 (`scope, experience, structure, technical, meta`) + domain extensions from overlay `discovery:` section. Q6: entries carry citable ids — the conservation check's source anchors; template documents the citation obligation for downstream transforms.
 
 ## Acceptance
-- [ ] Template exists; enum parameterization documented
-- [ ] Guard calibrations documented (per Q4)
-- [ ] Citation/id fields support the conservation check (ticket 026)
+- [x] Template exists; enum parameterization documented
+- [x] Guard calibrations documented (per Q4)
+- [x] Citation/id fields support the conservation check (ticket 026)
 
 Context: ADR 0011; spec T2; grill Q2/Q4/Q6.
