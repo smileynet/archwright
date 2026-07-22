@@ -1,7 +1,7 @@
 ---
 id: "042"
 title: "Adopt tkt natively: prefer it when on PATH, align ticket conventions regardless"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
