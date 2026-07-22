@@ -150,7 +150,7 @@ Research + design-theory project transitioning to implementation. Primary output
 
 ## Commands
 
-Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydration). Tasks: `validate`, `validate-links`, `validate:tickets`, `check-static`, `test`, `ship`, `deploy-skills`, `setup`, `rehydrate-alloy`. Without mise, tools are not on PATH — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
+Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydration). Tasks: `validate`, `validate-links`, `validate:tickets`, `check-static`, `test`, `ship` (`mise run ship -- "msg"` — commits STAGED files only + pushes, blocking on upstream divergence; prefer it over hand-rolled add/fetch/commit/push), `deploy-skills`, `setup`, `rehydrate-alloy`. Without mise, tools are not on PATH — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
 
 | Task | Command |
 |------|---------|
@@ -160,8 +160,8 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Batch static check | `python3 tools/archwright-check.py --static <dir> [--target <root>] [--changed-only [--base <ref>]]` — `--changed-only` (CK-19) runs only specs affected by the git diff vs `<ref>` (default HEAD): spec file changed, or changed/untracked file under a `check.target`; no-file-target specs always run; git failure = exit 2 |
 | Validate trace | `python3 tools/archwright-check.py --trace <spec.yaml> <trace.json> [--json]` — untranslatable predicates SKIP-with-reason (`invariants_skipped`/`guards_skipped` in output), never silent-pass (ticket 015); `--json` emits the CK-03 document (violations w/ full routing fields, skips[]) instead of the bespoke replay shape (ticket 016) |
 | Non-vacuity probe | `python3 tools/archwright-check.py --probe <behavior-spec.yaml>` — injects a false invariant; exit 0 = counterexample produced (good), 1 = vacuous model, 2 = not probeable |
-| Trace coverage | `python3 tools/archwright-check.py --trace-coverage <specs-dir> <traces-dir> [--json]` — reports which behavior spec scenarios have matching trace files; exit 0 = all covered, 1 = gaps |
-| Spec coverage | `python3 tools/archwright-check.py --coverage <specs-dir> [--target <root>] [--json]` — reports spec→implementation coverage (implemented/spec-ahead/no-target); informational, always exit 0 |
+| Trace coverage | `python3 tools/archwright-check.py --trace-coverage <specs-dir> <traces-dir> [--json]` — reports which behavior spec scenarios have matching trace files; exit 0 = all covered, 1 = gaps. **BROKEN (ticket 043):** crashes on canonical bare-array traces — verified 2026-07-22 |
+| Spec coverage | `python3 tools/archwright-check.py --coverage <specs-dir> [--target <root>] [--json]` — reports spec→implementation coverage (implemented/spec-ahead/no-target); informational, always exit 0. **BROKEN (ticket 043):** crashes on any dir with a parseable spec — verified 2026-07-22 |
 | Generate force files | `python3 tools/archwright-forces-gen.py <inventory.yaml> [-o <dir>]` — working inventory → design/forces/*.md |
 | Import WoZ session | `python3 tools/archwright-import-woz.py <export.json> [-o <design-dir>] [--force]` — woz-session/v1 JSON → `design/discovery/woz/` artifact (category mapping consumer-side; exit 1 = contract violation, 2 = usage/refusal) |
 | Compile to Alloy | `python3 tools/archwright-compile-alloy.py <spec.yaml>` |
