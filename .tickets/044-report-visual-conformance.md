@@ -1,7 +1,7 @@
 ---
 id: "044"
 title: "Visual design-conformance validation: screenshot the report page, analyze sections against the ratified design"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
