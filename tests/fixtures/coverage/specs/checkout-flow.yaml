@@ -1,0 +1,39 @@
+# Conformance fixture for ticket 043 — coverage modes.
+# Three scenarios: one covered by a bare-array trace (filename association),
+# one covered by an enveloped trace (explicit spec_id), one deliberately
+# uncovered (non-vacuity: the gap must be reported, exit 1).
+kind: behavior
+id: checkout-flow
+from_patterns:
+  - "pattern:conformance-fixture"
+
+protects_experience: "conformance-fixture"
+user_story: "Trace coverage associates canonical bare-array traces by filename and enveloped traces by spec_id."
+
+context:
+  variables:
+    step:
+      type: int
+      initial: 0
+
+states:
+  - id: browsing
+    initial: true
+  - id: paying
+  - id: done
+
+transitions:
+  - from: browsing
+    on: CHECKOUT
+    to: paying
+  - from: paying
+    on: CONFIRM
+    to: done
+
+scenarios:
+  - name: happy path
+    description: "Covered by checkout-flow.happy_path.trace.json (bare array, filename match)"
+  - name: timeout
+    description: "Covered by enveloped.trace.json (explicit spec_id)"
+  - name: crash recovery
+    description: "Deliberately uncovered — the report must show this gap"

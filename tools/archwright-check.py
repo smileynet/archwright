@@ -1984,17 +1984,30 @@ def trace_coverage_report(specs_dir, traces_dir, json_output=False):
             print(f"ERROR: {msg}", file=sys.stderr)
         return 2
 
-    # Collect traces and their spec associations
+    # Collect traces. Association is by explicit spec_id/spec field (enveloped
+    # dict shape) or by filename convention (canonical bare-array shape per
+    # trace-schema.ts — the content carries no spec identity; ticket 030/043).
     trace_files = list(traces_path.glob("*.json")) if traces_path.exists() else []
-    trace_spec_ids = {}
+    traces = []
     for tf in trace_files:
         try:
             data = json.loads(tf.read_text(encoding="utf-8"))
-            sid = data.get("spec_id", "")
-            source = data.get("source", tf.stem)
-            trace_spec_ids.setdefault(sid, []).append(source)
         except (json.JSONDecodeError, OSError):
-            pass
+            continue
+        if isinstance(data, dict):
+            sid = data.get("spec_id", "") or data.get("spec", "")
+            source = data.get("source", tf.stem)
+        elif isinstance(data, list):
+            sid = ""
+            source = tf.stem
+        else:
+            continue
+        traces.append({"sid": sid, "source": source, "stem": tf.stem})
+
+    def _slug(s):
+        return s.lower().replace(" ", "_").replace("-", "_")
+
+    claimed = set()
 
     total_scenarios = 0
     covered_scenarios = 0
@@ -2009,7 +2022,14 @@ def trace_coverage_report(specs_dir, traces_dir, json_output=False):
             continue
         spec_id = data.get("id", "")
         scenarios = data.get("scenarios", [])
-        traces_for_spec = trace_spec_ids.get(spec_id, [])
+        spec_slug = _slug(spec_id) if spec_id else ""
+        traces_for_spec = []
+        for t in traces:
+            if t["sid"] == spec_id or (
+                not t["sid"] and spec_slug and spec_slug in _slug(t["stem"])
+            ):
+                traces_for_spec.append(t["source"])
+                claimed.add(t["stem"])
 
         scenario_results = []
         for s in scenarios:
@@ -2028,9 +2048,11 @@ def trace_coverage_report(specs_dir, traces_dir, json_output=False):
             "scenarios": scenario_results,
         })
 
-    # Orphan traces: traces whose spec_id matches no loaded spec
-    known_ids = {r["spec_id"] for r in spec_reports}
-    orphan_traces = [sid for sid in trace_spec_ids if sid and sid not in known_ids]
+    # Orphan traces: never claimed by any loaded spec (explicit sid with no
+    # matching spec, or a bare-array trace whose filename matches no spec id)
+    orphan_traces = sorted(
+        {t["sid"] or t["stem"] for t in traces if t["stem"] not in claimed}
+    )
 
     status = "pass" if covered_scenarios == total_scenarios else "fail"
 
@@ -2092,12 +2114,11 @@ def coverage_report(specs_dir, target_root=None, json_output=False):
 
     for f in all_files:
         try:
-            data = load_spec(f)
+            data, kind = load_spec(f)
         except Exception:
             continue
-        if not data:
+        if not isinstance(data, dict) or not kind:
             continue
-        kind = data.get("kind", "")
         spec_id = data.get("id", "")
         check = data.get("check", {})
         target = check.get("target", "")
@@ -2207,7 +2228,11 @@ def main():
             print("Usage: archwright-check --trace-coverage <specs-dir> <traces-dir> [--json]")
             sys.exit(2)
         tc_json = "--json" in sys.argv[4:]
-        sys.exit(trace_coverage_report(sys.argv[2], sys.argv[3], json_output=tc_json))
+        try:
+            sys.exit(trace_coverage_report(sys.argv[2], sys.argv[3], json_output=tc_json))
+        except Exception as e:  # exit-code contract: tool error = 2 (ticket 043)
+            print(f"ERROR: trace-coverage failed: {e}", file=sys.stderr)
+            sys.exit(2)
 
     # Handle --coverage mode early (different flow)
     if sys.argv[1] == "--coverage":
@@ -2220,7 +2245,11 @@ def main():
         for idx, a in enumerate(rest):
             if a == "--target" and idx + 1 < len(rest):
                 cov_target = rest[idx + 1]
-        sys.exit(coverage_report(sys.argv[2], target_root=cov_target, json_output=cov_json))
+        try:
+            sys.exit(coverage_report(sys.argv[2], target_root=cov_target, json_output=cov_json))
+        except Exception as e:  # exit-code contract: tool error = 2 (ticket 043)
+            print(f"ERROR: coverage failed: {e}", file=sys.stderr)
+            sys.exit(2)
 
     files = []
     target_root = None

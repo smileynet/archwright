@@ -43,4 +43,8 @@ Tickets 030 (`--trace-coverage`) and 031 (`--coverage`) are `status: done`, but 
 
 ## Resolution (2026-07-22)
 
-TBD
+- `coverage_report` unpacks `(data, kind)` from `load_spec`; non-dict/kind-less files skipped (also filters stray .md without frontmatter).
+- `trace_coverage_report` is shape-aware per ticket 030's original intent: enveloped dict traces associate by `spec_id`/`spec` field; canonical bare-array traces (trace-schema.ts) associate by filename convention (spec-id slug substring of the trace stem). Orphans = traces claimed by no spec, both shapes.
+- Both mode dispatches wrap in exit-2-on-exception (tool error contract); missing specs-dir remains graceful exit 2 + message.
+- New fixture `tests/fixtures/coverage/` (bare-array match + enveloped match + deliberate gap + orphan) — 6 suite checks incl. the non-vacuous gap (exit 1) and both 043 crash reproductions. Suite green 140/0/0.
+- 030/031 residual ACs re-verified live and checked; AGENTS.md coverage rows updated (BROKEN notes removed), count row 134→140.

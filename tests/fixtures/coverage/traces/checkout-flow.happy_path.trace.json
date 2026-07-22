@@ -1,0 +1,5 @@
+[
+  {"event": "INITIAL", "state": {"step": 0}, "clock": 0},
+  {"event": "CHECKOUT", "state": {"step": 1}, "clock": 1},
+  {"event": "CONFIRM", "state": {"step": 2}, "clock": 2}
+]
