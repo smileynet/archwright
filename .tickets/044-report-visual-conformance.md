@@ -58,6 +58,24 @@ treated as unreliable.
    posture (needs-attention vs all-clear); the behavior diagram must be constant
    across them (glossary: posture).
 
+## Settled by operator (2026-07-22)
+
+1. **Invocation = subagent fan-out.** Analysis runs as subagent dispatch (fresh
+   session per section — also sidesteps the long-session/post-compaction inline-image
+   quirk). One section per stage, ≤4 stages per dispatch batch, 1–2 labeled images
+   per stage; findings written to files (write-then-read), then aggregated in the
+   main session. The bare `kiro-cli chat --no-interactive "<prompt> /abs/path.png"`
+   variant is still validated once at harness birth as the fallback path.
+2. **Pre-resize is mandatory, in the capture harness.** Crops are resized to
+   ≤1568 px long edge (and kept ≥200 px) BEFORE analysis — never rely on downstream
+   auto-resize (unverified in the kiro-cli path, and Anthropic's resize takes the
+   sizing choice away from us).
+3. **Image ordering through the tool path: resolved as non-issue.** Tool-mediated
+   images always arrive instruction-first (as read-tool results). That matches the
+   recommended ordering for targeted verify tasks, which is the rubric's shape;
+   images-first only matters for open-ended gestalt critique, which we don't rely
+   on. Confirm with one line during birth validation.
+
 ## Analysis stack (targeted research, 2026-07-22 — supplements the generic VLM findings)
 
 The analysis leg runs on kiro-cli + Claude, so the harness targets THEIR documented
@@ -109,7 +127,7 @@ decision either way.
 ## Acceptance criteria
 
 - [ ] Headless+image invocation validated once at harness birth (kiro-cli --no-interactive with an image path), result recorded
-- [ ] Capture harness produces named per-section PNGs + fullPage overview, light +
+- [ ] Capture harness produces named per-section PNGs (pre-resized ≤1568px long edge, ≥200px) + fullPage overview, light +
       dark, deterministic recipe applied; SKIPs with reason when playwright absent
 - [ ] Rubric file exists; every assertion cites a D-anchor; conservation checked
       (no anchor → error)
