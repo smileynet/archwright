@@ -36,10 +36,11 @@ treated as unreliable.
    `reducedMotion: 'reduce'`, `await document.fonts.ready`, mouse parked at 0,0).
    Per-section `locator.screenshot()` named by report region (posture badge, asks
    block, model view, behavior diagram, disclosure folds) + one fullPage overview;
-   two named runs for `colorScheme: light | dark`. Respect the ≤2000px long-edge /
-   ~1.15MP vision-model budget — viewport-height slices if a section exceeds it.
-   Playwright is an OPTIONAL dependency: absent → SKIP-with-reason (Extension
-   Protocol rule 1), never a suite failure.
+   two named runs for `colorScheme: light | dark`. Pre-downscale to the analysis
+   model's native limits (see Analysis stack below) — resolution mismatch is the #1
+   documented cause of grounding failure. Playwright is an OPTIONAL
+   dependency: absent → SKIP-with-reason (Extension Protocol rule 1), never a suite
+   failure.
 2. **Assertion rubric derived from D-anchors:** a checklist file mapping each visual
    assertion to its ledger anchor (design-system.md#D003/#D004 ask-type rendering,
    wf-all-clear#D003 honest-all-clear, posture badge rules, disclosure-fold
@@ -57,6 +58,41 @@ treated as unreliable.
    posture (needs-attention vs all-clear); the behavior diagram must be constant
    across them (glossary: posture).
 
+## Analysis stack (targeted research, 2026-07-22 — supplements the generic VLM findings)
+
+The analysis leg runs on kiro-cli + Claude, so the harness targets THEIR documented
+mechanics, not generic-VLM folklore (`.scratch/research/claude-vision-specs.md`,
+`claude-ui-screenshot-analysis.md`, `kiro-cli-image-workflow.md`):
+
+- **Image ingestion path:** images enter a kiro-cli session by FILE PATH — the agent
+  reads them via the read tool's Image mode (PNG/JPG/GIF/WebP; kiro-cli documents
+  <10 MB per image, up to 10 images per request). Headless fan-out
+  (`kiro-cli chat --no-interactive "<question> /abs/path.png"`) is the scripted
+  pattern; headless+image is not explicitly documented together — validate once at
+  harness birth and record the result (conformance-at-birth).
+- **Sizing (corrects the earlier generic numbers):** Claude vision cost is
+  patch-based — ⌈w/28⌉ × ⌈h/28⌉ tokens; the old w×h/750 formula is obsolete.
+  Standard tier resizes to 1568 px long edge / 1568-token cap (high-res tier 2576 px
+  on Opus 4.7+/Sonnet 5). Pre-downscale section crops to ≤1568 px long edge OURSELVES
+  (resolution mismatch = the #1 documented grounding-failure cause; Anthropic
+  publishes a reference resized_size()); crops under 200 px risk hallucination —
+  keep section crops between those bounds. Anthropic's internal testing: tiling and
+  coordinate-grid overlays do NOT help; don't build them.
+- **Prompt shape (official + measured):** images BEFORE text for open-ended
+  analysis; label every image with a text block ("Image A: wireframe wf-all-clear",
+  "Image B: rendered section"); structured severity-classified diff output; ≤5-10
+  images per request before recall degrades (two-pass for larger audits).
+- **Division of labor (Anthropic-documented):** Claude's spatial
+  reasoning/coordinates are "approximate" and counting is unreliable — geometry and
+  measurement stay mechanical (DOM assertions, axe-core); Claude judges semantics
+  (hierarchy, grouping, ask-type rendering intent).
+- **Hybrid comparison beats image-vs-image:** no controlled public measurement, but
+  converging evidence favors spec-text + screenshot (Claude can't measure pixels but
+  can verify STATED values) — which is exactly the D-anchor rubric shape. The ASCII
+  wireframes ride along as gestalt evidence, not as the comparison baseline.
+
+
+
 ## Non-vacuity (Extension Protocol rule 4)
 
 A deliberately-broken variant (e.g. CSS token override making status colors
@@ -72,6 +108,7 @@ decision either way.
 
 ## Acceptance criteria
 
+- [ ] Headless+image invocation validated once at harness birth (kiro-cli --no-interactive with an image path), result recorded
 - [ ] Capture harness produces named per-section PNGs + fullPage overview, light +
       dark, deterministic recipe applied; SKIPs with reason when playwright absent
 - [ ] Rubric file exists; every assertion cites a D-anchor; conservation checked
