@@ -1,7 +1,7 @@
 ---
 id: "043"
 title: "Coverage modes crash: --coverage on any parseable spec, --trace-coverage on bare-array traces"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -31,12 +31,16 @@ Tickets 030 (`--trace-coverage`) and 031 (`--coverage`) are `status: done`, but 
 
 ## Acceptance criteria
 
-- [ ] `--coverage` runs green against `examples/complete` (and reports gaps against `examples/partial`)
-- [ ] `--trace-coverage` runs against `tests/fixtures/trace-strict` bare-array traces without crashing
-- [ ] Crash paths exit 2, not 1-with-traceback
-- [ ] Suite tests for both modes incl. a gap scenario; AGENTS.md count row updated
-- [ ] Tickets 030/031 residual unchecked ACs re-verified and checked once fixed
+- [x] `--coverage` runs green against `examples/complete` (and reports gaps against `examples/partial`)
+- [x] `--trace-coverage` runs against `tests/fixtures/trace-strict` bare-array traces without crashing
+- [x] Crash paths exit 2, not 1-with-traceback
+- [x] Suite tests for both modes incl. a gap scenario; AGENTS.md count row updated
+- [x] Tickets 030/031 residual unchecked ACs re-verified and checked once fixed
 
 ## Out of scope
 
 - New coverage features; this is repair + conformance for what 030/031 claimed.
+
+## Resolution (2026-07-22)
+
+TBD
