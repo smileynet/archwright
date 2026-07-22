@@ -23,7 +23,7 @@ Add code-state identity to check evidence:
 
 - [x] `--json` check output includes `code_state: {commit, dirty}` (schema updated in check-output-schema.yaml)
 - [x] Evidence ledger events carry code_state; dedup identity unchanged (grill if this needs revisiting)
-- [ ] Staleness rule decided (grill or ADR note) and documented in the check skill
+- [x] Staleness rule decided (grill or ADR note) and documented in the check skill
 - [x] Fixture coverage: evidence event carries commit; dirty-tree flagged
 - [x] git-absent behavior: SKIP-with-reason on the field, never a crash (matches CK-19's exit-2-on-git-failure only when scoping REQUIRES git)
 
