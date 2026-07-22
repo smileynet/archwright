@@ -1,7 +1,7 @@
 ---
 id: "043"
 title: "Coverage modes crash: --coverage on any parseable spec, --trace-coverage on bare-array traces"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
