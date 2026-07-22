@@ -1,0 +1,8 @@
+{
+  "name": "archwright-tools",
+  "private": true,
+  "description": "Optional node deps for tools/ (playwright: report visual-conformance capture, ticket 044)",
+  "devDependencies": {
+    "playwright": "1.57.0"
+  }
+}
