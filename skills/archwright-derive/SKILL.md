@@ -36,7 +36,7 @@ Before generating anything, read BOTH sets (Reflections Protocol, `steering/arch
 - **Global** (methodology-level, all projects): `.memory/reflections/global.md` in the archwright repo
 - **Project** (target-specific): `.memory/reflections/` in the target project, if present
 
-Apply active workarounds to the specs you write (e.g. R11: no literal `---` inside spec block scalars while ticket 039 is open — write fence patterns as `-\{3\}`); skip entries marked OBSOLETE. A missing reflections file is normal — skip silently, never an error.
+Apply active workarounds to the specs you write; skip entries marked OBSOLETE (e.g. R11's `-\{3\}` fence-escaping became obsolete when ticket 039 landed fence-aware extraction). A missing reflections file is normal — skip silently, never an error.
 
 ### 2. Read the input
 

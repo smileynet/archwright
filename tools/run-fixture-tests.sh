@@ -1880,6 +1880,35 @@ else
 fi
 rm -rf "$MV_DIR"
 
+echo "=== Frontmatter Fence Extraction (ticket 039) ==="
+# extract_frontmatter split on the SUBSTRING '---', truncating any spec whose
+# block scalar legitimately contains it (e.g. grep for fence lines) — a bash
+# "unexpected EOF" two layers from the cause (reflection R11). Fence-aware
+# extraction splits on ^---$ LINES. Fixture: tests/fixtures/frontmatter-fence/
+# (pass variant + deliberately-violating variant per the vacuity rule).
+FF_FIX="$TOOLS/../tests/fixtures/frontmatter-fence"
+
+rc=0; python3 "$CHECK" "$FF_FIX/fence-block-scalar-pass.md" --target "$TOOLS/.." >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 0 ]; then
+  report PASS "frontmatter: block scalar containing '---' parses and check PASSES (039)"
+else
+  report FAIL "frontmatter: block scalar containing '---' parses and check PASSES (039)" "exit=$rc"
+fi
+
+rc=0; FF_OUT=$(python3 "$CHECK" "$FF_FIX/fence-block-scalar-fail.md" --target "$TOOLS/.." 2>&1) || rc=$?
+if [ $rc -eq 1 ] && echo "$FF_OUT" | grep -q "expected 3 fence lines, got 2"; then
+  report PASS "frontmatter: violating variant FAILs — parsed script actually ran (039, non-vacuous)"
+else
+  report FAIL "frontmatter: violating variant FAILs — parsed script actually ran (039, non-vacuous)" "exit=$rc"
+fi
+
+rc=0; python3 "$VALIDATE" "$FF_FIX/fence-block-scalar-pass.md" >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 0 ]; then
+  report PASS "validate: fence-aware extraction parses block-scalar '---' spec (039)"
+else
+  report FAIL "validate: fence-aware extraction parses block-scalar '---' spec (039)" "exit=$rc"
+fi
+
 echo "=== Coverage Modes (ticket 043) ==="
 # Both modes shipped crashing (tuple unpack / bare-array .get) with zero suite
 # coverage — the vacuous-checker class. Fixture: tests/fixtures/coverage/
