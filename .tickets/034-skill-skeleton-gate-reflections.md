@@ -42,7 +42,7 @@ lessons from prior derivation failures:
 
 ## Acceptance criteria
 
-- [ ] Step 7 (skeleton gate) in archwright-formalize/SKILL.md
+- [x] Step 7 (skeleton gate) in archwright-formalize/SKILL.md
 - [ ] Step 1b (reflections) in archwright-derive/SKILL.md
-- [ ] No disruption to upstream's ticket-027 additions (discovery-aware sections)
-- [ ] Skills deploy cleanly (symlinks live)
+- [x] No disruption to upstream's ticket-027 additions (discovery-aware sections)
+- [x] Skills deploy cleanly (symlinks live)

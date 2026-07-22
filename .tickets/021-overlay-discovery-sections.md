@@ -14,8 +14,8 @@ Add `discovery:` to `tools/domains/<d>/`: question frameworks, category extensio
 - general: fallback (goal → artifact → coverage questions), core-5 categories only
 
 ## Acceptance
-- [ ] All three overlays have `discovery:` sections
-- [ ] Game content cites wizard_of_oz sources; web content cites research
-- [ ] Category extensions consistent with grill Q2
+- [x] All three overlays have `discovery:` sections
+- [x] Game content cites wizard_of_oz sources; web content cites research
+- [x] Category extensions consistent with grill Q2
 
 Context: ADR 0011; spec T3; grill Q2.

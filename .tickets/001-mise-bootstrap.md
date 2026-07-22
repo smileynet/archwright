@@ -19,5 +19,5 @@ Rehydrating archwright's external deps (python, java, node/smcat, alloy jar) is 
 
 ## Acceptance criteria
 
-- [ ] `mise --version` succeeds in a fresh shell
-- [ ] `mise doctor` shows no blocking problems
+- [x] `mise --version` succeeds in a fresh shell
+- [x] `mise doctor` shows no blocking problems

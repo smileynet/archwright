@@ -32,7 +32,7 @@ content (ADR 0008, Extension Protocol). Move it there as
 
 ## Acceptance criteria
 
-- [ ] `tools/templates/reflection.md` exists with correct template structure
-- [ ] `tools/stacks/gdscript/trace-instrument.md` exists (moved from templates)
-- [ ] No `tools/templates/trace-instrument-gdscript.md` (wrong location)
-- [ ] REGISTRY.yaml consistent (gdscript entries present as pending)
+- [x] `tools/templates/reflection.md` exists with correct template structure
+- [x] `tools/stacks/gdscript/trace-instrument.md` exists (moved from templates)
+- [x] No `tools/templates/trace-instrument-gdscript.md` (wrong location)
+- [x] REGISTRY.yaml consistent (gdscript entries present as pending)

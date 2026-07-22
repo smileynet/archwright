@@ -41,12 +41,12 @@ Dependency Rehydration table).
 
 ## Acceptance criteria
 
-- [ ] `_check_semgrep()` no longer returns "not yet implemented"
-- [ ] Inline rule (check.rule as dict) works — writes temp file, invokes semgrep, cleans up
-- [ ] External rules_file (check.rules_file) works
-- [ ] expect: absent (default) fails when findings exist, passes when none
-- [ ] expect: present passes when findings exist, fails when none
-- [ ] Missing semgrep binary → status: skipped (not error)
-- [ ] Invalid rule / target not found → status: error with message
-- [ ] Evidence items include path:line:message, capped at _EVIDENCE_CAP
-- [ ] Suite green (no regressions in existing checks)
+- [x] `_check_semgrep()` no longer returns "not yet implemented"
+- [x] Inline rule (check.rule as dict) works — writes temp file, invokes semgrep, cleans up
+- [x] External rules_file (check.rules_file) works
+- [x] expect: absent (default) fails when findings exist, passes when none
+- [x] expect: present passes when findings exist, fails when none
+- [x] Missing semgrep binary → status: skipped (not error)
+- [x] Invalid rule / target not found → status: error with message
+- [x] Evidence items include path:line:message, capped at _EVIDENCE_CAP
+- [x] Suite green (no regressions in existing checks)

@@ -32,6 +32,6 @@ DemoAR dependency specs would all "pass" on wrong paths).
 
 ## Acceptance criteria
 
-- [ ] absent-check over a nonexistent target reports WARN/SKIP, not PASS
-- [ ] Fixture suite gains a vacuous-absent violating scenario
-- [ ] Template guidance shows one canonical example of each polarity
+- [x] absent-check over a nonexistent target reports WARN/SKIP, not PASS
+- [x] Fixture suite gains a vacuous-absent violating scenario
+- [x] Template guidance shows one canonical example of each polarity

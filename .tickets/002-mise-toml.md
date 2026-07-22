@@ -19,11 +19,11 @@ created: 2026-07-17
 
 ## Acceptance criteria
 
-- [ ] `mise install` completes
+- [x] `mise install` completes
 - [ ] `python3 --version` inside repo = mise python (not MS Store stub), incl. inside Git bash
-- [ ] `java -version` works inside repo
-- [ ] `echo $PYTHONIOENCODING` = utf-8 inside repo
-- [ ] `python3 -c "import yaml"` succeeds
+- [x] `java -version` works inside repo
+- [x] `echo $PYTHONIOENCODING` = utf-8 inside repo
+- [x] `python3 -c "import yaml"` succeeds
 
 ## Notes
 

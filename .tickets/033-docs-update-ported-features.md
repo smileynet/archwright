@@ -36,8 +36,8 @@ the new capabilities. All docs must match upstream's structure and voice.
 
 ## Acceptance criteria
 
-- [ ] AGENTS.md reflects all new flags and modes
-- [ ] steering/archwright-conventions.md has new convention entries
+- [x] AGENTS.md reflects all new flags and modes
+- [x] steering/archwright-conventions.md has new convention entries
 - [ ] docs/open-questions.md has new questions integrated (not duplicating existing)
-- [ ] README.md unchanged or minimally updated
-- [ ] No stale references to bash-era tools
+- [x] README.md unchanged or minimally updated
+- [x] No stale references to bash-era tools

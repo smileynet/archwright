@@ -39,7 +39,7 @@ archwright-review findings.
 
 ## Acceptance criteria
 
-- [ ] `.memory/adr/0008-tier3-tool-rewrites.md` exists with proper ADR format
-- [ ] `.memory/reflections/global.md` exists with R1–R10
-- [ ] `.memory/review-improvements-2026-07-11.md` exists
-- [ ] No conflicts with existing .memory/ content
+- [x] `.memory/adr/0008-tier3-tool-rewrites.md` exists with proper ADR format
+- [x] `.memory/reflections/global.md` exists with R1–R10
+- [x] `.memory/review-improvements-2026-07-11.md` exists
+- [x] No conflicts with existing .memory/ content

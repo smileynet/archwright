@@ -32,6 +32,6 @@ implemented. Conformance corpus must include: a spec whose exclude removes a rea
 
 ## Acceptance criteria
 
-- [ ] `exclude` filters grep/semgrep matches, or validate rejects the field loudly
-- [ ] Conformance fixture with passing AND violating variants
-- [ ] Conventions doc and reality agree
+- [x] `exclude` filters grep/semgrep matches, or validate rejects the field loudly
+- [x] Conformance fixture with passing AND violating variants
+- [x] Conventions doc and reality agree
