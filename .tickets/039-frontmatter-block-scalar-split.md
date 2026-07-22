@@ -1,7 +1,7 @@
 ---
 id: "039"
 title: "extract_frontmatter truncates YAML block scalars containing '---'"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -30,6 +30,10 @@ as `-\{3\}` so the literal never appears in the frontmatter.
 
 ## Acceptance criteria
 
-- [ ] Spec files with `---` inside block scalars parse correctly in check + validate tools
-- [ ] Conformance fixture: passing AND violating variants
-- [ ] Field workaround spec (crew-research design/specs/zero-migration.md) parses without the escaping trick
+- [x] Spec files with `---` inside block scalars parse correctly in check + validate tools
+- [x] Conformance fixture: passing AND violating variants
+- [x] Field workaround spec (crew-research design/specs/zero-migration.md) parses without the escaping trick
+
+## Resolution (2026-07-22)
+
+TBD
