@@ -40,8 +40,8 @@ Add to `tools/archwright-check.py`:
 
 ## Acceptance criteria
 
-- [ ] `python3 tools/archwright-check.py --trace-coverage <specs-dir> <traces-dir>` works
+- [x] `python3 tools/archwright-check.py --trace-coverage <specs-dir> <traces-dir>` works
 - [x] Reports covered/uncovered/orphan clearly
-- [ ] Exit 0 when fully covered, 1 when gaps, 2 on error
+- [x] Exit 0 when fully covered, 1 when gaps, 2 on error
 - [x] --json emits structured output
 - [x] Suite green

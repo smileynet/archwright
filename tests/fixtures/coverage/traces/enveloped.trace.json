@@ -1,0 +1,8 @@
+{
+  "spec_id": "checkout-flow",
+  "source": "test_timeout",
+  "events": [
+    {"event": "INITIAL", "state": {"step": 0}, "clock": 0},
+    {"event": "CHECKOUT", "state": {"step": 1}, "clock": 1}
+  ]
+}

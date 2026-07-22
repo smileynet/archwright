@@ -1880,6 +1880,74 @@ else
 fi
 rm -rf "$MV_DIR"
 
+echo "=== Coverage Modes (ticket 043) ==="
+# Both modes shipped crashing (tuple unpack / bare-array .get) with zero suite
+# coverage — the vacuous-checker class. Fixture: tests/fixtures/coverage/
+# (1 bare-array filename match, 1 enveloped spec_id match, 1 deliberate gap,
+# 1 orphan). Non-vacuity: the gap MUST surface as exit 1.
+COV_FIX="$TOOLS/../tests/fixtures/coverage"
+
+rc=0; TC_OUT=$(python3 "$CHECK" --trace-coverage "$COV_FIX/specs" "$COV_FIX/traces" 2>&1) || rc=$?
+if [ $rc -eq 1 ] && echo "$TC_OUT" | grep -q "❌ crash recovery" && echo "$TC_OUT" | grep -q "✅ happy path"; then
+  report PASS "trace-coverage: bare-array filename match + gap reported as exit 1 (non-vacuous)"
+else
+  report FAIL "trace-coverage: bare-array filename match + gap reported as exit 1 (non-vacuous)" "exit=$rc"
+fi
+
+if echo "$TC_OUT" | grep -q "✅ timeout" && echo "$TC_OUT" | grep -q "stray.trace"; then
+  report PASS "trace-coverage: enveloped spec_id association + orphan trace surfaced"
+else
+  report FAIL "trace-coverage: enveloped spec_id association + orphan trace surfaced" "$TC_OUT"
+fi
+
+rc=0; TC_JSON=$(python3 "$CHECK" --trace-coverage "$COV_FIX/specs" "$COV_FIX/traces" --json 2>&1) || rc=$?
+if [ $rc -eq 1 ] && echo "$TC_JSON" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+s = d['summary']
+assert d['status'] == 'fail' and s['covered'] == 2 and s['uncovered'] == 1, s
+assert s['orphan_traces'] == ['stray.trace'], s
+" 2>/dev/null; then
+  report PASS "trace-coverage: --json summary counts (2 covered / 1 gap / 1 orphan)"
+else
+  report FAIL "trace-coverage: --json summary counts (2 covered / 1 gap / 1 orphan)" "exit=$rc"
+fi
+
+# trace-coverage on the canonical bare-array trace-strict fixtures (the 043
+# crash reproduction): must complete without crashing (exit 0 or 1, never 2)
+rc=0; python3 "$CHECK" --trace-coverage "$TOOLS/../tests/fixtures/trace-strict" "$TOOLS/../tests/fixtures/trace-strict" >/dev/null 2>&1 || rc=$?
+if [ $rc -le 1 ]; then
+  report PASS "trace-coverage: canonical bare-array traces do not crash (043 repro)"
+else
+  report FAIL "trace-coverage: canonical bare-array traces do not crash (043 repro)" "exit=$rc"
+fi
+
+# --coverage: examples/complete has implemented specs; examples/planned is the
+# gap scenario (design-only, no code — everything spec-ahead or no-target)
+rc=0; CV_JSON=$(python3 "$CHECK" --coverage "$TOOLS/../examples/complete/design/specs" --target "$TOOLS/../examples/complete" --json 2>&1) || rc=$?
+if [ $rc -eq 0 ] && echo "$CV_JSON" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+assert d['summary']['implemented'] > 0, d['summary']
+" 2>/dev/null; then
+  report PASS "coverage: parseable specs report without crashing, implemented > 0 (043 repro)"
+else
+  report FAIL "coverage: parseable specs report without crashing, implemented > 0 (043 repro)" "exit=$rc"
+fi
+
+rc=0; CV_PLAN=$(python3 "$CHECK" --coverage "$TOOLS/../examples/planned/design/specs" --target "$TOOLS/../examples/planned" --json 2>&1) || rc=$?
+if [ $rc -eq 0 ] && echo "$CV_PLAN" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+s = d['summary']
+assert s['implemented'] == 0 and s['spec_ahead'] > 0, s
+" 2>/dev/null; then
+  report PASS "coverage: design-only project reports spec-ahead gaps, exit 0 (informational)"
+else
+  report FAIL "coverage: design-only project reports spec-ahead gaps, exit 0 (informational)" "exit=$rc"
+fi
+
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

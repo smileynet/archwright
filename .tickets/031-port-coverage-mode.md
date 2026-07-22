@@ -39,8 +39,8 @@ Add to `tools/archwright-check.py`:
 
 ## Acceptance criteria
 
-- [ ] `python3 tools/archwright-check.py --coverage <specs-dir> [--target <root>]` works
-- [ ] Reports covered/uncovered source files clearly
-- [ ] --json emits structured output
-- [ ] Handles missing target gracefully (exit 2 with message)
+- [x] `python3 tools/archwright-check.py --coverage <specs-dir> [--target <root>]` works
+- [x] Reports covered/uncovered source files clearly
+- [x] --json emits structured output
+- [x] Handles missing target gracefully (exit 2 with message)
 - [x] Suite green
