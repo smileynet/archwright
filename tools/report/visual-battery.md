@@ -1,6 +1,7 @@
 # Visual Question Battery — archwright report (ticket 044)
 
-Derived from the active D-anchors in `design/discovery/ui/` (2026-07-22). Method:
+Derived from the active D-anchors in `design/discovery/ui/` (2026-07-22). Method
+authority: `skills/archwright-review/references/visual-conformance.md`. Method:
 blind question-asking — answering sessions see screenshots + questions ONLY; these
 decision texts never enter an answering prompt. Conservation: every question cites
 one anchor; every active anchor appears below exactly once (question or

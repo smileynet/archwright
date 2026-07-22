@@ -73,7 +73,7 @@ After a check run, project the results into the human-facing report bundle:
 
 ```bash
 python tools/archwright-check.py --static design/specs/ --target . --json > check.json
-python tools/report/generate.py --check-json check.json [--design design/] [--project <name>]
+python tools/report/generate.py --check-json check.json [--design design/] [--out <dir>] [--project <name>]
 ```
 
 Output: `design/report/` (gitignored) — `report.html` (interactive surface),
