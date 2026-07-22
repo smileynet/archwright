@@ -1,7 +1,7 @@
 ---
 id: "044"
 title: "Visual design-conformance validation: screenshot the report page, analyze sections against the ratified design"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -127,22 +127,22 @@ per two-tier governance. Record the decision either way.
 
 ## Acceptance criteria
 
-- [ ] Headless+image invocation validated once at harness birth (kiro-cli
+- [x] Headless+image invocation validated once at harness birth (kiro-cli
       --no-interactive with an image path), result recorded
-- [ ] Capture harness produces named per-section PNGs (pre-resized ≤1568px long edge,
+- [x] Capture harness produces named per-section PNGs (pre-resized ≤1568px long edge,
       ≥200px) + fullPage overview, light + dark, deterministic recipe applied; SKIPs
       with reason when playwright absent
-- [ ] Question battery: every question cites a D-anchor; every active anchor has ≥1
+- [x] Question battery: every question cites a D-anchor; every active anchor has ≥1
       question or a not-visually-checkable entry (conservation, both directions);
       no question contains its expected answer (reviewable before use)
-- [ ] Blind answering runs see screenshots + questions only (no decisions, no
+- [x] Blind answering runs see screenshots + questions only (no decisions, no
       wireframes); descriptive pass precedes questions; answers carry confidence
       band + cited visual evidence + abstention path
-- [ ] Judging joins answers to anchors outside the answering sessions; triage table
+- [x] Judging joins answers to anchors outside the answering sessions; triage table
       emitted; absence-findings marked low-confidence
-- [ ] Non-vacuous: broken-variant run produces mismatches; passing run on the dogfood
+- [x] Non-vacuous: broken-variant run produces mismatches; passing run on the dogfood
       bundle is clean or has triaged candidates
-- [ ] Governance decision recorded (review-track vs future check-kind ADR)
+- [x] Governance decision recorded (review-track vs future check-kind ADR)
 
 ## Out of scope
 
@@ -153,3 +153,7 @@ per two-tier governance. Record the decision either way.
 - Mermaid-diagram content validation (settled-signal open question; capture waits for
   it but doesn't judge it)
 - CI wiring — local/operator-run first; field data decides if it joins the suite
+
+## Resolution (2026-07-22)
+
+TBD
