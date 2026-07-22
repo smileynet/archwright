@@ -105,9 +105,10 @@ Never present spec-ahead as a "failure" in alignment reports. The `--coverage` m
 ### R11: Check/validate frontmatter splits on literal '---' anywhere — avoid it in block scalars (2026-07-21)
 **Failure:** A crew-research constraint spec's `check.command` block scalar contained `grep -c "^---"` (checking ticket fence lines). `extract_frontmatter` splits on the SUBSTRING `---`, truncating the YAML mid-script — surfacing as a baffling bash "unexpected EOF" two layers from the cause. Cost 3 debug iterations. Filed as ticket 039.
 **Lesson:** Until 039 lands, spec scripts must never contain three consecutive hyphens: write fence patterns as `-\{3\}`. When a script-check fails with a shell quoting/EOF error that looks impossible, dump the parsed `check.command` FIRST — the frontmatter parser is a suspect, not just your quoting.
+**Status check (2026-07-22, ticket 042):** still live — 039 open; both `archwright-check.py` and `archwright-validate.py` still split on the substring. Workaround stands.
 
 ### R12: Three field gotchas from the first greenfield target run (crew-research tkt, 2026-07-21)
 **Observed:**
-1. `check.exclude` is documented in conventions but UNIMPLEMENTED in archwright-check (ticket 040) — it silently does nothing and matches in "excluded" files fail the check. Workaround: narrow `target:` to the source package dir (also the better spec per R2).
+1. ~~`check.exclude` is documented in conventions but UNIMPLEMENTED in archwright-check (ticket 040)~~ **OBSOLETE (2026-07-22):** 040 shipped same session — `exclude` now filters grep matches (semgrep rejects it loudly), with a non-vacuous fixture in the suite. The narrow-`target:` advice remains the better spec per R2, but is no longer a required workaround.
 2. `target_status: pending` removal is MANUAL. The check output says "activates when it exists," but nothing auto-detects the target landing — remove the flag in the same commit that creates the target, or checks stay pending forever and hide real failures.
 3. Deliberate violating-fixture runs (the non-vacuity discipline) append FAIL events to the evidence ledger and reset pass streaks. Benign, but expect the events — surface them in the span digest as test noise rather than letting them read as regressions.

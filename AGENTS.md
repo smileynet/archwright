@@ -91,7 +91,7 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   └── adr/                       # Architecture decision records
 ├── audit-plan.md                  # Audit plan — CLOSED 2026-07-18 (all 7 DoD verified; see §Plan Close-Out)
 ├── mise.toml                      # Managed toolchain + env + tasks (see Dependency Rehydration)
-├── .tickets/                      # Frontier tickets (frontmatter status/blocked_by)
+├── .tickets/                      # Frontier tickets (shared frontmatter contract, tkt-managed — see §Tickets)
 ├── .scratch/                      # Ephemeral working notes (gitignored)
 ├── .references/                   # Reference repos (gitignored)
 └── AGENTS.md                      # This file
@@ -150,7 +150,7 @@ Research + design-theory project transitioning to implementation. Primary output
 
 ## Commands
 
-Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydration). Tasks: `validate`, `validate-links`, `check-static`, `test`, `deploy-skills`, `setup`, `rehydrate-alloy`. Without mise, tools are not on PATH — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
+Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydration). Tasks: `validate`, `validate-links`, `validate:tickets`, `check-static`, `test`, `ship`, `deploy-skills`, `setup`, `rehydrate-alloy`. Without mise, tools are not on PATH — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
 
 | Task | Command |
 |------|---------|
@@ -213,6 +213,31 @@ Notes:
 3. **Build tooling** — scripts in `tools/` for validation, compilation, checking
 4. **Tracer bullet** — encode fieldball-coach decisions as patterns + specs, verify
 5. **Pipeline on new project** — run full pipeline (survey→check) on a target project, producing patterns + models + specs in `design/`
+
+## Tickets
+
+`.tickets/` follows the shared frontmatter contract — authority: crew-research `.memory/specs/ticket-cli-spec.md` (status vocabulary is frozen contract; additions need a spec change there, never convention drift). This is the repo convention regardless of tooling:
+
+- Text ids matching the `NNN-slug.md` filename prefix (3-digit here); quoted or unquoted
+- `status: open | in_progress | done` — `in_progress` = claimed WIP (excluded from frontier, visible on the board)
+- `blocked_by: [ids]` — all done ⇒ frontier-eligible; `priority: high` jumps lowest-number-first
+- Unknown fields (`created`, `closed`, `lane`, …) preserved verbatim; existing tickets valid unchanged (zero migration)
+- Claim-before-allocate: fetch → true-max scan (local + origin) → create → commit → push (a pushed ticket is a claim)
+
+**Prefer `tkt` when on PATH** (git-native ticket CLI, source: crew-research `tools/tkt`; install: `uv tool install ~/code/crew-research/tools/tkt`; interim without install: `PYTHONPATH=~/code/crew-research/tools/tkt python3 -m tkt.cli`):
+
+| Task | Command |
+|------|---------|
+| Frontier | `tkt ready` |
+| Allocate + claim new (collision-safe) | `tkt new <slug> --title "..." [--blocked-by IDS] [--priority high]` |
+| Claim WIP | `tkt claim <id>` |
+| Close (Resolution stub, warns unchecked ACs) | `tkt close <id>` |
+| Field edits | `tkt edit <id>` |
+| Contract + decay check | `tkt validate` — or `mise run validate:tickets` (warnings, e.g. unchecked ACs on done tickets, are advisory here) |
+
+**Manual fallback (tkt absent):** same shapes by hand — rescan before allocating, set `status: in_progress` on claim and push, dated Resolution on close, merge into the lower/pushed ticket on collision. Motivating incidents: 005 double-implementation, 009/010 id race (`.memory/lessons/concurrent-sessions.md`).
+
+PLAN.md stays the authoritative status narrative; ticket frontmatter is the machine-readable layer tkt computes from. Never use `tk` (unrelated third-party tool: reads `deps` not `blocked_by`, silently omits unparseable tickets).
 
 ## Key Constraints
 

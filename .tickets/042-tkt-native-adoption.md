@@ -58,4 +58,10 @@ archwright-side birth run.
 
 ## Resolution (2026-07-22)
 
-TBD
+- AGENTS.md §Tickets added: shared contract as repo convention (text ids, `open | in_progress | done`, blocked_by gating, unknown-field preservation, claim-before-allocate), tkt command table with install + interim invocation, manual fallback, `tk` warning. Layout row + mise task list updated (`validate:tickets`, `ship`).
+- `mise run validate:tickets` (f69f23d, pre-existing) verified green: exit 0, 27 unchecked-AC warnings — kept advisory (decay cleanup stays out of scope).
+- Zero migration confirmed: `tkt validate` status=pass over all existing tickets; `tkt ready` frontier matches manual scan.
+- PLAN.md seam note recorded (frontmatter = machine layer tkt computes from; sync-plan may watch the seam); stale NEXT UP refreshed.
+- `.memory/lessons/concurrent-sessions.md` allocation guard routed to tkt.
+- R11/R12 workaround audit (directive rider): R11 still live — 039 open, both check.py:384 and validate.py:63 still substring-split on `---`. R12 item 1 marked OBSOLETE (040 shipped exclude); items 2–3 stand.
+- This ticket was itself worked end-to-end via tkt (new → claim → close) — the birth run doubles as acceptance evidence.

@@ -313,4 +313,6 @@ Phase 6: Discovery Track
 
 Cross-repo: T7a exporter ticketed in `~/code/wizard_of_oz/.tickets/001`. Independent: ticket 018 (commit-binding, verification track); ticket 028 (sanitized example projects across the lifecycle spectrum — fixtures + browsable user docs, added 2026-07-19).
 
-**NEXT UP:** ticket 037 (deploy-skills.sh steering collision — stops silently overwriting crew-research's tier-owned `subagent-reliability.md`; discovered during crew-research's known-tool integration 2026-07-19, crew's copy authoritative until fixed).
+**NEXT UP:** ticket 023 (field run, operator-driven) → Phase 6 close-out. Done since: 037 (deploy steering ownership guard, 2026-07-19), 038/040/041 (report design + generator + exclude, 2026-07-21), 042 (tkt adoption, 2026-07-22).
+
+**Ticket/plan seam (ticket 042, 2026-07-22):** PLAN.md remains the authoritative status narrative; `.tickets/` frontmatter is the machine-readable layer `tkt` computes from (contract: crew-research `.memory/specs/ticket-cli-spec.md`; repo convention: AGENTS.md §Tickets). `mise run validate:tickets` checks the corpus (warnings advisory). A future drift-check (`tkt sync-plan --check`, crew ticket 41) may watch this seam.
