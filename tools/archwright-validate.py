@@ -61,15 +61,22 @@ CONSUMER_EXEMPT_SECTIONS = {"decisions", "unconsumed decisions", "not resolved h
 
 
 def extract_frontmatter(path):
-    """Extract YAML frontmatter from a markdown file."""
+    """Extract YAML frontmatter from a markdown file.
+
+    Fence-aware (ticket 039): fences are LINES matching ^---$, never the
+    substring — a block scalar legitimately containing `---` must not
+    truncate the frontmatter.
+    """
     content = path.read_text(encoding="utf-8")
-    if not content.startswith("---"):
+    m = re.match(r"---[ \t]*\r?\n", content)
+    if not m:
         return None, "File does not start with YAML frontmatter (---)"
-    parts = content.split("---", 2)
-    if len(parts) < 3:
+    body = content[m.end():]
+    m2 = re.search(r"^---[ \t]*$", body, re.MULTILINE)
+    if not m2:
         return None, "Malformed frontmatter: no closing ---"
     try:
-        data = yaml.safe_load(parts[1])
+        data = yaml.safe_load(body[: m2.start()])
         return data, None
     except yaml.YAMLError as e:
         return None, f"YAML parse error in frontmatter: {e}"
@@ -296,10 +303,13 @@ def _discovery_body(path):
     stripped (template guidance comments and ASCII wireframes must never
     register as ledger entries, citations, or citable elements)."""
     content = path.read_text(encoding="utf-8")
-    if content.startswith("---"):
-        parts = content.split("---", 2)
-        if len(parts) >= 3:
-            content = parts[2]
+    # Fence-aware (ticket 039): body starts after the closing fence LINE,
+    # never after the next `---` substring.
+    m = re.match(r"---[ \t]*\r?\n", content)
+    if m:
+        m2 = re.search(r"^---[ \t]*$", content[m.end():], re.MULTILINE)
+        if m2:
+            content = content[m.end() + m2.end():]
     return _FENCE_RE.sub("", _COMMENT_RE.sub("", content))
 
 

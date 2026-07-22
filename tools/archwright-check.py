@@ -377,14 +377,22 @@ def _code_state(root):
 
 
 def extract_frontmatter(path):
-    """Extract YAML frontmatter from a markdown file."""
+    """Extract YAML frontmatter from a markdown file.
+
+    Fence-aware (ticket 039): fences are LINES matching ^---$, never the
+    substring — a block scalar legitimately containing `---` (e.g. a grep
+    for fence lines) must not truncate the frontmatter. Block-scalar content
+    is indented, so it can never match a fence-line pattern.
+    """
     content = path.read_text(encoding="utf-8")
-    if not content.startswith("---"):
+    m = re.match(r"---[ \t]*\r?\n", content)
+    if not m:
         return None
-    parts = content.split("---", 2)
-    if len(parts) < 3:
+    body = content[m.end():]
+    m2 = re.search(r"^---[ \t]*$", body, re.MULTILINE)
+    if not m2:
         return None
-    return yaml.safe_load(parts[1])
+    return yaml.safe_load(body[: m2.start()])
 
 
 def load_spec(path):

@@ -106,6 +106,7 @@ Never present spec-ahead as a "failure" in alignment reports. The `--coverage` m
 **Failure:** A crew-research constraint spec's `check.command` block scalar contained `grep -c "^---"` (checking ticket fence lines). `extract_frontmatter` splits on the SUBSTRING `---`, truncating the YAML mid-script — surfacing as a baffling bash "unexpected EOF" two layers from the cause. Cost 3 debug iterations. Filed as ticket 039.
 **Lesson:** Until 039 lands, spec scripts must never contain three consecutive hyphens: write fence patterns as `-\{3\}`. When a script-check fails with a shell quoting/EOF error that looks impossible, dump the parsed `check.command` FIRST — the frontmatter parser is a suspect, not just your quoting.
 **Status check (2026-07-22, ticket 042):** still live — 039 open; both `archwright-check.py` and `archwright-validate.py` still split on the substring. Workaround stands.
+**OBSOLETE (2026-07-22, ticket 039 shipped):** extraction is now fence-aware in both tools (splits on `^---$` LINES; block-scalar content is indented and can never match). Literal `---` in block scalars parses correctly — conformance fixture `tests/fixtures/frontmatter-fence/` in the suite, crew's zero-migration.md verified parsing unescaped. The `-\{3\}` escaping trick is no longer required. The diagnostic lesson (dump the parsed `check.command` first on impossible-looking shell EOF errors) remains good practice.
 
 ### R12: Three field gotchas from the first greenfield target run (crew-research tkt, 2026-07-21)
 **Observed:**
