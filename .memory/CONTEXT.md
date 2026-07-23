@@ -176,3 +176,7 @@ _Avoid_: "status" (collides with check-result status pass/fail/error).
 **Ask-type (report taxonomy)**:
 The three kinds of asks the archwright report makes of a human: DECISIONS (genuine ambiguity, options + freeform + marked recommendation + rationale fold-out, never auto-resolved), APPROVALS (clear right answer with recommendation, sign-off; auto-approvable via local mise config, off by default), SUGGESTIONS (optional nudges like trust promotions; never block the all-clear verdict). Defined in design/discovery/ui/design-system.md#D003/#D004 + wf-all-clear#D003.
 _Avoid_: "notifications" (asks require a response channel), treating suggestions as blocking decisions.
+
+**Blind battery (visual conformance)**:
+The question set for judging a rendered surface against ratified design decisions: ≥1 neutral question per active D-anchor, answered by fresh sessions that see only screenshots + questions (never the decisions), judged by joining answers back to anchors in the main session. Method authority: `skills/archwright-review/references/visual-conformance.md`.
+_Avoid_: "rubric" (verify-this phrasing corrupts VQA answers — the rejected alternative), "visual regression" (pixel-baseline drift checking, a different problem).
