@@ -64,7 +64,7 @@ Operator policy (grill Q06, 2026-07-17), applies to ALL pipeline runs:
 1. **Scope by size.** Default: full project / all areas in one run. **Large projects and monorepos** (workspace layouts, multiple apps/packages, or a source corpus far beyond survey sizing guidance) are the exception: break into AREAS, run the full pipeline per area, then an **all-up reconciliation pass** — dedupe forces across areas, surface cross-area tensions, unify models. Area partitioning is for scale, never the norm.
 
    **Reconciliation deliverables** (first field run: TileRush area 4, 2026-07-18 — promote to a skill if a second run needs it):
-   - **Dedupe verdicts.** Compare force statements across areas; prefer FAMILIES over merges — forces with the same principle but different who/object/check-target stay separate with the family documented (merging blurs provenance and check targets). Areas that reused earlier ids via `shared_product_forces` create no dupes by construction.
+   - **Dedupe verdicts.** Compare force statements across areas; prefer FAMILIES over merges — forces with the same principle but different who/object/check-target stay separate with the family documented (merging blurs provenance and check targets). Areas that reused earlier ids via `shared_product_forces` create no dupes by construction. **Parallel area dispatch cannot reuse earlier ids** (no area is "earlier") — expect near-duplicate shared forces by construction; reconciliation designates a canonical id per family and retains the duplicates (cited ids are contracts; deleting breaks `--links`). Field run: discord-poc 2026-07-22, 9 parallel areas → 20 `dp-*` forces in 6 families.
    - **Cross-model seam table.** One row per producer/consumer seam crossing area models: contract involved, verdict (fold / extension / compatible / content-not-code-reuse), and any pattern edits made (scope notes, `completed_by` links).
    - **Experience ownership.** An experience id defined in 2+ models gets ONE owning model; others annotate theirs as a restatement.
    - **`design/models/system-overview.md`** — system composition diagram, the seam table, force families, and any cross-area spine invariant.
@@ -96,6 +96,22 @@ Six rules:
 
 Registries: `tools/stacks/REGISTRY.yaml` (per-language/engine adapters: trace emitters, ast-grep grammars, check-pattern libraries) and `tools/domains/detect.yaml` (per-domain vocabulary overlays). Stacks and domains are orthogonal axes — a TypeScript game backend is `web` domain + `typescript` stack.
 
+
+## Artifact Frontmatter Gotchas (validator facts, field-run 2026-07-22)
+
+- **Ratified/resolved tensions**: there is NO `status: resolved` — pattern
+  `status` must be `active|deprecated|fog|gated`. A resolved tension =
+  `status: active` + `tension_status: resolved` (+ `resolution_source`).
+- **Contract-candidate skips**: there is NO `skip:` field the links pass
+  reads. An "explicit skip note" = comment the whole candidate block out of
+  `contract_candidates` with a rationale line. A prose note next to a live
+  candidate still WARNs (f2 field incident: two "skip-noted" candidates
+  warned until commented out).
+- **Model YAML has no `kind` schema** — direct validation reports "unknown
+  kind"; models validate via `--links` only (ticket 048 tracks the fix).
+- **Candidate event names are a global namespace across models** — vet new
+  names against `design/models/*.yaml` before writing (CELL_RESULT collision,
+  ticket 050 tracks lint/scoping).
 
 ## Pattern Quality Gates
 
