@@ -139,7 +139,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 | `archwright-import-woz.py` | `archwright-woz-import` |
 | `run-fixture-tests.sh`, `deploy-skills.sh` | `.kiro/skills/repo-maintenance` — project-local, never deployed globally (2026-07-18; supersedes "no skill, this file is their home") |
 | `tools/templates/discovery-ledger.md`, `wireframe.md`, `design-system.md` (artifact contracts) | `archwright-discover-ui` |
-| `tools/report/capture.mjs`, `tools/report/visual-battery.md` (visual-conformance harness, ticket 044 — review-track) | `archwright-review` |
+| `tools/report/capture.mjs`, `tools/report/visual-battery.md`, `tools/report/probes/` (visual-conformance harness + validation probes, tickets 044/047 — review-track) | `archwright-review` |
 | `tools/templates/pattern.md`, `force.md`, `spec-*.{yaml,md}` (authoring templates) | `archwright-formalize` (pattern), `archwright-forces` (force), `archwright-derive` (behavior/constraint/dependency), `archwright-contract` (contract) |
 | `archwright_common.py` | none — shared module, not a CLI |
 

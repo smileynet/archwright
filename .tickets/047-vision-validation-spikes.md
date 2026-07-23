@@ -96,4 +96,34 @@ Everything downstream assumes the describe-pass reads the page correctly.
 
 ## Resolution (2026-07-23)
 
-TBD
+All three P0 spikes run against seeded pages at real crop geometry (model:
+claude-fable-5 via kiro subagent dispatch — the battery's real path). Harness:
+`tools/report/probes/` (gen_seeded.py, s1-questions.json, score_s3.py,
+score_s1s2.py) — rerunnable on model upgrades; working artifacts (pages, captures,
+42 blind answers) in `.scratch/vision-probes/`.
+
+**Results (all pass criteria exceeded):**
+- **S3:** 20/20 seeded strings verbatim in light AND dark (100%, n=20/scheme,
+  6 crops each) — ≥95% floor met with margin; dark (never previously analyzed)
+  shows zero degradation.
+- **S1:** neutral 10/10 (pass bar ≥9); all 5 FALSE leads explicitly refuted, all
+  5 TRUE leads confirmed — exposure delta 0pt at n=5. Published 12–42pt collapse
+  did not reproduce locally; blindness rule retained as cheap insurance (n too
+  small to license leading questions).
+- **S2:** false-absence 0/5, false-presence 0/5 — far under the 20% drop
+  threshold. **Absence policy CONFIRMED, not amended:** absences stay reportable,
+  mechanical verification at judge time stays mandatory (the 044 field
+  hallucination happened on a denser page than these seeded ones).
+- Method reference updated with the measured table (dated, per-cell n, rerun
+  instructions): `skills/archwright-review/references/visual-conformance.md`.
+
+**P1/P2 disposition:**
+- **P1 DEFERRED, no ticket.** Each spike's risk is off the battery's actual path:
+  S4 headless reliability — the battery dispatches subagents, not headless CLI;
+  S5 oversized images — capture.mjs pre-resizes by construction (a 3000px input
+  cannot reach an answerer); S6 referent binding — stages carry 1–2 labeled
+  images by design. Reopen only if a field run adopts headless dispatch or
+  multi-image stages.
+- **P2 DROPPED.** P0 surfaced no failure shape S7–S9 would probe; the 42 fresh
+  sessions of this run showed zero contradictory answers (implicit repeatability
+  signal). Model upgrades re-run P0, which subsumes the useful part.
