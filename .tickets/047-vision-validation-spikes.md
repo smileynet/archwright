@@ -1,7 +1,7 @@
 ---
 id: "047"
 title: "Validation spikes: kiro-cli + Claude image analysis for visual conformance (P0 set)"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 ---
