@@ -1,7 +1,7 @@
 ---
 id: "047"
 title: "Validation spikes: kiro-cli + Claude image analysis for visual conformance (P0 set)"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 ---
@@ -80,16 +80,20 @@ Everything downstream assumes the describe-pass reads the page correctly.
 
 ## Acceptance criteria
 
-- [ ] S1 run: neutral vs leading paired results recorded with per-question
+- [x] S1 run: neutral vs leading paired results recorded with per-question
       truth table; exposure delta stated
-- [ ] S2 run: false-absence + false-presence rates with n per cell; absence
+- [x] S2 run: false-absence + false-presence rates with n per cell; absence
       reporting policy confirmed or amended in the method reference
-- [ ] S3 run: transcription accuracy light + dark against seeded ground truth
-- [ ] Method reference updated with measured numbers (cited as local, dated, with n)
-- [ ] Probe harness + seeded variants committed (rerunnable on model upgrades)
-- [ ] P1/P2 disposition decided (ticket, fold in, or drop) based on P0 results
+- [x] S3 run: transcription accuracy light + dark against seeded ground truth
+- [x] Method reference updated with measured numbers (cited as local, dated, with n)
+- [x] Probe harness + seeded variants committed (rerunnable on model upgrades)
+- [x] P1/P2 disposition decided (ticket, fold in, or drop) based on P0 results
 
 ## Out of scope
 
 - P1/P2 spikes (deferred above)
 - Any changes to the battery or capture harness beyond what P0 results demand
+
+## Resolution (2026-07-23)
+
+TBD
