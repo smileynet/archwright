@@ -1,7 +1,7 @@
 ---
 id: "048"
 title: "Validator: schema for model YAML (kind: model) — direct validation currently impossible"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
