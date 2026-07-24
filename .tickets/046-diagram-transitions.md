@@ -1,7 +1,7 @@
 ---
 id: "046"
 title: "Report diagram renders states without transitions — join arrows from behavior specs"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -38,12 +38,16 @@ transition table; `derive.build_model_view` always emits `transitions: []`;
 
 ## Acceptance criteria
 
-- [ ] Diagram shows arrows between states when a behavior spec provides transitions
-- [ ] Arrow labels use vocabulary surface phrases
-- [ ] Suite check asserts edges semantically (not path-count proxy); suite green
-- [ ] Blind re-ask of Q3 describes connected flow without inferring from labels
+- [x] Diagram shows arrows between states when a behavior spec provides transitions
+- [x] Arrow labels use vocabulary surface phrases
+- [x] Suite check asserts edges semantically (not path-count proxy); suite green
+- [x] Blind re-ask of Q3 describes connected flow without inferring from labels
 
 ## Out of scope
 
 - Per-element rule joins (v1 granularity note) — separate deferral
 - Multi-actor composite diagrams (composition view is its own model decision)
+
+## Resolution (2026-07-24)
+
+TBD
