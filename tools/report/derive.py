@@ -33,6 +33,14 @@ def load_model(models_dir):
     return None
 
 
+def _actor_for_projection(model, proj):
+    source = proj.get("from", "")
+    for a in model.get("actors") or []:
+        if a["id"] in source or a["id"] in str(proj.get("pattern", "")):
+            return a["id"]
+    return None
+
+
 def _spec_join(model, doc):
     """Join spec results to actors via the model's spec_projections."""
     by_spec = {}
@@ -45,12 +53,7 @@ def _spec_join(model, doc):
     for proj in model.get("spec_projections") or []:
         spec_ref = proj["spec"]
         spec_id = spec_ref.split(":", 1)[1]
-        actor = None
-        source = proj.get("from", "")
-        for a in model.get("actors") or []:
-            if a["id"] in source or a["id"] in str(proj.get("pattern", "")):
-                actor = a["id"]
-                break
+        actor = _actor_for_projection(model, proj)
         results = by_spec.get(spec_id)
         if results:
             for status, item in results:
@@ -58,6 +61,57 @@ def _spec_join(model, doc):
         else:
             joined.setdefault(actor, []).append((spec_ref, "pass", None))
     return joined
+
+
+def _behavior_transitions(model, vocab):
+    """Join transitions from behavior specs into the model view (ticket 046).
+
+    Behavior specs (design/specs/<id>.yaml, kind: behavior) carry the statechart;
+    the model's spec_projections link them to actors. Returns
+    [{from, to, event, label, actor, spec}] with state ids normalized to the
+    model's hyphenated form. Reads spec YAML as a design/ file input — never
+    checker internals (dependency:report-reads-canonical-only).
+    """
+    specs_dir = Path(model["_path"]).parent.parent / "specs" if model.get("_path") else None
+    if specs_dir is None or not specs_dir.is_dir():
+        return []
+    state_ids = {}  # actor_id -> {normalized: model_form}
+    for a in model.get("actors") or []:
+        state_ids[a["id"]] = {
+            (st["id"] if isinstance(st, dict) else st).replace("_", "-"):
+            (st["id"] if isinstance(st, dict) else st)
+            for st in a.get("states") or []}
+
+    transitions = []
+    for proj in model.get("spec_projections") or []:
+        spec_ref = proj["spec"]
+        if not spec_ref.startswith("behavior:"):
+            continue
+        actor = _actor_for_projection(model, proj)
+        if actor is None:
+            continue
+        spec_path = specs_dir / (spec_ref.split(":", 1)[1] + ".yaml")
+        if not spec_path.exists():
+            continue
+        spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
+        if not isinstance(spec, dict) or spec.get("kind") != "behavior":
+            continue
+        ids = state_ids.get(actor, {})
+        model_form = lambda s: ids.get(str(s).replace("_", "-"), str(s))
+        for state_name, state_def in (spec.get("states") or {}).items():
+            if not isinstance(state_def, dict):
+                continue
+            for event, tr in (_bool_key(state_def, "on") or {}).items():
+                target = tr.get("target") if isinstance(tr, dict) else tr
+                if not target:
+                    continue
+                transitions.append({
+                    "from": model_form(state_name), "to": model_form(target),
+                    "event": str(event),
+                    "label": vocab.surface("event " + str(event)),
+                    "actor": actor, "spec": spec_ref,
+                })
+    return transitions
 
 
 def build_model_view(model, doc, vocab):
@@ -74,8 +128,9 @@ def build_model_view(model, doc, vocab):
     actors = [a for a in (model.get("actors") or []) if a.get("states")]
     front_door = "behavior-diagram" if len(actors) == 1 else "composition-view"
     joined = _spec_join(model, doc)
+    transitions = _behavior_transitions(model, vocab)
 
-    states, transitions = [], []
+    states = []
     for actor in actors:
         rules = []
         rollup = {"pass": 0, "fail": 0, "warn": 0, "skip": 0, "pending": 0}

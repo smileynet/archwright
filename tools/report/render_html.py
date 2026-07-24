@@ -65,20 +65,39 @@ def _ask_card(ask, vocab, violation_by_ref):
     return "\n".join(parts)
 
 
-def _diagram_svg(model, out_dir):
-    """Pre-rendered inline SVG via smcat when available; plain list fallback."""
-    if model is None:
-        return None
-    actors = [a for a in model.get("actors") or [] if a.get("states")]
-    if not actors:
-        return None
-    actor = actors[0]
+def _smcat_src(actor, transitions):
+    """smcat source for one actor: state declarations + labeled arrows.
+
+    Transitions come from behavior specs via model_view (ticket 046); arrow
+    labels are vocabulary surface phrases (D002 applies to arrows too)."""
     lines = []
     for st in actor["states"]:
         sid = st["id"] if isinstance(st, dict) else st
         label = (st.get("label") if isinstance(st, dict) else None) or sid
         lines.append('%s [label="%s"]' % (sid.replace("-", "_"), label))
     src = ",\n".join(lines) + ";"
+    for tr in transitions:
+        src += '\n%s => %s : %s;' % (
+            tr["from"].replace("-", "_"), tr["to"].replace("-", "_"), tr["label"])
+    return src
+
+
+def _diagram_svg(model, model_view):
+    """Pre-rendered inline SVG via smcat when available; plain list fallback.
+
+    Renders the first actor that has verified transitions (a connected map
+    serves the cold reader better than disconnected boxes — design-system#D006);
+    falls back to the first actor with states when no behavior spec matched."""
+    if model is None:
+        return None
+    actors = [a for a in model.get("actors") or [] if a.get("states")]
+    if not actors:
+        return None
+    all_transitions = model_view.get("transitions") or []
+    actor = next((a for a in actors
+                  if any(t["actor"] == a["id"] for t in all_transitions)), actors[0])
+    transitions = [t for t in all_transitions if t["actor"] == actor["id"]]
+    src = _smcat_src(actor, transitions)
     try:
         r = subprocess.run(["smcat", "-T", "svg", "-"], input=src,
                            capture_output=True, text=True, timeout=30)
@@ -124,7 +143,7 @@ def render_html(bundle, model, vocab, out_dir):
             sections.extend(_ask_card(a, vocab, violation_by_ref) for a in group)
     asks_section = "\n".join(sections)
 
-    svg = _diagram_svg(model, out_dir)
+    svg = _diagram_svg(model, model_view)
     diagram_section = ""
     if svg:
         badge = ("every step verified " + vocab.status_glyph("pass")) if post == "all-clear" \

@@ -23,6 +23,18 @@ tokens:
   needs-attention: "needs attention"
   tool-error: "the check tooling hit a problem — results are incomplete"
   empty-project: "nothing to check yet — no design rules found"
+  # event arrow labels (ticket 046 — D002 applies to arrow labels too; a target
+  # project adds "event <NAME>" tokens to its override for its own events)
+  "event CONFIG_ON": "auto-approve turned on"
+  "event AUTO_APPROVE": "signed off by your settings"
+  "event PRESENT": "shown to you"
+  "event RESPOND": "you answer"
+  "event REROUTE": "you say the rule is wrong"
+  "event REPRESENT": "comes back as a judgment call"
+  "event APPROVE_FIX": "approve the fix"
+  "event CHOOSE_OPTION": "pick an option"
+  "event FREEFORM_RESPONSE": "answer in your own words"
+  "event DISMISS": "not now"
 status_roles:
   pass:    { color_role: success, glyph: "✓" }
   fail:    { color_role: danger,  glyph: "✗" }
