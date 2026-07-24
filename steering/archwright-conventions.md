@@ -107,8 +107,9 @@ Registries: `tools/stacks/REGISTRY.yaml` (per-language/engine adapters: trace em
   `contract_candidates` with a rationale line. A prose note next to a live
   candidate still WARNs (f2 field incident: two "skip-noted" candidates
   warned until commented out).
-- **Model YAML has no `kind` schema** — direct validation reports "unknown
-  kind"; models validate via `--links` only (ticket 048 tracks the fix).
+- **Model YAML validates directly** (ticket 048): shape-detected by the
+  top-level `actors` key — no `kind` field needed; existing models pass
+  unmodified. Missing experiences/composition sections are advisory WARNs.
 - **Candidate event names are a global namespace across models** — vet new
   names against `design/models/*.yaml` before writing (CELL_RESULT collision,
   ticket 050 tracks lint/scoping).

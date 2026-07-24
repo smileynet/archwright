@@ -30,7 +30,7 @@ SCHEMA_DIR = Path(__file__).parent
 PATTERN_SCHEMA = SCHEMA_DIR / "pattern-schema.yaml"
 SPEC_SCHEMA = SCHEMA_DIR / "spec-schema.yaml"
 
-VALID_KINDS = {"pattern", "behavior", "contract", "constraint", "dependency", "boundary", "protocol", "force", "discovery"}
+VALID_KINDS = {"pattern", "behavior", "contract", "constraint", "dependency", "boundary", "protocol", "force", "discovery", "model"}
 VALID_CONFIDENCES = {"★★", "★", "—"}
 VALID_SCALES = {"premise", "loops-systems", "verbs-interactions", "feel-finish"}
 # gated = resolution ratified, activation gated on a named event (requires gated_on:).
@@ -92,7 +92,14 @@ def load_file(path):
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
             if not isinstance(data, dict):
                 return None, None, ["File does not contain a YAML mapping"]
-            return data, data.get("kind"), errors
+            kind = data.get("kind")
+            # Model detection convention (ticket 048): model YAML carries no
+            # frontmatter/kind — a mapping with a top-level `actors` key IS a
+            # model (the same shape test collect_model_index and the report
+            # generator use). An explicit `kind: model` is also accepted.
+            if kind is None and "actors" in data:
+                kind = "model"
+            return data, kind, errors
         except yaml.YAMLError as e:
             return None, None, [f"YAML parse error: {e}"]
     elif path.suffix == ".md":
@@ -432,6 +439,108 @@ def validate_discovery(data, path):
     return errors, warnings
 
 
+def validate_model(data, path):
+    """Validate a domain model YAML (ticket 048).
+
+    Detection convention: a YAML mapping with a top-level `actors` key is a
+    model (see load_file) — models carry no frontmatter; `kind: model` is
+    accepted but optional, so existing field models validate unmodified.
+
+    Hard schema (errors): non-empty actors with unique slug ids; dict states
+    carry ids; actor from_patterns are 'pattern:' refs; contract candidates
+    carry event + producer, event names unique within the file, folds resolve
+    to a non-folded candidate in the same file; spec_projections carry
+    'kind:id' spec refs; boundary entities carry ids.
+
+    Advisory (WARN): missing experiences / composition sections — the
+    archwright-model skill emits them, but the examples corpus and both field
+    projects' models predate the requirement (delta documented, ticket 048).
+
+    Returns (errors, warnings)."""
+    errors, warnings = [], []
+
+    actors = data.get("actors")
+    if not isinstance(actors, list) or not actors:
+        errors.append("'actors' must be a non-empty list")
+        actors = []
+    seen_actors = set()
+    for i, a in enumerate(actors):
+        if not isinstance(a, dict) or not a.get("id"):
+            errors.append(f"actor [{i}] missing required 'id'")
+            continue
+        aid = a["id"]
+        if not re.match(r"^[a-z][a-z0-9-]+$", aid):
+            errors.append(f"actor id '{aid}' must be lowercase slug (a-z, 0-9, hyphens)")
+        if aid in seen_actors:
+            errors.append(f"duplicate actor id '{aid}'")
+        seen_actors.add(aid)
+        for st in a.get("states") or []:
+            if isinstance(st, dict) and not st.get("id"):
+                errors.append(f"actor '{aid}' has a state without an 'id'")
+        for ref in a.get("from_patterns") or []:
+            if not str(ref).startswith("pattern:"):
+                errors.append(f"actor '{aid}' from_patterns ref '{ref}' must start with 'pattern:'")
+
+    boundary_ids = set()
+    for i, be in enumerate(data.get("boundary_entities") or []):
+        if not isinstance(be, dict) or not be.get("id"):
+            errors.append(f"boundary_entities [{i}] missing required 'id'")
+        else:
+            boundary_ids.add(be["id"])
+
+    cands = data.get("contract_candidates")
+    events = {}
+    if cands is not None and not isinstance(cands, list):
+        errors.append("'contract_candidates' must be a list")
+        cands = []
+    for i, c in enumerate(cands or []):
+        if not isinstance(c, dict) or not c.get("event"):
+            errors.append(f"contract_candidates [{i}] missing required 'event'")
+            continue
+        ev = c["event"]
+        if ev in events:
+            errors.append(f"duplicate contract candidate event '{ev}' — candidate events "
+                          f"must be unique within a model (cross-model collisions: ticket 050)")
+        events[ev] = c
+        if not c.get("producer"):
+            errors.append(f"contract candidate '{ev}' missing required 'producer'")
+        elif c["producer"] not in seen_actors | boundary_ids:
+            warnings.append(f"contract candidate '{ev}' producer '{c['producer']}' names no "
+                            f"actor or boundary entity in this model")
+    for ev, c in events.items():
+        fold = c.get("folded_into")
+        if not fold:
+            continue
+        if fold == ev:
+            errors.append(f"contract candidate '{ev}' is folded into itself")
+        elif fold not in events:
+            errors.append(f"contract candidate '{ev}' folded_into '{fold}' which is not a "
+                          f"candidate in this model")
+        elif events[fold].get("folded_into"):
+            errors.append(f"contract candidate '{ev}' folds into '{fold}', which is itself "
+                          f"folded — folds must target the protocol cluster owner directly")
+
+    for i, proj in enumerate(data.get("spec_projections") or []):
+        if not isinstance(proj, dict) or not proj.get("spec"):
+            errors.append(f"spec_projections [{i}] missing required 'spec'")
+        elif not LINK_REF_PATTERN.match(proj["spec"]):
+            errors.append(f"spec_projections [{i}] spec ref '{proj['spec']}' must be 'kind:id' format")
+
+    for i, exp in enumerate(data.get("experiences") or []):
+        if not isinstance(exp, dict) or not exp.get("id"):
+            errors.append(f"experiences [{i}] missing required 'id'")
+
+    if "experiences" not in data:
+        warnings.append("no 'experiences' section — the archwright-model skill records the "
+                        "user experiences the actors protect; add them so specs can cite "
+                        "protects_experience")
+    if "composition" not in data:
+        warnings.append("no 'composition' section — record how the actors compose "
+                        "(root/stages/rationale) per the archwright-model output format")
+
+    return errors, warnings
+
+
 def validate_file(path):
     """Validate a single file. Returns (status, errors, warnings)."""
     path = Path(path)
@@ -455,6 +564,8 @@ def validate_file(path):
         errors = validate_contract(data, path)
     elif kind == "discovery":
         errors, warnings = validate_discovery(data, path)
+    elif kind == "model":
+        errors, warnings = validate_model(data, path)
     elif kind in ("boundary", "protocol"):
         errors = []  # minimal validation for now
     else:
@@ -564,6 +675,9 @@ def collect_all_refs(directory):
         data, kind, _ = load_file(path)
         if not data or not kind:
             continue
+        if kind == "model":
+            continue  # models are indexed by collect_model_index (ticket 048 —
+            # keeps --links ref/from_force enforcement scoped to patterns/specs)
 
         file_id = data.get("id")
         if file_id:

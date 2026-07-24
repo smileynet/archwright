@@ -1,0 +1,35 @@
+# Violating model fixture (ticket 048) — every error class the schema catches
+# (vacuity rule: a checker proven only on passing cases may be vacuous).
+# Expected FAILs: actor missing id, duplicate actor id, non-slug actor id,
+# state without id, bad from_patterns ref, candidate without producer,
+# duplicate candidate event, fold to unknown target, fold chain, bad
+# spec_projections ref, boundary entity without id.
+system: broken
+actors:
+  - name: "no id at all"
+  - id: gate-arm
+    states:
+      - { label: "state with no id" }
+  - id: gate-arm
+  - id: Not_A_Slug
+    from_patterns: ["fare-gate"]
+boundary_entities:
+  - note: "boundary with no id"
+contract_candidates:
+  - event: orphan_event
+    consumers: [gate-arm]
+  - event: dup_event
+    producer: gate-arm
+  - event: dup_event
+    producer: gate-arm
+  - event: dangling_fold
+    producer: gate-arm
+    folded_into: no_such_event
+  - event: fold_base
+    producer: gate-arm
+    folded_into: dup_event
+  - event: chained_fold
+    producer: gate-arm
+    folded_into: fold_base
+spec_projections:
+  - spec: "not-a-ref"

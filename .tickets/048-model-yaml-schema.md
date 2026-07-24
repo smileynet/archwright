@@ -34,4 +34,28 @@ crew-research field models — this is the second field run to hit it.
 
 ## Resolution (2026-07-24)
 
-TBD
+**Convention decided:** models are shape-detected — a YAML mapping with a
+top-level `actors` key IS a model (the same test `collect_model_index` and the
+report generator already use). No `kind` field required; explicit `kind: model`
+accepted. Existing field models therefore validate UNMODIFIED.
+
+- `validate_model` in archwright-validate.py. Errors: empty/missing actors,
+  actor without id / duplicate / non-slug, dict state without id, non-`pattern:`
+  from_patterns ref, candidate without event or producer, duplicate candidate
+  event within the file (cross-model is ticket 050), fold to unknown target,
+  fold chains (must target the cluster owner directly), fold-to-self, malformed
+  spec_projections ref, boundary entity without id. Unknown candidate producer =
+  WARN.
+- **Documented delta from the ticket text:** `experiences` and `composition`
+  are advisory WARNs, not required — the whole local corpus (3 snackbox
+  lifecycle models) and both field projects' models omit them; hard-requiring
+  them would fail AC3. The archwright-model skill still emits them; the WARN
+  nudges older models forward.
+- Models stay excluded from the generic `--links` ref collector (indexed by
+  `collect_model_index` as before) — all four local `--links` runs verified
+  unchanged.
+- Conformance: `tests/fixtures/model-schema/{valid,violating}.yaml`; suite +3
+  (149 green) — valid passes as `(kind: model)`, violating FAILs with all 11
+  error classes asserted individually (non-vacuous), corpus models pass
+  unmodified. Steering + AGENTS command row updated (the "direct validation
+  impossible" gotcha note now states the new behavior).
