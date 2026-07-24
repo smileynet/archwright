@@ -1,7 +1,7 @@
 ---
 id: "048"
 title: "Validator: schema for model YAML (kind: model) — direct validation currently impossible"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -28,6 +28,10 @@ crew-research field models — this is the second field run to hit it.
   without producer) wired into run-fixture-tests.sh
 
 ## Acceptance criteria
-- [ ] `archwright-validate.py design/models/x.yaml` gives a real PASS/FAIL, not "unknown kind"
-- [ ] Violating fixture fails loudly in the fixture suite
-- [ ] Both field projects' existing models pass unmodified (or the delta is documented)
+- [x] `archwright-validate.py design/models/x.yaml` gives a real PASS/FAIL, not "unknown kind"
+- [x] Violating fixture fails loudly in the fixture suite
+- [x] Both field projects' existing models pass unmodified (or the delta is documented)
+
+## Resolution (2026-07-24)
+
+TBD
