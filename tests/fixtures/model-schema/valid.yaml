@@ -1,0 +1,34 @@
+# Valid model fixture (ticket 048) — passes schema validation.
+# Detection: top-level `actors` key (no kind field, like all field models).
+system: turnstile
+actors:
+  - id: gate-arm
+    from_patterns: ["pattern:fare-gate"]
+    states:
+      - { id: locked, label: "locked" }
+      - { id: unlocked, label: "unlocked" }
+    owns:
+      - fare_paid: "bool"
+  - id: fare-reader
+    states:
+      - { id: idle }
+      - { id: reading }
+boundary_entities:
+  - id: card-network
+contract_candidates:
+  - event: fare_accepted
+    producer: fare-reader
+    consumers: [gate-arm]
+  - event: fare_receipt
+    producer: fare-reader
+    consumers: [card-network]
+    folded_into: fare_accepted
+spec_projections:
+  - spec: "behavior:gate-arm-lifecycle"
+    from: "gate-arm state machine"
+experiences:
+  - id: exp-walk-through
+    desire: frictionless-entry
+composition:
+  root: null
+  rationale: "two peers linked by fare events"

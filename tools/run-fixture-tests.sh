@@ -1987,6 +1987,40 @@ else
 fi
 rm -rf "$MV_DIR"
 
+echo ""
+echo "=== Model YAML Schema (ticket 048) ==="
+# Direct model validation: shape-detected (top-level `actors`, no kind field),
+# so existing field models validate unmodified. Vacuity rule: valid fixture
+# passes AND every schema error class fires on the violating fixture.
+MS_FIX="$TOOLS/../tests/fixtures/model-schema"
+rc=0; MS_OUT=$(python3 "$VALIDATE" "$MS_FIX/valid.yaml" 2>&1) || rc=$?
+if [ $rc -eq 0 ] && echo "$MS_OUT" | grep -q "(kind: model)" && ! echo "$MS_OUT" | grep -q "unknown kind"; then
+  report PASS "model-schema: valid model PASSes as kind model (no 'unknown kind')"
+else
+  report FAIL "model-schema: valid model PASSes as kind model (no 'unknown kind')" "exit=$rc"
+fi
+rc=0; MS_OUT=$(python3 "$VALIDATE" "$MS_FIX/violating.yaml" 2>&1) || rc=$?
+MS_OK=1
+for want in "actor \[0\] missing required 'id'" "duplicate actor id" "must be lowercase slug" \
+            "state without an 'id'" "must start with 'pattern:'" "missing required 'producer'" \
+            "duplicate contract candidate event" "not a candidate in this model" \
+            "which is itself folded" "must be 'kind:id' format" "boundary_entities \[0\] missing"; do
+  echo "$MS_OUT" | grep -q "$want" || { MS_OK=0; MS_MISS="$want"; }
+done
+if [ $rc -eq 1 ] && [ $MS_OK -eq 1 ]; then
+  report PASS "model-schema: violating model FAILs with all 11 error classes (non-vacuous)"
+else
+  report FAIL "model-schema: violating model FAILs with all 11 error classes (non-vacuous)" "exit=$rc missing=${MS_MISS:-none}"
+fi
+# Field-model regression: the examples corpus models (no experiences/composition
+# sections) must pass unmodified — those sections are advisory WARNs only.
+rc=0; MS_OUT=$(python3 "$VALIDATE" "$TOOLS/../examples/complete/design/models/snackbox.yaml" "$TOOLS/../design/models/report-actors.yaml" 2>&1) || rc=$?
+if [ $rc -eq 0 ] && echo "$MS_OUT" | grep -cq "PASS"; then
+  report PASS "model-schema: existing corpus models pass unmodified (advisory sections WARN only)"
+else
+  report FAIL "model-schema: existing corpus models pass unmodified (advisory sections WARN only)" "exit=$rc"
+fi
+
 echo "=== Frontmatter Fence Extraction (ticket 039) ==="
 # extract_frontmatter split on the SUBSTRING '---', truncating any spec whose
 # block scalar legitimately contains it (e.g. grep for fence lines) — a bash
