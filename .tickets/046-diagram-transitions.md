@@ -1,7 +1,7 @@
 ---
 id: "046"
 title: "Report diagram renders states without transitions — join arrows from behavior specs"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
