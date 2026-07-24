@@ -1793,6 +1793,113 @@ else
   report FAIL "report: corrupted bundle FAILs banner + disclosure constraints (non-vacuous)" "exit=$rc"
 fi
 
+# Diagram transitions (ticket 046): behavior-spec statechart joins into
+# model_view.transitions and emits smcat/mermaid ARROWS with vocabulary labels.
+# Assertions are on EDGES semantically — (from, to, event) tuples and labeled
+# arrow markup — never element/path counts (the proxy that fooled the 044 judge).
+# Fixture exercises hyphen/underscore state-id normalization AND both `on:`
+# spellings (quoted + bare YAML-1.1 boolean key).
+TD_TMP=$(mktemp -d)
+mkdir -p "$TD_TMP/design/models" "$TD_TMP/design/specs"
+cat > "$TD_TMP/design/models/gate.yaml" <<'EOF'
+system: gatedemo
+actors:
+  - id: gate
+    states:
+      - { id: closed, label: "closed" }
+      - { id: open-wide, label: "open" }
+spec_projections:
+  - spec: "behavior:gate-flow"
+    from: "gate state machine"
+EOF
+cat > "$TD_TMP/design/specs/gate-flow.yaml" <<'EOF'
+kind: behavior
+id: gate-flow
+states:
+  closed:
+    "on":
+      PRESENT: { target: open_wide }
+  open_wide:
+    on:
+      RESPOND: { target: closed }
+EOF
+cat > "$TD_TMP/check.json" <<'EOF'
+{"status":"pass","scope":{"mode":"static","specs_checked":1},"violations":[],"errors":[],
+ "skips":[],"coverage":{"checked":1,"passed":1,"failed":0,"skipped":0,"errors":0,"pending":0},
+ "remaining_delta":0,"fingerprint_algo":"aw/v1","code_state":{"commit":"deadbeef","dirty":false}}
+EOF
+rc=0; python3 "$RG" --check-json "$TD_TMP/check.json" --design "$TD_TMP/design" --project gatedemo >/dev/null 2>&1 || rc=$?
+rc2=0; python3 -c "
+import json
+d=json.load(open('$TD_TMP/design/report/report.json'))
+edges={(t['from'],t['to'],t['event']) for t in d['model_view']['transitions']}
+assert edges=={('closed','open-wide','PRESENT'),('open-wide','closed','RESPOND')}, edges
+labels={t['event']: t['label'] for t in d['model_view']['transitions']}
+assert labels=={'PRESENT':'shown to you','RESPOND':'you answer'}, labels
+md=open('$TD_TMP/design/report/REPORT.md',encoding='utf-8').read()
+assert 'closed --> open_wide: shown to you' in md, 'md arrow missing'
+assert 'open_wide --> closed: you answer' in md, 'md return arrow missing'
+" 2>/dev/null || rc2=$?
+if [ $rc -eq 0 ] && [ $rc2 -eq 0 ]; then
+  report PASS "report: behavior-spec transitions join as semantic edges (both on: spellings, id normalization, vocab labels, md mirror)"
+else
+  report FAIL "report: behavior-spec transitions join as semantic edges (both on: spellings, id normalization, vocab labels, md mirror)" "exit=$rc/$rc2"
+fi
+
+# smcat source: labeled arrow statements present (edge semantics in the source,
+# independent of the smcat binary); HTML surface label gated on smcat presence.
+rc=0; python3 -c "
+import sys, yaml, json
+sys.path.insert(0, '$TOOLS/report')
+import render_html, derive
+from vocab import Vocabulary
+vocab = Vocabulary()
+model = derive.load_model('$TD_TMP/design/models')
+doc = json.load(open('$TD_TMP/check.json'))
+mv = derive.build_model_view(model, doc, vocab)
+actor = [a for a in model['actors'] if a.get('states')][0]
+src = render_html._smcat_src(actor, mv['transitions'])
+assert 'closed => open_wide : shown to you;' in src, src
+assert 'open_wide => closed : you answer;' in src, src
+" 2>/dev/null || rc=$?
+rc2=0
+if command -v smcat >/dev/null 2>&1; then
+  python3 -c "
+html=open('$TD_TMP/design/report/report.html',encoding='utf-8').read()
+assert 'shown to you' in html, 'arrow label missing from rendered HTML'
+" 2>/dev/null || rc2=$?
+fi
+if [ $rc -eq 0 ] && [ $rc2 -eq 0 ]; then
+  report PASS "report: smcat source carries labeled arrows (semantic, not path-count); label reaches HTML when smcat present"
+else
+  report FAIL "report: smcat source carries labeled arrows (semantic, not path-count); label reaches HTML when smcat present" "exit=$rc/$rc2"
+fi
+
+# Non-vacuity / fallback: same model WITHOUT a matching behavior spec must
+# produce zero transitions and no arrows — states-only diagram is unchanged.
+rm "$TD_TMP/design/specs/gate-flow.yaml"
+rc=0; python3 "$RG" --check-json "$TD_TMP/check.json" --design "$TD_TMP/design" --project gatedemo >/dev/null 2>&1 || rc=$?
+rc2=0; python3 -c "
+import sys, json
+sys.path.insert(0, '$TOOLS/report')
+import render_html, derive
+from vocab import Vocabulary
+d=json.load(open('$TD_TMP/design/report/report.json'))
+assert d['model_view']['transitions']==[], d['model_view']['transitions']
+md=open('$TD_TMP/design/report/REPORT.md',encoding='utf-8').read()
+assert '-->' not in md.split('stateDiagram-v2')[1].split('\`\`\`')[0], 'phantom arrow in md'
+model = derive.load_model('$TD_TMP/design/models')
+mv = derive.build_model_view(model, json.load(open('$TD_TMP/check.json')), Vocabulary())
+actor = [a for a in model['actors'] if a.get('states')][0]
+assert '=>' not in render_html._smcat_src(actor, mv['transitions']), 'phantom smcat arrow'
+" 2>/dev/null || rc2=$?
+if [ $rc -eq 0 ] && [ $rc2 -eq 0 ]; then
+  report PASS "report: no behavior spec -> zero transitions, no arrows (states-only fallback unchanged)"
+else
+  report FAIL "report: no behavior spec -> zero transitions, no arrows (states-only fallback unchanged)" "exit=$rc/$rc2"
+fi
+rm -rf "$TD_TMP"
+
 # Reducer trace round-trip: the REAL page reducer's trace satisfies behavior:ask-lifecycle.
 if command -v node >/dev/null 2>&1; then
   RT_ABS="$(cd "$TOOLS" && pwd)"

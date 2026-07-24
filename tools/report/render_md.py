@@ -28,6 +28,9 @@ def render_md(bundle, vocab):
         lines += ["## How %s works" % bundle["project"], "", "```mermaid", "stateDiagram-v2"]
         for el in model_view["states"]:
             lines.append('    %s: %s' % (el["id"].replace("-", "_"), el["label"]))
+        for tr in model_view.get("transitions") or []:
+            lines.append('    %s --> %s: %s' % (tr["from"].replace("-", "_"),
+                                                tr["to"].replace("-", "_"), tr["label"]))
         lines += ["```", ""]
 
     blocking = [a for a in asks_block["asks"] if not a["auto_approved"]]

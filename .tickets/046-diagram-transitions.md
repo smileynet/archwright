@@ -50,4 +50,23 @@ transition table; `derive.build_model_view` always emits `transitions: []`;
 
 ## Resolution (2026-07-24)
 
-TBD
+Transitions now join from behavior specs into the report diagram on both surfaces.
+
+- `derive._behavior_transitions`: walks `spec_projections` for `behavior:` specs,
+  loads the spec YAML (design/ file input — no checker imports; the local
+  `_bool_key` helper handles both `on:` spellings), normalizes hyphen/underscore
+  state ids to the model's form, labels every event via `vocab.surface("event X")`
+  (D002 — unknown event = generation error, per the completeness discipline; ten
+  `event *` tokens added to the default table).
+- `render_html`: `_smcat_src` emits `a => b : label;` arrows; the diagram now
+  renders the first actor WITH verified transitions (D006 — a connected map beats
+  actors[0]'s disconnected boxes), falling back to actors[0] states-only when no
+  behavior spec matches.
+- `render_md`: mermaid `a --> b: label` arrows (projections stay in agreement).
+- Suite +3 (now 146 green): semantic edge assertion on (from,to,event) tuples +
+  vocab labels + md mirror; smcat-source arrow statements (path-count proxy
+  explicitly avoided); non-vacuity — spec removed ⇒ zero transitions, no arrows.
+- Blind re-ask of Q3 (fresh session, dogfood capture): answerer described the
+  five states, every labeled arrow, the fan-outs, and the reroute cycle, calling
+  it "states connected by event-labeled transitions" — connected flow read
+  directly from the drawing, not inferred from label wording.
