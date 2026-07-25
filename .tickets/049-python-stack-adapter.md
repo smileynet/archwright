@@ -1,7 +1,7 @@
 ---
 id: "049"
 title: "Stacks registry: python adapter (trace emitter) — extension-protocol instance"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -27,7 +27,11 @@ the extension protocol, no ADR needed.
 - Activation-gated: checks run only where survey detects the python stack
 
 ## Acceptance criteria
-- [ ] REGISTRY.yaml row for python with computed status ≥ ★
-- [ ] discord-poc behavior spec (e.g. x1-replay-emission) trace-checkable
+- [x] REGISTRY.yaml row for python with computed status ≥ ★
+- [x] discord-poc behavior spec (e.g. x1-replay-emission) trace-checkable
       end-to-end against a sample trace
-- [ ] Violating trace FAILs in the fixture suite
+- [x] Violating trace FAILs in the fixture suite
+
+## Resolution (2026-07-25)
+
+TBD
