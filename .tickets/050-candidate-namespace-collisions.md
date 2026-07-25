@@ -1,7 +1,7 @@
 ---
 id: "050"
 title: "Links pass: contract-candidate event names are a global namespace — add collision lint or scoping"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -31,7 +31,11 @@ extension protocol's two-tier governance):
    `from_model: <other-model>` reference
 
 ## Acceptance criteria
-- [ ] The dp-poc collision shape (two areas, same name, separate seams)
+- [x] The dp-poc collision shape (two areas, same name, separate seams)
       produces a clear error or is safely scoped — fixture proves it
-- [ ] x1-style deliberate cross-area contracts still validate
-- [ ] Decision + rationale recorded (ADR if links semantics changed)
+- [x] x1-style deliberate cross-area contracts still validate
+- [x] Decision + rationale recorded (ADR if links semantics changed)
+
+## Resolution (2026-07-25)
+
+TBD
