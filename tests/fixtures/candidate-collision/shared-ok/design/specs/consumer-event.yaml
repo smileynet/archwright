@@ -1,0 +1,13 @@
+kind: contract
+id: consumer-event
+from_patterns: []
+from_model: "model:CONSUMER_EVENT"
+confidence: "★"
+protects_experience: "fixture"
+user_story: "One cross-area event, one owning contract."
+events:
+  CONSUMER_EVENT:
+    fields:
+      value:
+        type: int
+        required: true

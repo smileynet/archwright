@@ -1,0 +1,9 @@
+version: 1
+project: fixture
+actors:
+  - id: b-actor
+    from_patterns: ["pattern:fixture"]
+    states: [{id: idle}]
+contract_candidates:
+  - event: CELL_RESULT
+    producer: b-actor

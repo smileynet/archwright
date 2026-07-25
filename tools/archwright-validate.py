@@ -502,6 +502,9 @@ def validate_model(data, path):
             errors.append(f"duplicate contract candidate event '{ev}' — candidate events "
                           f"must be unique within a model (cross-model collisions: ticket 050)")
         events[ev] = c
+        if "shared" in c and not isinstance(c["shared"], bool):
+            errors.append(f"contract candidate '{ev}' 'shared' must be a boolean "
+                          f"(cross-model sharing opt-in, ticket 050)")
         if not c.get("producer"):
             errors.append(f"contract candidate '{ev}' missing required 'producer'")
         elif c["producer"] not in seen_actors | boundary_ids:
@@ -618,7 +621,7 @@ def collect_model_index(directory):
     """
     directory = Path(directory)
     model_ids = set()
-    candidates = []  # (path, event_name, folded_into)
+    candidates = []  # (path, event_name, folded_into, shared)
     boundary_ids = set()
     producers = set()
     models_exist = False
@@ -646,7 +649,9 @@ def collect_model_index(directory):
         for cand in data.get("contract_candidates") or []:
             if isinstance(cand, dict) and cand.get("event"):
                 model_ids.add(cand["event"])
-                candidates.append((path, cand["event"], cand.get("folded_into")))
+                candidates.append(
+                    (path, cand["event"], cand.get("folded_into"), bool(cand.get("shared")))
+                )
                 if cand.get("producer"):
                     producers.add(cand["producer"])
         for be in data.get("boundary_entities") or []:
@@ -803,8 +808,37 @@ def validate_links(directory):
                     f"(no actor, contract candidate, or producer boundary entity with that "
                     f"id in design/models/)"
                 )
-        all_candidate_events = {e for _, e, _ in candidates}
-        for model_path, event_name, folded_into in candidates:
+        all_candidate_events = {e for _, e, _, _ in candidates}
+
+        # Cross-model collision lint (ticket 050, ADR 0013): candidate event
+        # names are a global namespace — the coverage matching below aliases
+        # same-named events across models (field incident: two areas' unrelated
+        # CELL_RESULT events produced a spurious "covered by 2 contract specs").
+        # Same name in 2+ model files = error unless EVERY declaration opts in
+        # with `shared: true` (deliberate cross-area event, one contract owns it).
+        by_event = {}  # event -> {path: shared}
+        for model_path, event_name, _, shared in candidates:
+            by_event.setdefault(event_name, {})[model_path] = (
+                by_event.get(event_name, {}).get(model_path, False) or shared
+            )
+        for event_name, decls in sorted(by_event.items()):
+            if len(decls) > 1 and not all(decls.values()):
+                names = ", ".join(str(p) for p in sorted(decls, key=str))
+                errors.append(
+                    f"contract candidate '{event_name}' is declared in {len(decls)} model files "
+                    f"({names}) — candidate events are a global namespace; rename one (area-"
+                    f"prefixed names) or mark EVERY declaration 'shared: true' if this is "
+                    f"deliberately one cross-area event (ticket 050)"
+                )
+            elif len(decls) == 1 and next(iter(decls.values())):
+                warnings.append(
+                    f"{next(iter(decls))}: contract candidate '{event_name}' is marked "
+                    f"'shared: true' but only one model declares it — drop the flag or "
+                    f"add the counterpart declaration"
+                )
+
+        multi_covered_reported = set()
+        for model_path, event_name, folded_into, _ in candidates:
             covering = event_coverage.get(event_name, [])
             if folded_into:
                 # Folded candidate (ticket 013): its payload rides inside another
@@ -832,7 +866,10 @@ def validate_links(directory):
                     f"{model_path}: contract candidate '{event_name}' has no contract spec "
                     f"(run archwright-contract, or record an explicit skip note)"
                 )
-            elif len(covering) > 1:
+            elif len(covering) > 1 and event_name not in multi_covered_reported:
+                # Shared events (ticket 050) are legitimately declared in 2+
+                # models — report the ownership violation once per event.
+                multi_covered_reported.add(event_name)
                 names = ", ".join(str(p) for p in covering)
                 errors.append(
                     f"contract candidate '{event_name}' is covered by {len(covering)} contract specs "

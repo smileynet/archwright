@@ -38,4 +38,27 @@ extension protocol's two-tier governance):
 
 ## Resolution (2026-07-25)
 
-TBD
+**Option 1 (collision lint + mutual `shared: true` opt-out) — ADR 0013.**
+Research (subagent pass over Kafka/Confluent, CloudEvents, protobuf/Buf,
+AsyncAPI): no surveyed ecosystem silently scopes boundary-crossing event
+names — detection at registration time + explicit sharing declarations is the
+consensus; silent aliasing (Confluent RecordNameStrategy) is the documented
+hazard. Option 2 rejected: silent scoping would let two areas modeling the
+SAME real event get divergent contract specs unnoticed, and it changes what a
+bare event name means in every existing artifact.
+
+Implementation (`archwright-validate.py`):
+- `--links`: event declared in 2+ model files = error naming every file, with
+  the rename-or-declare-shared instruction; suppressed only when EVERY
+  declaration carries `shared: true`. Lone `shared: true` = warning (stale
+  flag / counterpart not landed yet — legitimate mid-modeling).
+- Schema level (`validate_model`): non-boolean `shared` rejected.
+- Exactly-one-owning-contract rule unchanged for shared events (now reported
+  once per event, not once per declaring model).
+
+Verification: `tests/fixtures/candidate-collision/` (collision, shared-ok
+incl. x1-style covering contract, half-shared, lone-shared, bad-shared-type)
+wired into the suite § Candidate Event Collisions — both FAIL directions
+proven non-vacuous; suite 157/0/0. discord-poc field corpus passes `--links`
+unchanged. Conventions steering + archwright-model skill updated (namespace
+rule + `shared:` usage).

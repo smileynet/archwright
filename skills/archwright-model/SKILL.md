@@ -252,6 +252,8 @@ contract_candidates:
 
 **Boundary entities as producers:** a boundary entity (e.g., a configuration-authority) may be named as a candidate's `producer:` — that makes it a valid `from_model:` target for the resulting contract spec. Boundary entities that produce no candidates are not valid `from_model` targets.
 
+**Candidate event names are a global namespace across ALL model files** (ADR 0013, ticket 050). `--links` errors when 2+ models declare the same candidate event. When modeling an area in a multi-model project, prefer area-prefixed names for area-local events (`MEASUREMENT_CELL_RESULT`, not `CELL_RESULT`). If the event genuinely IS one cross-area event (a consumer contract both areas speak), mark EVERY declaration `shared: true` — one contract spec still owns the payload, and a `shared: true` no counterpart repeats draws a warning until the other model lands.
+
 ## Rendering Guidance
 
 ### Label length

@@ -2046,6 +2046,43 @@ else
   report FAIL "model-schema: existing corpus models pass unmodified (advisory sections WARN only)" "exit=$rc"
 fi
 
+echo "=== Candidate Event Collisions (ticket 050) ==="
+# Cross-model collision lint: candidate event names are a global namespace
+# (--links coverage matching aliases same-named events across models — the
+# dp-poc CELL_RESULT incident). Fixture: tests/fixtures/candidate-collision/
+# (four directions; vacuity rule: both FAIL cases must actually fail).
+CC_FIX="$TOOLS/../tests/fixtures/candidate-collision"
+rc=0; CC_OUT=$(python3 "$VALIDATE" --links "$CC_FIX/collision/design" 2>&1) || rc=$?
+if [ $rc -eq 1 ] && echo "$CC_OUT" | grep -q "declared in 2 model files"; then
+  report PASS "candidate-collision: same event in 2 models FAILs naming both files (050)"
+else
+  report FAIL "candidate-collision: same event in 2 models FAILs naming both files (050)" "exit=$rc"
+fi
+rc=0; CC_OUT=$(python3 "$VALIDATE" --links "$CC_FIX/shared-ok/design" 2>&1) || rc=$?
+if [ $rc -eq 0 ] && ! echo "$CC_OUT" | grep -q "WARN"; then
+  report PASS "candidate-collision: mutual 'shared: true' + one owning contract PASSes clean (x1-style)"
+else
+  report FAIL "candidate-collision: mutual 'shared: true' + one owning contract PASSes clean (x1-style)" "exit=$rc"
+fi
+rc=0; python3 "$VALIDATE" --links "$CC_FIX/half-shared/design" >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 1 ]; then
+  report PASS "candidate-collision: 'shared' on only ONE of two declarations still FAILs"
+else
+  report FAIL "candidate-collision: 'shared' on only ONE of two declarations still FAILs" "exit=$rc"
+fi
+rc=0; CC_OUT=$(python3 "$VALIDATE" --links "$CC_FIX/lone-shared/design" 2>&1) || rc=$?
+if [ $rc -eq 0 ] && echo "$CC_OUT" | grep -q "only one model declares it"; then
+  report PASS "candidate-collision: lone 'shared: true' WARNs (stale flag), exit 0"
+else
+  report FAIL "candidate-collision: lone 'shared: true' WARNs (stale flag), exit 0" "exit=$rc"
+fi
+rc=0; CC_OUT=$(python3 "$VALIDATE" "$CC_FIX/bad-shared-type/design/models/area-a.yaml" 2>&1) || rc=$?
+if [ $rc -eq 1 ] && echo "$CC_OUT" | grep -q "'shared' must be a boolean"; then
+  report PASS "candidate-collision: non-boolean 'shared' rejected at schema level"
+else
+  report FAIL "candidate-collision: non-boolean 'shared' rejected at schema level" "exit=$rc"
+fi
+
 echo "=== Frontmatter Fence Extraction (ticket 039) ==="
 # extract_frontmatter split on the SUBSTRING '---', truncating any spec whose
 # block scalar legitimately contains it (e.g. grep for fence lines) — a bash
