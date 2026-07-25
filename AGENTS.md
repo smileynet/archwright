@@ -194,7 +194,7 @@ mise run test                  # verify: suite green, 0 failed, 0 skipped (count
 
 | Dependency | Needed for | Rehydrate |
 |------------|-----------|-----------|
-| `alloy6.jar` (Alloy ≥ 6.2.0 — the `exec` CLI was added in 6.2.0) | behavior checks | `curl -L -o .references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar` |
+| `alloy6.jar` (Alloy ≥ 6.2.0 — the `exec` CLI was added in 6.2.0) | behavior checks | `python3 tools/install-alloy.py` (pinned URL + SHA-256 verification via `tools/alloy-runtime.json`; the mise task delegates to this script) |
 | Java (JVM, `java` on PATH) | running the Alloy jar | `winget install EclipseAdoptium.Temurin.21.JRE` / `brew install temurin` / `apt-get install default-jre` |
 | Python 3 + PyYAML | all tools | `pip install pyyaml` |
 | `smcat` (state-machine-cat) | model/diagram FSM rendering (optional) | `npm i -g state-machine-cat` — PNG output also needs Graphviz `dot` |

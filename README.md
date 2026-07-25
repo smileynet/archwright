@@ -36,7 +36,7 @@ Archwright is a **methodology embodied as agent skills**, with supporting tools 
 Install the pinned, SHA-256-verified Alloy runtime once, then run a behavior check:
 
 ```bash
-python tools/install-alloy.py
+mise run rehydrate-alloy   # or without mise: python tools/install-alloy.py
 python tools/archwright-check.py design/specs/example-behavior.yaml
 ```
 

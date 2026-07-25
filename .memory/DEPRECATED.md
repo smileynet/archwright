@@ -10,7 +10,6 @@ mechanisms, dated working notes) — don't wait for a cleanup pass to rediscover
 
 | Path | Superseded by | Remove when | Added |
 |------|---------------|-------------|-------|
-| `tools/install-alloy.py` + `tools/alloy-runtime.json` OR `mise.toml [tasks.rehydrate-alloy]` | Each other — duplicate rehydration mechanisms fetching the same jar (install-alloy adds SHA-256 verification; mise task is the documented AGENTS.md path). Pick one | Owner decides which survives; loser's docs references updated (README currently points at install-alloy, AGENTS.md at rehydrate-alloy) | 2026-07-19 (upstream merge) |
 | Legacy jar fallback in `tools/archwright-check.py` `_find_alloy_jar` (`~/code/archwright/.references/alloy6.jar`, line ~410) | `ARCHWRIGHT_ALLOY_JAR` env (mise sets it) + script-relative path | No machine relies on the legacy checkout location (verify: env var set on all dev machines) | 2026-07-19 |
 | `.memory/review-improvements-2026-07-11.md` | Its actionable items were absorbed into skills/tools (upstream commit ec359c6 claims "review improvements") | Verify absorption claim (diff its recommendations vs current skills), then delete | 2026-07-19 (upstream merge) |
 
