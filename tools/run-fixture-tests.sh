@@ -301,6 +301,31 @@ else
 fi
 
 echo ""
+echo "=== Stack Adapter Conformance: python.trace_emitter ==="
+# Extension Protocol rules 3-5 (ticket 049): same corpus shape as the TS adapter —
+# scenario emits passing + violating traces via the real recorder; violating MUST FAIL.
+PE_DIR="$TOOLS/stacks/python/trace_emitter"
+PE_OUT=$(mktemp -d)
+if python3 "$PE_DIR/conformance/scenario.py" "$PE_OUT" >/dev/null 2>&1; then
+  report PASS "py-emitter: scenario emits traces via recorder"
+else
+  report FAIL "py-emitter: scenario emits traces via recorder"
+fi
+rc=0; python3 "$CHECK" --trace "$PE_DIR/conformance/py-emitter-conformance.yaml" "$PE_OUT/passing.trace.json" >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 0 ]; then
+  report PASS "py-emitter: guarded run trace validates (exit 0)"
+else
+  report FAIL "py-emitter: guarded run trace validates (exit 0)" "exit=$rc"
+fi
+rc=0; python3 "$CHECK" --trace "$PE_DIR/conformance/py-emitter-conformance.yaml" "$PE_OUT/violating.trace.json" >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 1 ]; then
+  report PASS "py-emitter: unguarded run trace FAILs at capacity breach (exit 1)"
+else
+  report FAIL "py-emitter: unguarded run trace FAILs at capacity breach (exit 1)" "exit=$rc"
+fi
+rm -rf "$PE_OUT"
+
+echo ""
 echo "=== Check-Tool Feature Tests ==="
 # Golden assertions for check-backend features (tickets 005/006) — temp specs
 # run against the fixture tree, cleaned up unconditionally.

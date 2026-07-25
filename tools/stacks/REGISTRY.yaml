@@ -39,6 +39,26 @@ stacks:
           - {status: pending, date: 2026-07-17, note: "birth entry"}
         reason: "No pattern library yet. Unblocks: reusable constraint checks for Godot idioms (signals, autoloads, scene tree)."
 
+  python:
+    detect: ["pyproject.toml", "setup.py", "requirements.txt", "*.py"]
+    adapters:
+      trace_emitter:
+        status: "★★"
+        since:
+          - {status: "★★", date: 2026-07-25, note: "Ticket 049 (discord-poc field gap): corpus wired into run-fixture-tests.sh (3 checks — emit, pass-validate, violate-FAIL); suite 152/0/0. Measured cost: recorder 83 lines (~57 code), scenario run 60ms, ~1 line of test integration per recorded event. Research pass: no prior art emits this shape (Hypothesis = code repr, pytest-reportlog = test lifecycle, PyModel = Python source) — thin convention helper confirmed as cheapest correct shape; snapshot-at-record-time + atomic os.replace write from stdlib-documented pitfalls."}
+          - {status: pending, date: 2026-07-25, note: "birth entry — discord-poc dp-poc run (2026-07-22) left ~20 behavior specs' trace checks SKIPping for want of this adapter"}
+        evidence: "tools/stacks/python/trace_emitter/conformance/ (scenario.py + py-emitter-conformance.yaml); suite section 'Stack Adapter Conformance'. Field target: discord-poc x1-replay-emission sample trace validated end-to-end 2026-07-25."
+      ast_grammar:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-25, note: "birth entry"}
+        reason: "ast-grep ships Python support upstream; conformance corpus not yet written. Unblocks: ★ structural constraint checks."
+      check_patterns:
+        status: pending
+        since:
+          - {status: pending, date: 2026-07-25, note: "birth entry"}
+        reason: "No pattern library yet. Unblocks: reusable constraint checks for Python idioms (import boundaries, bare except, mutable defaults)."
+
   typescript:
     detect: ["tsconfig.json", "*.ts"]
     adapters:

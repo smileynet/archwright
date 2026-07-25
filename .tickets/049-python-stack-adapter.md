@@ -34,4 +34,26 @@ the extension protocol, no ADR needed.
 
 ## Resolution (2026-07-25)
 
-TBD
+Built `tools/stacks/python/trace_emitter/` (trace_recorder.py, 83 lines, stdlib
+only) from the TypeScript adapter's pattern, per the Extension Protocol:
+
+- **Research (rule 3):** 3 subagent reports (prior art, best practices, related
+  RV ecosystems) — synthesis promoted to `.memory/research-py-trace-emitter.md`.
+  Verdict: no prior art emits the `{event, state, clock}` shape (Hypothesis =
+  code repr, pytest plugins = test lifecycle, PyModel = Python source); thin
+  convention helper confirmed. Adopted from findings: snapshot-at-record-time
+  via JSON round-trip (stdlib mock.call_args mutable-argument pitfall; fails
+  fast at the offending event on non-serializable state) + atomic
+  mkstemp→os.replace write (no truncated JSON on CI-timeout kill).
+- **Conformance at birth (rule 4):** guarded-counter corpus mirroring the TS
+  adapter (scenario.py emits passing + violating traces via the real recorder);
+  violating run FAILs at the capacity breach. Wired into run-fixture-tests.sh
+  § Stack Adapter Conformance (3 checks); suite 152/0/0.
+- **Registry (rule 5):** REGISTRY.yaml python row, trace_emitter ★★ (computed:
+  corpus in suite + measured cost — recorder 83 lines/~57 code, scenario 60ms),
+  since: history from birth. ast_grammar/check_patterns registered pending.
+- **End-to-end AC:** sample clean-replay trace generated with the recorder for
+  discord-poc `x1-replay-emission`, validated pass (6 steps, clean-emission
+  checked, no skips); a corrupted-seq run FAILs at position 3 with full
+  provenance — non-vacuous on the field spec, not just the fixture. Trace
+  committed to discord-poc `design/traces/`.
