@@ -80,7 +80,11 @@ Output: `design/report/` (gitignored) — `report.html` (interactive surface),
 `REPORT.md` (mirror), `report.json` (canonical doc + `model_view`/`asks` blocks).
 Exit 0 = bundle written (posture printed); exit 2 = input error OR an
 untranslated vocabulary term (add the surface phrase to the token table —
-never bypass). `ARCHWRIGHT_AUTO_APPROVE` (off|code-fixes|all, mise.local.toml)
+never bypass). Behavior-spec transitions render as diagram arrows (ticket 046):
+every event name in a projected behavior spec needs an `"event <NAME>":` token
+in the vocabulary (default table covers ask-lifecycle events; a target project
+adds its own events to its vocabulary override — a missing one is the exit-2
+case above). `ARCHWRIGHT_AUTO_APPROVE` (off|code-fixes|all, mise.local.toml)
 collapses APPROVALS only — decisions/suggestions are structurally exempt.
 
 **Consuming a response file** (`design/report/responses.json`, contract:response-file):

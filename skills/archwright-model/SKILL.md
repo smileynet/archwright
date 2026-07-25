@@ -285,6 +285,7 @@ smcat -T png actor.smcat
 
 ## Quality Checks
 
+- Model YAML passes direct validation: `python3 tools/archwright-validate.py design/models/<model>.yaml` (shape-detected by the top-level `actors` key since ticket 048 — no `kind` field needed). This is the phase's flow-through validation gate (ADR 0007); fix errors before presenting. `experiences`/`composition` WARNs are advisory but new models should include both.
 - Every pattern's resolution has at least one actor identified
 - Every actor has explicit: owned state, accepted events, emitted events, lifecycle
 - No shared mutable state between actors (if found → it's an implicit actor that needs naming)
