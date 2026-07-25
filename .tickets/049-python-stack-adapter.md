@@ -1,7 +1,7 @@
 ---
 id: "049"
 title: "Stacks registry: python adapter (trace emitter) — extension-protocol instance"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
