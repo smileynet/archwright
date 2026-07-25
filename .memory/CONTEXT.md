@@ -127,7 +127,7 @@ A human-pre-authorized run of contiguous flow-through phases ("forces through de
 The tightly-coupled messages of ONE protocol, owned by one authority actor, that evolve in lockstep (e.g., request/accept/reject of a transfer — the counterparty's request leg belongs to the same protocol) — may share one contract spec, named for the protocol. The only sanctioned bend of one-spec-per-file (C7 R2, ratified 2026-07-16).
 
 **Contract candidate**:
-Model-phase output naming an event's identity/direction/producer WITHOUT payload shape — the contract phase (sole owner of contract specs) formalizes it, carrying `from_model:` provenance (C7 R1, ratified 2026-07-16).
+Model-phase output naming an event's identity/direction/producer WITHOUT payload shape — the contract phase (sole owner of contract specs) formalizes it, carrying `from_model:` provenance (C7 R1, ratified 2026-07-16). Candidate event names are a checked global namespace across all model files: cross-model duplicates are a `--links` error unless every declaration is marked `shared: true` (ADR 0013).
 
 **Domain overlay**:
 Per-domain vocabulary pack (`tools/domains/<domain>/` — game, web, general): `scales.yaml` maps the four canonical scale IDs to domain-native labels/examples; `predicates.yaml` holds advisory, prior-art-backed design rules. Detected via `detect.yaml` manifest rules (architecture over theme — a game-themed express backend is `web`); explicit override wins. Deployed with the survey skill (`references/domains/`).
