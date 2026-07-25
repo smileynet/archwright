@@ -1,7 +1,7 @@
 ---
 id: "050"
 title: "Links pass: contract-candidate event names are a global namespace — add collision lint or scoping"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
