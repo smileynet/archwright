@@ -27,8 +27,8 @@ description = "One-time: python libs the tools need"
 run = "python -m pip install pyyaml"
 
 [tasks.rehydrate-alloy]
-description = "Fetch Alloy 6.2.0 dist jar into .references/ (exec CLI needs >= 6.2.0)"
-run = "curl -L --create-dirs -o {{config_root}}/.references/alloy6.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar"
+description = "Fetch Alloy 6.2.0 dist jar into .references/ with SHA-256 verification (exec CLI needs >= 6.2.0)"
+run = "python {{config_root}}/tools/install-alloy.py"
 
 [tasks.validate]
 description = "Schema-validate patterns/specs: mise run validate -- <files...>"
