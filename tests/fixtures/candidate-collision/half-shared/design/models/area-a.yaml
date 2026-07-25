@@ -1,0 +1,10 @@
+version: 1
+project: fixture
+actors:
+  - id: a-actor
+    from_patterns: ["pattern:fixture"]
+    states: [{id: idle}]
+contract_candidates:
+  - event: HALF_EVENT
+    producer: a-actor
+    shared: true

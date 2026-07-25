@@ -110,9 +110,12 @@ Registries: `tools/stacks/REGISTRY.yaml` (per-language/engine adapters: trace em
 - **Model YAML validates directly** (ticket 048): shape-detected by the
   top-level `actors` key — no `kind` field needed; existing models pass
   unmodified. Missing experiences/composition sections are advisory WARNs.
-- **Candidate event names are a global namespace across models** — vet new
-  names against `design/models/*.yaml` before writing (CELL_RESULT collision,
-  ticket 050 tracks lint/scoping).
+- **Candidate event names are a global namespace across models** — `--links`
+  ERRORS when 2+ model files declare the same candidate event (ADR 0013,
+  ticket 050). Default remedy: area-prefixed rename (CELL_RESULT →
+  MEASUREMENT_CELL_RESULT). Genuinely cross-area events: mark EVERY
+  declaration `shared: true` (boolean); one contract spec still owns the
+  payload. A lone `shared: true` WARNs (stale flag or missing counterpart).
 
 ## Pattern Quality Gates
 
