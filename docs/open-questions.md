@@ -146,3 +146,11 @@ After multiple semantic reviews (Layer 3) on the same project, patterns emerge i
 **Trigger:** After 3+ semantic reviews on same project with actionable findings.
 **Mechanism:** Store review findings in `.memory/review-history/`. Feed missed issues as context to next review.
 **Evaluation:** Does review accuracy improve (fewer false negatives) across sessions?
+
+### 18. Codified Change-Propagation and Context Rules ← from Spec Growth Engine notes (R18/R19, 2026-07-07; absorbed 2026-07-25)
+
+When a pattern changes, which specs MUST update — and what must an agent READ before a given task type? SGE codifies both (a change-type → required-updates rule table, and a computable `Context(N)` formula: root invariants + spine contracts + own spec + one-hop dependency contracts + own code). Archwright covers change propagation informally via provenance links + pass-up; context assembly is prose guidance in skills.
+
+**Trigger:** an agent misses a required downstream update after a pattern edit, or context exhaustion during a pipeline phase traces to over-reading.
+**Deliverable:** a rule table in a skill's references (growth rules) and/or a per-phase read formula.
+**Current status:** provenance links make the dependency graph walkable, so both may be derivable rather than hand-authored.
