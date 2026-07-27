@@ -1,7 +1,7 @@
 ---
 id: "053"
 title: "Report: implement decisions + approvals sections with actionable cards"
-status: open
+status: done
 blocked_by: ["052"]
 priority: high
 ---
