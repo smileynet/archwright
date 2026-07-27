@@ -114,6 +114,48 @@ def _behavior_transitions(model, vocab):
     return transitions
 
 
+def _model_transitions(model, vocab):
+    """Extract transitions from inline on: maps in model YAML actors (ticket 052).
+
+    Handles object-style states (keyed by name, with on: maps) as used in field
+    models like lacrosse-bosse. List-style states (array of {id, label}) have no
+    inline transitions — those come from behavior specs via _behavior_transitions.
+
+    Labels use vocabulary when the event is registered; otherwise humanizes the
+    event name (underscores→spaces) since model-inline events are domain-specific
+    and may not have vocab entries."""
+    transitions = []
+    for actor in model.get("actors") or []:
+        states = actor.get("states")
+        if not isinstance(states, dict):
+            continue  # list-style states have no inline on: maps
+        for state_name, state_def in states.items():
+            if not isinstance(state_def, dict):
+                continue
+            on_map = _bool_key(state_def, "on")
+            if not on_map:
+                continue
+            for event, tr in on_map.items():
+                target = tr.get("target") if isinstance(tr, dict) else tr
+                if not target:
+                    continue
+                # Vocabulary lookup with graceful fallback for domain events
+                term = "event " + str(event)
+                try:
+                    label = vocab.surface(term)
+                except GenerationError:
+                    label = str(event).replace("_", " ")
+                transitions.append({
+                    "from": str(state_name),
+                    "to": str(target),
+                    "event": str(event),
+                    "label": label,
+                    "actor": actor["id"],
+                    "spec": None,  # no behavior spec — sourced from model inline
+                })
+    return transitions
+
+
 def build_model_view(model, doc, vocab):
     """model_view block: elements with plain labels + per-element rollups.
 
@@ -129,6 +171,13 @@ def build_model_view(model, doc, vocab):
     front_door = "behavior-diagram" if len(actors) == 1 else "composition-view"
     joined = _spec_join(model, doc)
     transitions = _behavior_transitions(model, vocab)
+    # Merge model-inline transitions, deduping by (from, to, event, actor)
+    behavior_edges = {(t["from"], t["to"], t["event"], t["actor"]) for t in transitions}
+    for mt in _model_transitions(model, vocab):
+        key = (mt["from"], mt["to"], mt["event"], mt["actor"])
+        if key not in behavior_edges:
+            transitions.append(mt)
+            behavior_edges.add(key)
 
     states = []
     for actor in actors:
