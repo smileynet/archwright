@@ -1,7 +1,7 @@
 ---
 id: "052"
 title: "Report: render the statechart as an actual diagram with edges, not a state list"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
