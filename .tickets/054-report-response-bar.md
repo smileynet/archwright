@@ -1,7 +1,7 @@
 ---
 id: "054"
 title: "Report: response bar accumulation + response file export"
-status: open
+status: done
 blocked_by: ["053"]
 priority: high
 ---
