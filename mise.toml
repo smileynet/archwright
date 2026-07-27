@@ -53,6 +53,35 @@ run = "python tools/archwright-validate.py --links"
 description = "Batch static check: mise run check-static -- <specs-dir> [--target <root>]"
 run = "python tools/archwright-check.py --static"
 
+[tasks.report]
+description = "Generate report for a target project: mise run report -- --project <path> [--out <dir>]"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+PROJECT=""
+OUT=""
+NAME=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --project) PROJECT="$2"; shift 2 ;;
+    --out) OUT="$2"; shift 2 ;;
+    --name) NAME="$2"; shift 2 ;;
+    *) echo "Unknown arg: $1"; exit 2 ;;
+  esac
+done
+if [ -z "$PROJECT" ]; then echo "Usage: mise run report -- --project <path> [--out <dir>] [--name <display>]"; exit 2; fi
+SPECS="$PROJECT/design/specs"
+DESIGN="$PROJECT/design"
+if [ -z "$OUT" ]; then OUT="$PROJECT/.scratch/report"; fi
+if [ -z "$NAME" ]; then NAME="$(basename "$PROJECT")"; fi
+mkdir -p "$OUT"
+TMP=$(mktemp)
+python tools/archwright-check.py --all "$SPECS" --target "$PROJECT" --json > "$TMP" 2>/dev/null || true
+python tools/report/generate.py --check-json "$TMP" --design "$DESIGN" --project "$NAME" --out "$OUT"
+rm -f "$TMP"
+echo "Report: $OUT/report.html"
+"""
+
 [tasks.test]
 description = "Fixture suite over tests/fixtures/ + examples/ lifecycle corpora — the repo's regression net (count: AGENTS.md test row)"
 run = "bash tools/run-fixture-tests.sh"
