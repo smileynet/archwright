@@ -47,6 +47,7 @@ Draft `design-system.md` from the template: principles (cited, force-linked), ma
 ### 4. Wireframe the screens
 
 - Screen list from the overlay's coverage gates (e.g., web red routes; game first-contact moment) plus what the user names. Propose an order; the user can jump (propose-don't-force).
+- **Research each screen area before proposing.** Step 2's research covers the design system; but each new functional area (e.g., editor palettes, library browsers, onboarding flows) needs its own prior-art research dispatch. Search for domain-specific prior art (competing apps, established patterns for that screen type) and cite findings in the wireframe's rationale. A wireframe proposed without research is a guess — the user shouldn't have to ask "did you look at how other apps do this?"
 - One file per screen from the template. **Show the ASCII sketch within 2–3 exchanges**, then ask max 1–2 questions per screen, always after showing. Early sketches end with the direction check.
 - Every choice that survives an exchange becomes a ledger entry with honest origin. Watch the tripwire guard.
 
