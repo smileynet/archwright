@@ -1,192 +1,183 @@
 # Archwright: A Brief
 
-## What It Is
+## Design decisions that compound in your favor.
 
-A design methodology — embodied as AI agent skills — that captures *why* you made design decisions, then verifies your architecture actually honors them.
+Archwright is a strategic advisor for product design. It surfaces competing forces in what you're building, helps you resolve them at the right altitude, and verifies those resolutions hold over time.
 
-You express intent as **forces** (what you want vs. what constrains you). The agent helps **resolve** those forces into checkable specs. When something violates the stated intent, the system tells you *what* broke, *why*, and *which decision* to revisit.
+Decide at the top. The architecture stays honest.
 
-## The Problem
+---
 
-Design intent gets lost. You decide "only one entity can hold the ball" in a planning session. Three weeks later, a controller writes `ball_holder = self` directly. Nobody catches it because the decision lives in a doc nobody re-reads.
+## The Problem Isn't Bugs — It's Unexamined Decisions
 
-```
-  Decision                     Code (3 weeks later)
-  ┌────────────────┐          ┌──────────────────────┐
-  │ "Only one      │          │ // BallStateService  │
-  │  entity holds  │   ???    │ ball_holder = player_a│
-  │  the ball"     │──────>   │                      │
-  └────────────────┘          │ // FielderAI (oops)  │
-                              │ ball_holder = self    │
-                              └──────────────────────┘
-```
+Most teams don't fail because they violated a good decision. They fail because they never examined the decision in the first place.
 
-Archwright makes decisions **checkable** — they're not just documentation, they're verification contracts.
-
-## How It Works
-
-### Step 1: Name the Forces
-
-In conversation, you express what you want and what limits you. The agent helps make it precise:
+Forces pull in opposite directions — but nobody names them. Tensions resolve implicitly (whoever commits first wins). Architecture accumulates without strategy. And when something finally breaks, the symptom is three layers removed from the cause.
 
 ```
-  DESIRE:     "Any fielder can receive a pass at any time"
-  CONSTRAINT: "Exactly one entity holds the ball" (physics — ★★)
-  CONSTRAINT: "Only BallStateService writes possession" (architecture — ★★)
+  What looks like:          What it actually is:
+  ┌──────────────┐          ┌────────────────────────┐
+  │ A bug in     │          │ A tension that was     │
+  │ fielder_ai   │  ← ← ←  │ never surfaced, let    │
+  │              │          │ alone resolved         │
+  └──────────────┘          └────────────────────────┘
 ```
 
-The ★★ means "true invariant — this must never be violated."
+The cost isn't one bug. It's every decision downstream that compounded on the wrong assumption.
 
-### Step 2: Resolve the Tension
+---
 
-Forces pull in different directions. You find a configuration that satisfies all of them:
+## What Archwright Does
 
-```
-  RESOLUTION: Request/validate model.
-  Controllers REQUEST transfers.
-  BallStateService VALIDATES and commits.
-  Ball is "in flight" during transfer (no holder).
-```
+### It's two things:
 
-This gets captured as a **pattern** — a YAML file recording the forces, the tension, and how you resolved it.
+**1. An advisor** — helps you see the shape of what you're building: what forces are at play, where they conflict, and what your options are for resolving them.
 
-### Step 3: Express as Checkable Specs
+**2. A guardian** — once you've decided, it formalizes the decision as checkable structure and tells you when the architecture drifts from your intent.
 
-The resolution becomes concrete specs — each one verifiable:
+### The pipeline:
 
 ```
-  ┌─ behavior:ball-state-lifecycle ──────────────────┐
-  │                                                  │
-  │  Held ──[REQUEST]──> In-Flight ──[VALIDATE]──>  │
-  │   ↑                      │              Held    │
-  │   │                      │ [invalid]    (new)   │
-  │   └──────────────────────┘                      │
-  │            (returned to sender)                  │
-  │                                                  │
-  │  INVARIANT: at most one holder at any time (★★)  │
-  └──────────────────────────────────────────────────┘
-
-  ┌─ constraint:single-ball-holder ──────────────────┐
-  │  "Only BallStateService writes ball_holder"      │
-  │  check: grep for ball_holder assignments         │
-  │  expect: only in ball_state_service.gd           │
-  └──────────────────────────────────────────────────┘
-
-  ┌─ dependency:ball-write-ownership ────────────────┐
-  │  allowed: BallStateService → ball_holder (write) │
-  │  forbidden: anything else → ball_holder (write)  │
-  └──────────────────────────────────────────────────┘
+┌─────────── ADVISOR ───────────┐  ┌─────────── GUARDIAN ──────────┐
+│                                │  │                                │
+│  survey → forces → tensions   │  │  model → contract → derive    │
+│       → resolve → formalize   │  │       → check                 │
+│                                │  │                                │
+│  "What does this want to be?" │  │  "Is it still what you said?" │
+└────────────────────────────────┘  └────────────────────────────────┘
 ```
 
-### Step 4: Check
+---
 
-The agent runs verification. Behavior specs get model-checked (Alloy finds counterexamples in <500ms). Constraint and dependency specs get checked against the actual codebase:
+## See It Work
+
+### A designer expresses a desire:
+
+> "I want any fielder to be able to receive a pass at any time."
+
+This is a force — a pull toward freedom of motion.
+
+### The advisor surfaces what pushes back:
+
+| Force | Type |
+|-------|------|
+| "Any fielder can receive a pass" | Desire |
+| "Exactly one entity holds the ball" | Constraint — physics (★★) |
+| "Only BallStateService writes possession" | Constraint — architecture (★★) |
+
+"These are in tension. Freedom to receive vs. exclusivity of possession. Here are three ways to resolve it..."
+
+### The human decides:
+
+> **Resolution: Request/Validate model.**
+> Controllers REQUEST. BallStateService VALIDATES and commits.
+> During transfer: ball is "in flight" — no holder.
+
+This is the strategic moment. Everything below flows from this.
+
+### The decision gets captured:
+
+A pattern file records the forces, the tension, and the resolution — with provenance tracing back to the human desire it serves.
+
+### Architecture falls out:
+
+The resolution *implies* checkable specs:
+- **Behavior:** Held → In-Flight → Held (state machine)
+- **Constraint:** Only BallStateService writes `ball_holder`
+- **Invariant:** At most one holder at any time (★★)
+
+### Three weeks later, the guardian catches drift:
 
 ```
-  $ archwright-check ball-state-lifecycle.yaml
-    ✓ at-most-one-holder: PASS
-
-  $ archwright-check single-ball-holder.yaml
-    ✗ FAIL: ball_holder assigned outside BallStateService
+$ archwright-check single-ball-holder.yaml
+  ✗ FAIL: ball_holder assigned outside BallStateService
       src/controllers/fielder_ai.gd:183
       content: "ball_holder = self"
+
+  TRACES TO: pattern:ball-possession → force:single-possession (★★)
+  FIX: Use BallStateService.request_transfer() instead
 ```
 
-### Step 5: Route the Correction
+The violation routes back to the decision that owns it. The ★★ means: escalate to human.
 
-Every spec element traces back to the force that created it. The violation tells you exactly what to fix and why:
+---
 
-```
-  VIOLATION: fielder_ai.gd writes ball_holder directly
-  INVARIANT: single-ball-holder (★★)
-  FROM: pattern:ball-possession → constraint:single-writer
-  FIX DIRECTION: use BallStateService.request_transfer() instead
+## Why "At the Top" Matters
 
-  ★★ = must escalate to human before changing
-```
-
-## What Lives Where
+A tension resolved at the strategic level makes thousands of implementation decisions locally obvious. A tension left unresolved at the top becomes a contradiction in every PR, every sprint, every refactor.
 
 ```
-  your-project/
-    design/
-      patterns/                        # WHY — forces + resolutions
-        ball-possession.md               (markdown — humans read these)
-        practice-execution.md
-      specs/                           # WHAT — checkable architecture
-        ball-state-lifecycle.yaml        (kind: behavior — YAML)
-        resolved-play-view.yaml          (kind: contract — YAML)
-        single-ball-holder.md            (kind: constraint — markdown)
-        ball-write-ownership.md          (kind: dependency — markdown)
+  Resolved at the top:              Unresolved at the top:
+
+  ┌─── ONE resolution ───┐         ┌── same argument ──────┐
+  │  "Request/Validate"   │         │  PR #47: "who writes?" │
+  └───────┬───────────────┘         │  PR #63: "who writes?" │
+          │ implies                  │  PR #91: "who writes?" │
+  ┌───────┴───────────────┐         │  Sprint 8: "who owns?" │
+  │  spec, check, routing │         │  Retro: "why is this   │
+  │  all fall out for free│         │          still broken?" │
+  └───────────────────────┘         └────────────────────────┘
 ```
 
-**Patterns** = markdown with YAML frontmatter. Humans read the prose; tools validate the frontmatter.
-**Specs** = YAML for machine-processed specs (behavior, contract). Markdown+frontmatter for human-read specs (constraint, dependency).
-Your test suite verifies the implementation matches the specs.
+This is what "compound in your favor" means. One good resolution, properly captured and verified, saves you from re-litigating it forever.
+
+---
 
 ## The Confidence System
 
 Not all decisions are equally sacred:
 
+| Level | Meaning | When violated |
+|-------|---------|--------------|
+| ★★ | Must always hold — true invariant | Escalate to human. Never auto-fix. |
+| ★ | Believed correct — evidence supports it | Advisor proposes fix, waits for approval |
+| — | One approach — might change | Advisor may adjust autonomously |
+
+Confidence can be promoted (evidence accumulates) or demoted (counterexample found). The advisor earns trust incrementally.
+
+---
+
+## The Advisor's Role
+
+| It does | It doesn't |
+|---------|-----------|
+| Surfaces forces you haven't named | Decide what your product should be |
+| Names tensions between your desires | Override your resolution |
+| Proposes resolutions with trade-offs | Auto-fix ★★ violations |
+| Captures decisions with provenance | Forget why something exists |
+| Verifies alignment over time | Replace judgment with automation |
+
+**You decide. The advisor surfaces, proposes, and verifies.**
+
+---
+
+## What Lives Where
+
 ```
-  ★★  This must ALWAYS hold. Physics. Security. Data integrity.
-      → Checked rigorously. Violations escalate to human.
-
-  ★   We believe this is right. Evidence supports it.
-      → Checked normally. Agent proposes fixes.
-
-  —   One approach. Untested. Might change.
-      → Checked lightly. Agent may auto-adjust.
+your-project/
+  design/
+    forces/     # What you want and what constrains you
+    patterns/   # How tensions were resolved (WHY)
+    models/     # Actors, state machines, event flows
+    specs/      # Checkable commitments (WHAT must hold)
 ```
 
-Confidence can be promoted (evidence accumulates) or demoted (counterexample found).
+---
 
-## The Agent's Role
+## Limitations
 
-The agent holds the methodology. It:
+**What archwright can do:**
+- Surface forces and tensions from conversation and code
+- Verify conformance to stated rules (grep, semgrep, Alloy)
+- Route violations back to the responsible decision
+- Provide bounded model checking for behavior specs
 
-- Helps you **name forces** from conversation (what do you want? what bounds you?)
-- Helps you **find resolutions** (proposes options, researches prior art)
-- **Formalizes** ratified decisions as patterns + specs
-- **Checks** specs against each other and against your code
-- **Routes corrections** back to the responsible decision when violations are found
-
-You decide. The agent prepares, proposes, and verifies.
-
-## Key Ideas
-
-1. **Forces stay first-class.** The reusable knowledge is the method of naming and resolving tensions — not a template library.
-
-2. **"Resolves into" not "compiles to."** Design intent doesn't mechanically transform into architecture. It's creatively resolved, then formally verified.
-
-3. **The agent IS the system.** Intelligence lives in skills (methodology). Tools handle only deterministic operations (schema validation, model checking, grep).
-
-4. **Trust via verification.** Once specs are proven consistent, you review the *intent* (pattern), not the *output* (spec). The checking handles correctness.
-
-5. **Contrast pairs over raw errors.** When something breaks, show the violation next to the nearest valid alternative. The *diff* is the diagnosis.
-
-## Limitations & Honest Claims
-
-**What archwright CAN do:**
-- Catch structural violations in abstracted models (dead-ends, unreachable states, constraint breaches)
-- Verify codebase conformance to stated rules (grep/AST checks against real code)
-- Route violations back to responsible design decisions via provenance
-- Provide a disciplined vocabulary for design intent that both humans and agents can use
-
-**What archwright CANNOT do:**
-- Verify full game simulations (state explosion makes real games intractable without abstraction)
-- Prove properties hold in the actual implementation (model checking proves properties of the MODEL, not the code — runtime monitoring or Lean-based code proofs bridge this gap)
-- Replace playtesting for experience qualities (proxies approximate but don't prove "feels good")
-
-**What already exists (archwright builds on, not invents):**
-- Formal methods applied to games (Mawhorter 2021, Rezin 2017)
-- Softlock detection via CTL: `AG(EF(goal))` is published
-- State machine model checking (Alloy, SPIN, TLC — decades of prior art)
-- AI-assisted proof generation (DeepSeek-Prover, AlphaProof)
+**What archwright cannot do:**
+- Replace human judgment on resolution
+- Prove implementation correctness beyond the model's abstraction
+- Validate experience qualities ("feels good") — only structural proxies
 
 **What archwright uniquely adds:**
-- A unified library of game/app failure predicates (not just softlock)
-- Provenance routing from violations back to design forces
-- The force-resolution methodology connecting Alexander's theory to formal verification
-- Multi-kind specs (behavior + constraint + dependency) with self-describing checks
-- Confidence-gated AI autonomy for correction routing
+- Bidirectional traceability: architecture talks back to strategy
+- Resolution altitude: strategic decisions produce architectural coherence
+- Force-first methodology: desires are primary, constraints serve them
