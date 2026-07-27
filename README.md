@@ -1,83 +1,99 @@
 # Archwright
 
-A force-resolution design language that resolves into verified architecture.
-
-## The Thesis
-
-Human design intent — expressed as forces in tension — **resolves into** verified architecture. The resolution is traceable: every architectural commitment carries provenance back to the forces that demanded it. When the architecture violates its own stated forces, corrections route back to the design for re-resolution.
-
-Two vocabularies, one pipeline:
-
-1. **Design domain** — a vocabulary for thinking at the level of intent: what the thing wants to be, what bounds it, and how those are reconciled.
-2. **Architecture domain** — the formal target: behavior models, data contracts, service boundaries, dependency rules, and invariants — verified against the stated forces.
-
-These are not two systems but one resolution, running in both directions.
-
-## The Model in One Line
-
-> Forces in tension → resolved Pattern → takes form as architecture (State · Data · Interface · Invariant) → verified against forces → violations surface as contrast pairs → route back to responsible force → re-resolve → … → quiescence.
-
-## Core Commitment
-
-Keep *forces* first-class — and product-level desires (what humans need) are the primary forces. Architectural constraints exist to serve those desires via explicit traceability. The reusable IP is not a catalogue of patterns; it is the method of naming and resolving tensions that trace back to human purpose. The moment patterns become fixed templates disconnected from the desires that generated them, the system dies.
+Design decisions that compound in your favor.
 
 ## What Archwright Is
 
-Archwright is a **methodology embodied as agent skills**, with supporting tools for mechanical tasks. The AI agent IS the system — it holds the design methodology. Humans express intent through conversation; the agent resolves it into checkable specifications.
+A strategic advisor for product design — embodied as AI agent skills. It surfaces the forces shaping your product, helps you resolve tensions at the right altitude, and verifies those resolutions hold over time.
 
-- **Skills** (global, `~/.kiro/skills/`) — the design methodology: force identification, resolution, verification, correction
-- **Tools** (on PATH, `tools/`) — mechanical operations: schema validation, spec → Alloy compilation, checking, parsing
-- **Patterns** (in target project, `design/patterns/`) — captured design intent
-- **Models** (in target project, `design/models/`) — domain actors, state machines, event flows, composition
-- **Specs** (in target project, `design/specs/`) — verified architectural commitments (behavior, constraint, contract, dependency)
+The architecture is the output of the advisory process, not the process itself.
 
-## Verification tools
+## The Insight
 
-Install the pinned, SHA-256-verified Alloy runtime once, then run a behavior check:
+Every product has forces pulling it in different directions — what users want, what the technology allows, what the business needs, what physics demands. Most teams resolve these forces implicitly: whoever commits first wins the architecture.
+
+Archwright makes this explicit. It helps you see what's in tension, resolve it deliberately, and ensure the resolution compounds rather than erodes.
+
+## Two Modes
+
+| Mode | What it does | Role |
+|------|-------------|------|
+| **Advisor** | Surfaces forces, names tensions, proposes resolutions | Counselor — reveals what you can't see alone |
+| **Guardian** | Formalizes decisions, derives specs, verifies alignment | Enforcer — ensures what you decided stays true |
+
+```
+┌──────────────── ADVISOR ────────────────┐
+│                                          │
+│  forces → tensions → resolve → formalize │
+│                                          │
+│  "What's this trying to become?          │
+│   What's in conflict? How do we resolve?"│
+│                                          │
+├──────────────── GUARDIAN ────────────────┤
+│                                          │
+│  model → contract → derive → check       │
+│                                          │
+│  "Now that you've decided —              │
+│   I'll make sure it's honored."          │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+## How It Works
+
+1. **You express a desire** — "I want any fielder to receive a pass at any time"
+2. **The advisor surfaces what pushes back** — "But physics says exactly one holder. And your architecture says only BallStateService writes possession."
+3. **You resolve the tension** — "Request/validate model. Controllers request, BallStateService commits."
+4. **The decision gets formalized** — pattern captured with forces, tension, resolution, provenance
+5. **Specs fall out** — the resolution implies checkable structure
+6. **The guardian enforces** — three weeks later, when `fielder_ai.gd` writes `ball_holder = self`, the check catches it and routes back to the decision it violated
+
+## The Pipeline
+
+```
+survey → forces → tensions → resolve → formalize → model → contract → derive → check
+└──────────── advisor ──────────────┘   └──────────── guardian ──────────────┘
+```
+
+Each phase produces an artifact. The human reviews before the next begins.
+
+## Core Ideas
+
+**Resolution altitude** — Resolve tensions at the highest level that produces coherence below. A strategic resolution at the top makes thousands of implementation decisions locally obvious. A tension left unresolved at the top becomes a contradiction in every PR.
+
+**Forces stay first-class** — Product-level desires (what humans need) are primary. Architectural constraints exist to serve those desires via explicit traceability.
+
+**The architecture talks back** — When implementation drifts from intent, violations route back through the provenance chain to the specific decision that was violated. The advisor remembers what the team forgets.
+
+**You decide. Always.** — The advisor surfaces, proposes, and verifies. It never decides on anything that matters. Confidence levels (★★/★/—) control how much latitude the advisor has, per decision.
+
+## Verification Tools
 
 ```bash
 mise run rehydrate-alloy   # or without mise: python tools/install-alloy.py
 python tools/archwright-check.py design/specs/example-behavior.yaml
 ```
 
-Behavior checks compile typed context, transitions, guards, effects, and invariants to Alloy 6. Unsupported predicates fail compilation instead of producing vacuous assertions. A passing result provides bounded assurance at the spec's declared scope and step count.
+Behavior checks compile to Alloy 6 for bounded model checking. Constraint/dependency specs run against the codebase via grep, semgrep, or custom scripts.
 
 ## Documentation
 
 | Document | Contents |
 |----------|----------|
-| [Lineage](docs/lineage.md) | Where this comes from — Alexander, and what we're keeping vs. what software dropped |
-| [Findings](docs/findings.md) | The 9 load-bearing theoretical insights (stable core) |
+| [Brief](docs/brief.md) | The full story in one page |
+| [Lineage](docs/lineage.md) | Alexander → this, and what software dropped along the way |
+| [Findings](docs/findings.md) | The 9 load-bearing theoretical insights |
 | [Glossary](docs/glossary.md) | All concepts and terminology |
-| [Pattern Schema](docs/pattern-schema.md) | The proposed machine-readable schema for patterns |
-| [Worked Examples](docs/worked-examples.md) | Alexander patterns mapped to games/apps |
-| [Prior Art](docs/prior-art.md) | The 5 traditions we draw from, with full references |
+| [Prior Art](docs/prior-art.md) | The 5 traditions we draw from |
 | [Open Questions](docs/open-questions.md) | Prioritized research backlog |
-
-## Figures
-
-| Figure | Shows |
-|--------|-------|
-| [compilation.svg](figures/compilation.svg) | Vertical resolution from forces → architecture |
-| [invariant_boundary.svg](figures/invariant_boundary.svg) | Invariant-as-no-go-region + pass-up hop |
-| [pass_up_tower.svg](figures/pass_up_tower.svg) | Pass-up as level-terminating climb |
 
 ## Project Status
 
-Research + design phase. Shipped tools include schema/link validation, trace replay, grep conformance checks, and bounded Alloy checking with counterexample capture. Structural AST routing, contrast-pair rendering, and unbounded proof remain planned.
-
-**Done:** Tracer bullet against fieldball-coach (sanitized alias) — design decisions encoded as patterns + specs, invariants verified, violation detection demonstrated (Phases 0-4, 2026-07-16). **Next:** field runs of the discovery track.
+Research + design phase, with working verification tools (schema validation, trace replay, grep conformance, bounded Alloy checking). Field-tested on two projects.
 
 ## Lineage
 
 Archwright evolves from:
-1. **spec-driven-development** — structured planning (PLAN.md, spec files, validation criteria)
-2. **project-overseer** — drift detection between spec and implementation (terraform model)
-3. **archwright** — formal verification of design intent (forces → checkable invariants → verified architecture)
-
-## How to Contribute
-
-- Extend the design language → add findings to [findings.md](docs/findings.md), terms to [glossary.md](docs/glossary.md)
-- Explore an open question → pick from [open-questions.md](docs/open-questions.md), research, write findings
-- Build tooling → scripts in `tools/`
-- The **forces-first principle** is the tie-breaker whenever a decision threatens to turn a pattern into a template
+1. **spec-driven-development** — structured planning
+2. **project-overseer** — drift detection
+3. **archwright** — strategic design advisory with formal verification
