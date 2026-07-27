@@ -72,9 +72,15 @@ archwright-check --all design/specs/ # Check everything
 After a check run, project the results into the human-facing report bundle:
 
 ```bash
-python tools/archwright-check.py --static design/specs/ --target . --json > check.json
+python tools/archwright-check.py --all design/specs/ --target . --json > check.json
 python tools/report/generate.py --check-json check.json [--design design/] [--out <dir>] [--project <name>]
 ```
+
+**Prerequisites for a meaningful report:**
+- The diagram (the "How it works" front door) renders transitions as labeled arrows. These transitions come from **behavior specs** (not directly from model YAML `states.on`). A model YAML without matching behavior specs produces a states-only fallback (bullet list, no edges). To get the diagram: ensure at least one behavior spec exists with states matching the model actors.
+- Use `--all` (not `--static` alone) to include behavior-spec Alloy verification alongside constraint checks. Static-only runs miss behavior invariants.
+- `--json` is required — the report generator consumes only the CK-03 document format.
+- After generating for a new target project, **compare the output against the designed wireframes** (`design/discovery/ui/wf-overview.md`, `wf-all-clear.md`) before presenting to a user. A structurally correct but visually bare report is not "done."
 
 Output: `design/report/` (gitignored) — `report.html` (interactive surface),
 `REPORT.md` (mirror), `report.json` (canonical doc + `model_view`/`asks` blocks).
