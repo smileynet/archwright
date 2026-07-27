@@ -33,9 +33,13 @@ supersedes: ""                # optional: id of the wireframe this replaces
 
 ## Design-System Elements Used
 
-| Element | From design-system | Usage here |
-|---------|-------------------|------------|
-| (token/component id) | design-system#D00N | (how it appears on this screen) |
+<!-- CONSERVATION: every table row must cite ≥1 ledger anchor (D{NNN} or artifact#D{NNN}).
+     The validator enforces this — rows without citations FAIL.
+     Example: "| `accent_green` | design-system#D001 | Progress fill color | D003 |" -->
+
+| Element | From design-system | Usage here | Anchor |
+|---------|-------------------|------------|--------|
+| (token/component id) | design-system#D00N | (how it appears on this screen) | D001 |
 
 ## Layout Rationale
 
@@ -45,7 +49,12 @@ Why THIS arrangement — the choice made, in terms a non-technical reviewer can 
 
 <!-- Format + rules: tools/templates/discovery-ledger.md (append-only, origin recorded,
      rationale verbatim, SUPERSEDES for reversals). Creative session → strict
-     rubber-stamp guard (3+ consecutive `suggested` → stop and ask). -->
+     rubber-stamp guard (3+ consecutive `suggested` → stop and ask).
+
+     VALID CATEGORIES — core: experience, meta, scope, structure, technical
+     Game domain extensions: mechanic, feedback, progression, economy, content, narrative
+     Web domain extensions: see tools/domains/web/discovery.yaml
+     "interaction" is NOT a valid category — use "experience" or "mechanic" instead. -->
 
 ### D001 — Decision title
 - **Category:** structure
