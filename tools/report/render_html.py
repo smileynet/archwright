@@ -111,6 +111,143 @@ def _diagram_svg(model, model_view):
     return "<ul>%s</ul>" % items
 
 
+def _behavior_detail_sections(model, model_view, vocab):
+    """Generate behavior-detail drill-down sections (ticket 055, wf-behavior-detail).
+
+    One anchor section per state: description, arrives-from/leads-to, rules with
+    status badges, protected experiences, provenance fold. Uses in-page anchors
+    (no routing framework — constraint:no-server-dependency)."""
+    if model is None or not model_view.get("states"):
+        return ""
+
+    transitions = model_view.get("transitions") or []
+    experiences_by_id = {e["id"]: e for e in model.get("experiences") or []}
+
+    # Build state descriptions from raw model (dict-style states carry descriptions)
+    descriptions = {}  # (actor_id, state_id) -> description
+    for actor in model.get("actors") or []:
+        states = actor.get("states")
+        if isinstance(states, dict):
+            for sname, sdef in states.items():
+                if isinstance(sdef, dict) and sdef.get("description"):
+                    descriptions[(actor["id"], sname)] = sdef["description"]
+
+    sections = []
+    seen_actors = set()
+    for st in model_view["states"]:
+        actor_id = st["actor"]
+        state_id = st["id"]
+        anchor = "detail-%s-%s" % (actor_id, state_id.replace("_", "-"))
+
+        # Arrives from / leads to
+        arrives = [t for t in transitions if t["to"] == state_id and t["actor"] == actor_id]
+        leads = [t for t in transitions if t["from"] == state_id and t["actor"] == actor_id]
+
+        # Description
+        desc = descriptions.get((actor_id, state_id)) or descriptions.get((actor_id, state_id.replace("-", "_")))
+
+        # Actor header (once per actor)
+        if actor_id not in seen_actors:
+            seen_actors.add(actor_id)
+            actor_obj = next((a for a in model.get("actors") or [] if a["id"] == actor_id), None)
+            actor_desc = actor_obj.get("description", "") if actor_obj else ""
+            if actor_desc:
+                sections.append('<h3 class="meta">%s</h3>' % _esc(actor_desc))
+
+        # Build section
+        parts = []
+        parts.append('<div class="card behavior-detail" id="%s">' % _esc(anchor))
+        parts.append('<p><a href="#diagram-top">&larr; back to the diagram</a></p>')
+
+        # State name + rollup badge
+        rollup = st.get("rollup", {})
+        if rollup.get("fail"):
+            badge_class = "status-fail"
+            badge_text = vocab.status_glyph("fail") + " needs attention"
+        elif rollup.get("pass") and not rollup.get("pending"):
+            badge_class = "status-pass"
+            badge_text = vocab.status_glyph("pass") + " verified"
+        else:
+            badge_class = "status-pending"
+            badge_text = vocab.status_glyph("pending") + " pending"
+        parts.append('<p><strong>%s</strong> <span class="glyph %s">%s</span></p>'
+                     % (_esc(st["label"]), badge_class, badge_text))
+
+        # What happens here
+        if desc or arrives or leads:
+            parts.append("<h4>WHAT HAPPENS HERE</h4>")
+            if desc:
+                parts.append("<p>%s</p>" % _esc(desc))
+            if arrives:
+                from_labels = ", ".join("%s (%s)" % (_esc(t["from"]), _esc(t["label"])) for t in arrives)
+                parts.append('<p class="meta">arrives from: %s</p>' % from_labels)
+            if leads:
+                to_labels = ", ".join("%s (%s)" % (_esc(t["to"]), _esc(t["label"])) for t in leads)
+                parts.append('<p class="meta">leads to: %s</p>' % to_labels)
+
+        # Rules that apply (from model_view join or model invariants)
+        rules = st.get("rules") or []
+        # Also gather invariants from the raw model for this actor
+        actor_obj = next((a for a in model.get("actors") or [] if a["id"] == actor_id), None)
+        invariants = (actor_obj.get("invariants") or []) if actor_obj else []
+        if rules or invariants:
+            parts.append("<h4>THE RULES THAT APPLY HERE</h4>")
+            for r in rules:
+                status = r.get("status", "pending")
+                glyph = vocab.status_glyph(status) if status in ("pass", "fail", "warn", "skip", "pending") else "?"
+                glyph_class = "status-%s" % status if status in ("pass", "fail", "warn", "skip", "pending") else ""
+                statement = r.get("statement") or r.get("spec", "")
+                parts.append('<p><span class="glyph %s">%s</span>%s</p>'
+                             % (glyph_class, glyph, _esc(statement)))
+            if not rules and invariants:
+                for inv in invariants:
+                    desc_text = inv.get("description") or inv.get("id", "")
+                    parts.append('<p><span class="glyph status-pending">%s</span>%s</p>'
+                                 % (vocab.status_glyph("pending"), _esc(desc_text)))
+
+        # What this protects
+        protects = st.get("protects") or []
+        if protects:
+            exp_texts = []
+            for eid in protects:
+                exp = experiences_by_id.get(eid)
+                if exp:
+                    exp_texts.append(exp.get("what_user_sees") or eid)
+                else:
+                    exp_texts.append(eid)
+            if exp_texts:
+                parts.append("<h4>WHAT THIS PROTECTS</h4>")
+                parts.append("<p>%s</p>" % " &middot; ".join(_esc(t) for t in exp_texts))
+
+        # How we arrived at this (folded provenance)
+        prov_lines = []
+        for r in rules:
+            spec_ref = r.get("spec", "")
+            if spec_ref:
+                prov_lines.append(spec_ref)
+        # Include force/experience links as provenance when available
+        for eid in protects:
+            exp = experiences_by_id.get(eid)
+            if exp:
+                for prot in exp.get("protected_by") or []:
+                    prov_lines.append("%s — %s" % (prot.get("spec", ""), prot.get("how", "")))
+                if exp.get("desire"):
+                    prov_lines.append("desire: %s" % exp["desire"])
+        if prov_lines:
+            parts.append('<details class="detail-fold"><summary>HOW WE ARRIVED AT THIS</summary>')
+            parts.append('<div class="disclosure-body"><p class="meta">Provenance chain:</p><ul>')
+            for line in prov_lines:
+                parts.append("<li><code>%s</code></li>" % _esc(line))
+            parts.append("</ul></div></details>")
+
+        parts.append("</div>")
+        sections.append("\n".join(parts))
+
+    if not sections:
+        return ""
+    return '<div id="behavior-details">' + "\n".join(sections) + "</div>"
+
+
 def render_html(bundle, model, vocab, out_dir):
     doc = bundle["canonical"]
     asks_block, model_view = bundle["asks"], bundle["model_view"]
@@ -148,11 +285,13 @@ def render_html(bundle, model, vocab, out_dir):
     if svg:
         badge = ("every step verified " + vocab.status_glyph("pass")) if post == "all-clear" \
             else "steps needing attention are marked " + vocab.status_glyph("fail")
-        diagram_section = ('<h2>HOW %s WORKS</h2><div class="diagram">%s</div>'
-                           '<p class="meta">%s · click any step for details</p>'
+        diagram_section = ('<div id="diagram-top"><h2>HOW %s WORKS</h2><div class="diagram">%s</div>'
+                           '<p class="meta">%s · click any step for details</p></div>'
                            % (_esc(bundle["project"].upper()), svg, _esc(badge)))
     elif model_view.get("note"):
-        diagram_section = '<p class="meta">%s</p>' % _esc(model_view["note"])
+        diagram_section = '<div id="diagram-top"><p class="meta">%s</p></div>' % _esc(model_view["note"])
+
+    behavior_detail_section = _behavior_detail_sections(model, model_view, vocab)
 
     unverified = []
     pendings = [s for s in doc.get("skips") or [] if "pending" in (s.get("reason") or "")]
@@ -210,5 +349,6 @@ function saveResponses() {
         project=_esc(bundle["project"]), checked_at=_esc(bundle["generated_at"]),
         run_label=_esc((run.get("commit") or "no-git")[:7] + (" · uncommitted changes present" if run.get("dirty") else "")),
         verdict_line=verdict, asks_section=asks_section, diagram_section=diagram_section,
+        behavior_detail_section=behavior_detail_section,
         unverified_section=unverified_section, stability_section=stability_section,
         page_js=page_js, page_wiring=page_wiring)

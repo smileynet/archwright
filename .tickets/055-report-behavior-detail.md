@@ -1,7 +1,7 @@
 ---
 id: "055"
 title: "Report: behavior-detail drill-down from diagram clicks"
-status: open
+status: done
 blocked_by: ["052"]
 priority: medium
 ---

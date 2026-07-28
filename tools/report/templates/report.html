@@ -26,6 +26,8 @@ code, pre { font-family: ui-monospace, monospace; }
   border-top:1px solid var(--border); padding:16px; display:none; text-align:right}
 details{margin:8px 0} summary{cursor:pointer}
 .diagram svg{max-width:100%} .meta{color:var(--neutral); font-size:12.5px}
+.behavior-detail h4{font-size:13px; letter-spacing:.04em; margin:16px 0 4px}
+.behavior-detail{scroll-margin-top:16px}
 </style>
 </head>
 <body>
@@ -35,6 +37,7 @@ details{margin:8px 0} summary{cursor:pointer}
 <p class="verdict">$verdict_line</p>
 $asks_section
 $diagram_section
+$behavior_detail_section
 $unverified_section
 $stability_section
 <div id="response-bar">
