@@ -344,8 +344,7 @@ def render_html(bundle, model, vocab, out_dir):
 
     page_js = Path(TEMPLATES / "page.js").read_text(encoding="utf-8")
     mermaid_vendor = Path(__file__).parent / "vendor" / "mermaid.min.js"
-    # Escape $ for string.Template (mermaid.min.js has ~10K dollar signs)
-    mermaid_js = mermaid_vendor.read_text(encoding="utf-8").replace("$", "$$") if mermaid_vendor.exists() else ""
+    mermaid_js_content = mermaid_vendor.read_text(encoding="utf-8") if mermaid_vendor.exists() else ""
     run = (doc.get("code_state") or {})
     page_wiring = """
 var page = ArchwrightReport.newPage(%s);
@@ -370,10 +369,13 @@ function saveResponses() {
 }
 """ % json.dumps({"commit": run.get("commit"), "dirty": run.get("dirty")})
 
-    return _tpl("report.html").substitute(
+    result = _tpl("report.html").substitute(
         project=_esc(bundle["project"]), checked_at=_esc(bundle["generated_at"]),
         run_label=_esc((run.get("commit") or "no-git")[:7] + (" · uncommitted changes present" if run.get("dirty") else "")),
         verdict_line=verdict, asks_section=asks_section, diagram_section=diagram_section,
         behavior_detail_section=behavior_detail_section,
         unverified_section=unverified_section, stability_section=stability_section,
-        mermaid_js=mermaid_js, page_js=page_js, page_wiring=page_wiring)
+        mermaid_js="/* __MERMAID_PLACEHOLDER__ */", page_js=page_js, page_wiring=page_wiring)
+    # Insert mermaid.js AFTER template substitution to avoid $ escaping conflicts
+    # (mermaid.min.js has ~10K $ signs in template literals that break string.Template)
+    return result.replace("/* __MERMAID_PLACEHOLDER__ */", mermaid_js_content)

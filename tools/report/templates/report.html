@@ -48,15 +48,26 @@ $stability_section
 $mermaid_js
 </script>
 <script>
-if (typeof mermaid !== 'undefined') {
+(function() {
+  if (typeof mermaid === 'undefined') return;
+  var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   mermaid.initialize({
-    startOnLoad: true,
-    theme: document.documentElement.style.colorScheme === 'dark' ||
-           window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+    startOnLoad: false,
+    theme: isDark ? 'dark' : 'default',
     state: { useMaxWidth: true },
     securityLevel: 'loose'
   });
-}
+  function renderDiagrams() {
+    var els = document.querySelectorAll('.mermaid');
+    if (els.length === 0) return;
+    mermaid.run({ nodes: els });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderDiagrams);
+  } else {
+    renderDiagrams();
+  }
+})();
 </script>
 <script>
 $page_js
