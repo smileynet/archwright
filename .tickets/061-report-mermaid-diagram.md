@@ -1,7 +1,7 @@
 ---
 id: "061"
 title: "Report: client-side Mermaid diagram rendering in HTML"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
