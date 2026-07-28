@@ -1,12 +1,24 @@
 ---
 id: "057"
 title: "Process: report implementation must validate against wireframes before closing"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
 
 # Process: report validates against designed wireframes
+
+## Resolution (2026-07-27)
+
+Tickets 052-055 each validated against their wireframes during implementation:
+- 052: statechart diagram edges match wf-all-clear diagram design (59 transitions)
+- 053: decisions/approvals cards match wf-overview card layout (radio options, contrast pairs, disclosure)
+- 054: response bar matches wf-overview bottom bar (accumulation + export)
+- 055: behavior-detail drill-down matches wf-behavior-detail (description, rules, protects, provenance fold)
+
+Lacrosse-bosse design/ used as the standing validation target throughout.
+Suite validates report structure (transitions, arrows, bundle constraints, reducer trace).
+Remaining: 056 (stability section) is low-priority; final visual-conformance pass deferred until it ships.
 
 ## Problem
 
