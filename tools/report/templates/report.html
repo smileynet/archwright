@@ -45,6 +45,20 @@ $stability_section
   <button onclick="saveResponses()">Save responses for the agent</button>
 </div>
 <script>
+$mermaid_js
+</script>
+<script>
+if (typeof mermaid !== 'undefined') {
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: document.documentElement.style.colorScheme === 'dark' ||
+           window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+    state: { useMaxWidth: true },
+    securityLevel: 'loose'
+  });
+}
+</script>
+<script>
 $page_js
 $page_wiring
 </script>

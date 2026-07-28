@@ -66,15 +66,18 @@ def _ask_card(ask, vocab, violation_by_ref):
 
 
 def _smcat_src(actor, transitions):
-    """smcat source for one actor: state declarations + labeled arrows.
+    """smcat source for one actor — retained for fixture suite compatibility.
 
     Transitions come from behavior specs via model_view (ticket 046); arrow
     labels are vocabulary surface phrases (D002 applies to arrows too)."""
     lines = []
-    for st in actor["states"]:
+    for st in actor["states"] if not isinstance(actor.get("states"), dict) else []:
         sid = st["id"] if isinstance(st, dict) else st
         label = (st.get("label") if isinstance(st, dict) else None) or sid
         lines.append('%s [label="%s"]' % (sid.replace("-", "_"), label))
+    if isinstance(actor.get("states"), dict):
+        for sname in actor["states"]:
+            lines.append('%s [label="%s"]' % (sname.replace("-", "_"), sname))
     src = ",\n".join(lines) + ";"
     for tr in transitions:
         src += '\n%s => %s : %s;' % (
@@ -82,33 +85,45 @@ def _smcat_src(actor, transitions):
     return src
 
 
-def _diagram_svg(model, model_view):
-    """Pre-rendered inline SVG via smcat when available; plain list fallback.
+def _mermaid_src(actor, transitions, actor_id):
+    """Mermaid stateDiagram-v2 source for one actor."""
+    lines = ["stateDiagram-v2"]
+    states = actor.get("states") if isinstance(actor.get("states"), dict) else actor.get("states", [])
+    if isinstance(states, dict):
+        for sname, sdef in states.items():
+            label = sdef.get("description", sname) if isinstance(sdef, dict) else sname
+            sid = sname.replace("-", "_")
+            lines.append("    %s: %s" % (sid, sname))
+    else:
+        for st in states:
+            sid = st["id"] if isinstance(st, dict) else st
+            label = (st.get("label") if isinstance(st, dict) else None) or sid
+            lines.append("    %s: %s" % (sid.replace("-", "_"), label))
+    for tr in transitions:
+        lines.append("    %s --> %s: %s" % (
+            tr["from"].replace("-", "_"), tr["to"].replace("-", "_"), tr["label"]))
+    return "\n".join(lines)
 
-    Renders the first actor that has verified transitions (a connected map
-    serves the cold reader better than disconnected boxes — design-system#D006);
-    falls back to the first actor with states when no behavior spec matched."""
+
+def _diagram_section(model, model_view):
+    """Generate diagram content: Mermaid source for client-side rendering.
+
+    Primary path: emit <pre class="mermaid"> with stateDiagram-v2 source.
+    Mermaid.js (inlined in template) renders it to SVG on page load.
+    Fallback (JS disabled): the Mermaid source is readable as-is."""
     if model is None:
-        return None
+        return None, None
     actors = [a for a in model.get("actors") or [] if a.get("states")]
     if not actors:
-        return None
+        return None, None
     all_transitions = model_view.get("transitions") or []
+    # Pick the first actor that has transitions; fallback to first with states
     actor = next((a for a in actors
                   if any(t["actor"] == a["id"] for t in all_transitions)), actors[0])
-    transitions = [t for t in all_transitions if t["actor"] == actor["id"]]
-    src = _smcat_src(actor, transitions)
-    try:
-        r = subprocess.run(["smcat", "-T", "svg", "-"], input=src,
-                           capture_output=True, text=True, timeout=30)
-        if r.returncode == 0 and r.stdout.strip().startswith("<"):
-            return r.stdout
-    except (OSError, subprocess.TimeoutExpired):
-        pass
-    items = "".join("<li>%s</li>" % _esc((s.get("label") if isinstance(s, dict) else None) or
-                                          (s["id"] if isinstance(s, dict) else s))
-                    for s in actor["states"])
-    return "<ul>%s</ul>" % items
+    actor_id = actor["id"]
+    transitions = [t for t in all_transitions if t["actor"] == actor_id]
+    mermaid_src = _mermaid_src(actor, transitions, actor_id)
+    return mermaid_src, actor
 
 
 def _behavior_detail_sections(model, model_view, vocab):
@@ -280,14 +295,21 @@ def render_html(bundle, model, vocab, out_dir):
             sections.extend(_ask_card(a, vocab, violation_by_ref) for a in group)
     asks_section = "\n".join(sections)
 
-    svg = _diagram_svg(model, model_view)
+    svg = _diagram_section(model, model_view)
     diagram_section = ""
     if svg:
-        badge = ("every step verified " + vocab.status_glyph("pass")) if post == "all-clear" \
-            else "steps needing attention are marked " + vocab.status_glyph("fail")
-        diagram_section = ('<div id="diagram-top"><h2>HOW %s WORKS</h2><div class="diagram">%s</div>'
-                           '<p class="meta">%s · click any step for details</p></div>'
-                           % (_esc(bundle["project"].upper()), svg, _esc(badge)))
+        mermaid_src, diagram_actor = svg
+        if mermaid_src:
+            badge = ("every step verified " + vocab.status_glyph("pass")) if post == "all-clear" \
+                else "steps needing attention are marked " + vocab.status_glyph("fail")
+            # Mermaid source needs < and & escaped but NOT > (arrows use -->)
+            safe_src = mermaid_src.replace("&", "&amp;").replace("<", "&lt;")
+            diagram_section = ('<div id="diagram-top"><h2>HOW %s WORKS</h2>'
+                               '<div class="diagram"><pre class="mermaid">\n%s\n</pre></div>'
+                               '<p class="meta">%s · click any step for details</p></div>'
+                               % (_esc(bundle["project"].upper()), safe_src, _esc(badge)))
+        else:
+            diagram_section = '<div id="diagram-top"><p class="meta">%s</p></div>' % _esc(model_view.get("note", ""))
     elif model_view.get("note"):
         diagram_section = '<div id="diagram-top"><p class="meta">%s</p></div>' % _esc(model_view["note"])
 
@@ -321,6 +343,9 @@ def render_html(bundle, model, vocab, out_dir):
             _ask_card(a, vocab, violation_by_ref) for a in suggestions)
 
     page_js = Path(TEMPLATES / "page.js").read_text(encoding="utf-8")
+    mermaid_vendor = Path(__file__).parent / "vendor" / "mermaid.min.js"
+    # Escape $ for string.Template (mermaid.min.js has ~10K dollar signs)
+    mermaid_js = mermaid_vendor.read_text(encoding="utf-8").replace("$", "$$") if mermaid_vendor.exists() else ""
     run = (doc.get("code_state") or {})
     page_wiring = """
 var page = ArchwrightReport.newPage(%s);
@@ -351,4 +376,4 @@ function saveResponses() {
         verdict_line=verdict, asks_section=asks_section, diagram_section=diagram_section,
         behavior_detail_section=behavior_detail_section,
         unverified_section=unverified_section, stability_section=stability_section,
-        page_js=page_js, page_wiring=page_wiring)
+        mermaid_js=mermaid_js, page_js=page_js, page_wiring=page_wiring)
