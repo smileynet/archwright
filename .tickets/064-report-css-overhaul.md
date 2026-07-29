@@ -1,7 +1,7 @@
 ---
 id: "064"
 title: "Report: CSS overhaul — layout, typography, visual hierarchy"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---

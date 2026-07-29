@@ -6,28 +6,143 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>$project — Design Check</title>
 <style>
+/* === Design Tokens === */
 :root { color-scheme: light dark;
   --success:#1a7f37; --danger:#cf222e; --warning:#9a6700; --neutral:#6e7781; --info:#0969da;
-  --fg:#1f2328; --bg:#ffffff; --card:#f6f8fa; --border:#d1d9e0; }
+  --fg:#1f2328; --bg:#ffffff; --card:#f6f8fa; --border:#d1d9e0;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.1), 0 1px 4px rgba(0,0,0,.06);
+  --radius: 8px;
+  --success-bg: #dafbe1; --danger-bg: #ffebe9; --warning-bg: #fff8c5; --info-bg: #ddf4ff; --neutral-bg: #f6f8fa;
+}
 @media (prefers-color-scheme: dark) { :root {
   --success:#3fb950; --danger:#f85149; --warning:#d29922; --neutral:#8b949e; --info:#58a6ff;
-  --fg:#e6edf3; --bg:#0d1117; --card:#161b22; --border:#30363d; } }
-body { font-family: system-ui, sans-serif; font-size:15px; color:var(--fg); background:var(--bg);
-  max-width:900px; margin:0 auto; padding:16px; }
-h1 { font-size:20px; line-height:26px; } h2 { font-size:15px; letter-spacing:.05em; }
-code, pre { font-family: ui-monospace, monospace; }
+  --fg:#e6edf3; --bg:#0d1117; --card:#161b22; --border:#30363d;
+  --shadow: 0 1px 3px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.2);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.2);
+  --success-bg: #0d2818; --danger-bg: #2d1214; --warning-bg: #2e2208; --info-bg: #0c2d48; --neutral-bg: #161b22;
+} }
+
+/* === Base === */
+*, *::before, *::after { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; line-height: 1.5;
+  color: var(--fg); background: var(--bg); max-width: 960px; margin: 0 auto; padding: 24px 16px 80px; }
+code, pre { font-family: ui-monospace, 'Cascadia Code', 'SF Mono', monospace; font-size: 13px; }
+a { color: var(--info); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* === Typography === */
+h1 { font-size: 22px; font-weight: 600; line-height: 1.3; margin: 0 0 8px; }
+h2 { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--neutral); margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+h3 { font-size: 14px; font-weight: 600; color: var(--neutral); margin: 24px 0 8px; }
+h4 { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--neutral); margin: 20px 0 6px; }
+.meta { color: var(--neutral); font-size: 12.5px; }
 .count { font-variant-numeric: tabular-nums; }
-.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:16px; margin:8px 0; }
-.status-pass{color:var(--success)} .status-fail{color:var(--danger)}
-.status-warn{color:var(--warning)} .status-skip{color:var(--neutral)} .status-pending{color:var(--info)}
-.glyph{margin-right:8px} .verdict{font-size:20px; margin:24px 0}
-.rec{font-weight:600} button{padding:8px 16px; border-radius:8px; border:1px solid var(--border); cursor:pointer}
-#response-bar{position:fixed; bottom:0; left:0; right:0; background:var(--card);
-  border-top:1px solid var(--border); padding:16px; display:none; text-align:right}
-details{margin:8px 0} summary{cursor:pointer}
-.diagram svg{max-width:100%} .meta{color:var(--neutral); font-size:12.5px}
-.behavior-detail h4{font-size:13px; letter-spacing:.04em; margin:16px 0 4px}
-.behavior-detail{scroll-margin-top:16px}
+
+/* === Header === */
+header { margin-bottom: 8px; }
+header h1 .meta { font-weight: 400; margin-left: 8px; }
+
+/* === Verdict === */
+.verdict { font-size: 24px; font-weight: 600; margin: 16px 0 24px; line-height: 1.3; }
+
+/* === Cards === */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; margin: 12px 0; box-shadow: var(--shadow); position: relative; }
+.card p { margin: 6px 0; }
+.card strong { font-weight: 600; }
+
+/* Card variants by ask type */
+.card.ask[data-ask-type="decision"] { border-left: 4px solid var(--warning); }
+.card.ask[data-ask-type="approval"] { border-left: 4px solid var(--danger); }
+.card.ask[data-ask-type="suggestion"] { border-left: 4px solid var(--info); }
+
+/* Behavior detail cards */
+.behavior-detail { border-left: 4px solid var(--info); scroll-margin-top: 24px; }
+.behavior-detail h4 { font-size: 11px; letter-spacing: .06em; margin: 20px 0 6px; }
+
+/* === Status Glyphs === */
+.glyph { margin-right: 6px; font-weight: 600; }
+.status-pass { color: var(--success); }
+.status-fail { color: var(--danger); }
+.status-warn { color: var(--warning); }
+.status-skip { color: var(--neutral); }
+.status-pending { color: var(--info); }
+
+/* === Buttons === */
+button { font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 6px;
+  border: 1px solid var(--border); cursor: pointer; background: var(--card); color: var(--fg);
+  transition: background .15s, border-color .15s, box-shadow .15s; }
+button:hover { background: var(--bg); border-color: var(--neutral); }
+button:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
+/* Primary button (Approve Fix) */
+button[onclick*="approveFix"] { background: var(--success); color: #fff; border-color: var(--success); }
+button[onclick*="approveFix"]:hover { opacity: .9; }
+/* Secondary (Review/Amend) */
+button[onclick*="reroute"] { border-color: var(--neutral); }
+
+/* === Form Inputs === */
+label { display: block; padding: 6px 0; cursor: pointer; }
+label:hover { background: var(--neutral-bg); border-radius: 4px; padding-left: 4px; margin-left: -4px; }
+input[type="radio"] { accent-color: var(--info); margin-right: 6px; width: 16px; height: 16px; vertical-align: middle; }
+input[type="text"] { font-size: 14px; padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: 4px; background: var(--bg); color: var(--fg); width: 100%; max-width: 400px; }
+input[type="text"]:focus { outline: 2px solid var(--info); outline-offset: 1px; border-color: var(--info); }
+.rec { font-weight: 600; color: var(--success); font-size: 12px; }
+
+/* === Diagram === */
+#diagram-top { margin: 24px 0; }
+.diagram { margin: 16px 0; padding: 16px; background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow); overflow-x: auto; }
+.diagram svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.diagram pre.mermaid { margin: 0; padding: 0; background: transparent; border: none;
+  white-space: pre-wrap; font-size: 13px; }
+
+/* === Disclosure / Details === */
+details { margin: 12px 0; }
+summary { cursor: pointer; font-size: 13px; color: var(--neutral); padding: 4px 0; }
+summary:hover { color: var(--fg); }
+summary:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; border-radius: 2px; }
+.disclosure-body { padding: 8px 0 8px 16px; border-left: 2px solid var(--border); margin-top: 4px; }
+.disclosure-body pre { background: var(--neutral-bg); padding: 8px 12px; border-radius: 4px;
+  overflow-x: auto; font-size: 12px; margin: 8px 0; }
+
+/* === Response Bar === */
+#response-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
+  border-top: 1px solid var(--border); padding: 12px 24px; display: none;
+  text-align: right; box-shadow: 0 -2px 8px rgba(0,0,0,.08); z-index: 100; }
+#response-bar .count { margin-right: 16px; font-weight: 500; }
+
+/* === Sections === */
+#behavior-details { margin-top: 32px; }
+
+/* === Responsive === */
+@media (max-width: 600px) {
+  body { padding: 16px 12px 80px; }
+  .verdict { font-size: 20px; }
+  .card { padding: 16px 12px; }
+  h2 { font-size: 11px; }
+  button { padding: 6px 12px; font-size: 13px; }
+  .diagram { padding: 8px; }
+}
+
+/* === Print === */
+@media print {
+  body { max-width: none; padding: 0; }
+  #response-bar { display: none !important; }
+  .card { box-shadow: none; break-inside: avoid; border: 1px solid #ccc; }
+  button { display: none; }
+  details { display: block; }
+  details > summary { display: none; }
+  details > .disclosure-body { display: block; border: none; padding-left: 0; }
+  .diagram { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* === Focus === */
+a:focus-visible, summary:focus-visible, button:focus-visible, input:focus-visible,
+label:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
 </style>
 </head>
 <body>
