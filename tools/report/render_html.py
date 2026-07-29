@@ -20,6 +20,52 @@ def _esc(s):
     return html.escape(str(s if s is not None else ""))
 
 
+def _code_context(evidence_lines, max_shown=1):
+    """Render evidence lines as formatted code blocks (ticket 066).
+
+    Parses 'file:line: content' format. First location shown with file header
+    and highlighted flagged line; additional locations behind disclosure."""
+    if not evidence_lines:
+        return ""
+    import re
+    pattern = re.compile(r'^(.+?):(\d+):\s*(.*)$')
+    locations = []
+    for line in evidence_lines:
+        m = pattern.match(line)
+        if m:
+            locations.append({"file": m.group(1), "line": int(m.group(2)), "content": m.group(3)})
+        elif line.strip():
+            locations.append({"file": "", "line": 0, "content": line})
+
+    if not locations:
+        return ""
+
+    parts = []
+    for i, loc in enumerate(locations[:max_shown]):
+        header = ""
+        if loc["file"]:
+            header = '<p class="code-file">%s<span class="code-line-ref">:%d</span></p>' % (
+                _esc(loc["file"]), loc["line"])
+        parts.append(header)
+        parts.append('<pre class="code-block"><code>')
+        parts.append('<span class="code-flagged">%4d │ %s</span>' % (loc["line"], _esc(loc["content"])))
+        parts.append('</code></pre>')
+
+    if len(locations) > max_shown:
+        rest = locations[max_shown:]
+        parts.append('<details class="detail-fold"><summary>+ %d more location%s</summary>' % (
+            len(rest), "s" if len(rest) > 1 else ""))
+        parts.append('<div class="disclosure-body">')
+        for loc in rest:
+            if loc["file"]:
+                parts.append('<p class="code-file meta">%s:%d</p>' % (_esc(loc["file"]), loc["line"]))
+            parts.append('<pre class="code-block"><code>%4d │ %s</code></pre>' % (
+                loc["line"], _esc(loc["content"])))
+        parts.append('</div></details>')
+
+    return "\n".join(parts)
+
+
 def _disclosure(summary, item):
     ev = "\n".join((item.get("evidence") or [])[:8])
     return _tpl("disclosure.html").substitute(
@@ -50,8 +96,13 @@ def _ask_card(ask, vocab, violation_by_ref):
              % (_esc(ask["ask_id"]), _esc(ask["ask_type"]))]
     glyph = "?" if ask["ask_type"] == "decision" else ("💡" if ask["ask_type"] == "suggestion" else vocab.status_glyph("fail"))
     chip = _confidence_chip(ask["confidence_phrase"])
+    # Link title to issue-detail section when source is a violation (ticket 067)
+    title_text = _esc(ask["title"])
+    if ask["source"]["kind"] == "violation":
+        issue_anchor = "issue-%s" % ask["source"]["ref"].replace("_", "-")
+        title_text = '<a href="#%s">%s</a>' % (_esc(issue_anchor), title_text)
     parts.append('<p><span class="glyph status-fail">%s</span><strong>%s</strong> %s</p>'
-                 % (glyph, _esc(ask["title"]), chip))
+                 % (glyph, title_text, chip))
     cp = ask.get("contrast_pair")
     if cp:
         parts.append("<p>The design says: %s<br>The code does: %s</p>"
@@ -314,6 +365,70 @@ def _behavior_detail_sections(model, model_view, vocab):
     return '<div id="behavior-details">' + "\n".join(sections) + "</div>"
 
 
+def _issue_detail_sections(doc, vocab):
+    """Generate per-violation issue-detail sections (ticket 067, wf-issue-detail).
+
+    Each violation gets an anchored section with: contrast pair, code context,
+    provenance chain (Because/Decided/So), recommendation + actions."""
+    violations = [v for v in (doc.get("violations") or []) if not v.get("baselined")]
+    if not violations:
+        return ""
+    sections = []
+    for v in violations:
+        spec_id = v.get("spec_id", "")
+        anchor = "issue-%s" % spec_id.replace("_", "-")
+        cp = v.get("contrast_pair") or {}
+
+        parts = []
+        parts.append('<div class="card issue-detail" id="%s">' % _esc(anchor))
+        parts.append('<p><a href="#diagram-top">&larr; back to overview</a></p>')
+
+        # Header with status + title
+        chip = _confidence_chip(vocab.surface("confidence " + v.get("confidence", "—")))
+        parts.append('<p><span class="glyph status-fail">%s</span><strong>%s</strong> %s</p>'
+                     % (vocab.status_glyph("fail"), _esc(v.get("message", spec_id)), chip))
+
+        # Contrast pair (prominent)
+        if cp:
+            parts.append('<div class="contrast-pair">')
+            parts.append('<p><strong>The design says:</strong> %s</p>' % _esc(cp.get("expected", "")))
+            parts.append('<p><strong>The code does:</strong> %s</p>' % _esc(cp.get("actual", "")))
+            parts.append('</div>')
+
+        # WHERE: code context
+        evidence = v.get("evidence") or []
+        if evidence:
+            parts.append("<h4>WHERE</h4>")
+            parts.append(_code_context(evidence))
+
+        # WHY THIS RULE EXISTS: Because/Decided/So
+        from_force = v.get("from_force")
+        from_pattern = v.get("from_pattern")
+        if from_force or from_pattern:
+            parts.append("<h4>WHY THIS RULE EXISTS</h4>")
+            if from_force:
+                parts.append('<p><strong>Because:</strong> %s</p>' % _esc(from_force))
+            if from_pattern:
+                parts.append('<p><strong>Decided:</strong> %s</p>' % _esc(from_pattern))
+            parts.append('<p><strong>So:</strong> spec <code>%s</code> watches for violations</p>' % _esc(spec_id))
+
+        # WHAT WE RECOMMEND
+        route = v.get("suggested_route", "fix-implementation")
+        parts.append("<h4>WHAT WE RECOMMEND</h4>")
+        parts.append('<p>%s</p>' % _esc(vocab.surface(route)))
+        parts.append('<p><button onclick="approveFix(this)">Approve Fix</button> '
+                     '<button onclick="reroute(this)">Review / Amend Rule</button></p>')
+
+        # Disclosure for full internals
+        parts.append(_disclosure("internals · check method · fingerprint", v))
+        parts.append("</div>")
+        sections.append("\n".join(parts))
+
+    if not sections:
+        return ""
+    return '<div id="issue-details">' + "\n".join(sections) + "</div>"
+
+
 def render_html(bundle, model, vocab, out_dir):
     doc = bundle["canonical"]
     asks_block, model_view = bundle["asks"], bundle["model_view"]
@@ -365,6 +480,7 @@ def render_html(bundle, model, vocab, out_dir):
         diagram_section = '<div id="diagram-top"><p class="meta">%s</p></div>' % _esc(model_view["note"])
 
     behavior_detail_section = _behavior_detail_sections(model, model_view, vocab)
+    issue_detail_section = _issue_detail_sections(doc, vocab)
 
     unverified = []
     pendings = [s for s in doc.get("skips") or [] if "pending" in (s.get("reason") or "")]
@@ -440,6 +556,7 @@ function saveResponses() {
         run_label=_esc((run.get("commit") or "no-git")[:7] + (" · uncommitted changes present" if run.get("dirty") else "")),
         verdict_line=verdict, asks_section=asks_section, diagram_section=diagram_section,
         behavior_detail_section=behavior_detail_section,
+        issue_detail_section=issue_detail_section,
         unverified_section=unverified_section, stability_section=stability_section,
         mermaid_js="/* __MERMAID_PLACEHOLDER__ */", page_js=page_js, page_wiring=page_wiring)
     # Insert mermaid.js AFTER template substitution to avoid $ escaping conflicts

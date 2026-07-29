@@ -1,7 +1,7 @@
 ---
 id: "066"
 title: "Report: code context rendering for violations"
-status: open
+status: done
 blocked_by: ["064"]
 priority: medium
 ---
