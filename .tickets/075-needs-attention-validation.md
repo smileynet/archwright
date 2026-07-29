@@ -1,7 +1,7 @@
 ---
 id: "075"
 title: "Reference: needs-attention posture validation with planted violation"
-status: open
+status: done
 blocked_by: ["061", "064", "063"]
 priority: medium
 ---

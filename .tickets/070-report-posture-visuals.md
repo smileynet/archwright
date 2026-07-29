@@ -1,7 +1,7 @@
 ---
 id: "070"
 title: "Report: posture-specific visual treatment"
-status: open
+status: done
 blocked_by: ["061", "064"]
 priority: medium
 ---
