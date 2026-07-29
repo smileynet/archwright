@@ -73,6 +73,13 @@ header h1 .meta { font-weight: 400; margin-left: 8px; }
 .status-skip { color: var(--neutral); }
 .status-pending { color: var(--info); }
 
+/* === Confidence Chips (ticket 065) === */
+.chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 10px; vertical-align: middle; margin-left: 6px; letter-spacing: .02em; }
+.chip-firm { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+.chip-strong { background: var(--info-bg); color: var(--info); border: 1px solid var(--info); }
+.chip-advisory { background: var(--neutral-bg); color: var(--neutral); border: 1px solid var(--neutral); }
+
 /* === Buttons === */
 button { font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 6px;
   border: 1px solid var(--border); cursor: pointer; background: var(--card); color: var(--fg);
@@ -117,8 +124,30 @@ summary:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; bor
   text-align: right; box-shadow: 0 -2px 8px rgba(0,0,0,.08); z-index: 100; }
 #response-bar .count { margin-right: 16px; font-weight: 500; }
 
+/* === Sticky Back Link (ticket 069) === */
+#sticky-back { position: fixed; top: 12px; left: 12px; z-index: 90; display: none;
+  background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 12px; font-size: 13px; box-shadow: var(--shadow); text-decoration: none;
+  color: var(--info); font-weight: 500; }
+#sticky-back:hover { background: var(--bg); border-color: var(--info); }
+
 /* === Sections === */
 #behavior-details { margin-top: 32px; }
+
+/* === Posture-Specific Visuals (ticket 070) === */
+[data-posture="all-clear"] .verdict { color: var(--success); }
+[data-posture="needs-attention"] .verdict { color: var(--danger); }
+[data-posture="tool-error"] .verdict { color: var(--warning); }
+[data-posture="empty-project"] .verdict { color: var(--neutral); font-style: italic; }
+
+[data-posture="needs-attention"] .diagram { border-color: var(--danger); border-width: 2px; }
+[data-posture="tool-error"] #diagram-top::before {
+  content: "⚠ Check run encountered errors — results may be incomplete";
+  display: block; padding: 8px 12px; margin-bottom: 12px;
+  background: var(--warning-bg); border: 1px solid var(--warning); border-radius: 6px;
+  font-size: 13px; color: var(--warning); font-weight: 500; }
+[data-posture="empty-project"] #diagram-top { display: none; }
+[data-posture="empty-project"] #behavior-details { display: none; }
 
 /* === Responsive === */
 @media (max-width: 600px) {
@@ -147,7 +176,7 @@ a:focus-visible, summary:focus-visible, button:focus-visible, input:focus-visibl
 label:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
 </style>
 </head>
-<body>
+<body data-posture="$posture">
 <header>
   <h1>$project — Design Check <span class="meta">checked $checked_at · $run_label</span></h1>
 </header>
@@ -157,6 +186,7 @@ $diagram_section
 $behavior_detail_section
 $unverified_section
 $stability_section
+<a id="sticky-back" href="#diagram-top" aria-label="Back to diagram">&larr; back to the diagram</a>
 <div id="response-bar">
   <span id="response-count" class="count"></span>
   <button onclick="saveResponses()">Save responses for the agent</button>

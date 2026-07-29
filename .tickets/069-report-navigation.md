@@ -1,7 +1,7 @@
 ---
 id: "069"
 title: "Report: navigation — smooth scroll, sticky back-link, history"
-status: open
+status: done
 blocked_by: ["062"]
 priority: low
 ---

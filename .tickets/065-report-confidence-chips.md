@@ -1,7 +1,7 @@
 ---
 id: "065"
 title: "Report: confidence badges as styled pill chips"
-status: open
+status: done
 blocked_by: ["064"]
 priority: medium
 ---

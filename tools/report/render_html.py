@@ -31,13 +31,27 @@ def _disclosure(summary, item):
         evidence=_esc(ev))
 
 
+def _confidence_chip(phrase):
+    """Render confidence as a colored pill chip (ticket 065)."""
+    if "firm" in phrase:
+        cls = "chip chip-firm"
+    elif "strong" in phrase or "guideline" in phrase:
+        cls = "chip chip-strong"
+    else:
+        cls = "chip chip-advisory"
+    # Show only the short label on the chip
+    short = "firm rule" if "firm" in phrase else ("strong guide" if "strong" in phrase or "guideline" in phrase else "advisory")
+    return '<span class="%s">%s</span>' % (cls, _esc(short))
+
+
 def _ask_card(ask, vocab, violation_by_ref):
     v = violation_by_ref.get(ask["source"]["ref"]) or {}
     parts = ['<div class="card ask" data-ask-id="%s" data-ask-type="%s">'
              % (_esc(ask["ask_id"]), _esc(ask["ask_type"]))]
     glyph = "?" if ask["ask_type"] == "decision" else ("💡" if ask["ask_type"] == "suggestion" else vocab.status_glyph("fail"))
-    parts.append('<p><span class="glyph status-fail">%s</span><strong>%s</strong> [%s]</p>'
-                 % (glyph, _esc(ask["title"]), _esc(ask["confidence_phrase"])))
+    chip = _confidence_chip(ask["confidence_phrase"])
+    parts.append('<p><span class="glyph status-fail">%s</span><strong>%s</strong> %s</p>'
+                 % (glyph, _esc(ask["title"]), chip))
     cp = ask.get("contrast_pair")
     if cp:
         parts.append("<p>The design says: %s<br>The code does: %s</p>"
@@ -404,10 +418,25 @@ function saveResponses() {
   a.download = 'responses.json';
   a.click();
 }
+// Sticky back-link: show when scrolled past the diagram (ticket 069)
+(function() {
+  var diagramTop = document.getElementById('diagram-top');
+  var stickyBack = document.getElementById('sticky-back');
+  if (!diagramTop || !stickyBack) return;
+  var threshold = diagramTop.offsetTop + diagramTop.offsetHeight;
+  window.addEventListener('scroll', function() {
+    stickyBack.style.display = window.scrollY > threshold ? 'block' : 'none';
+  }, { passive: true });
+  stickyBack.addEventListener('click', function(e) {
+    e.preventDefault();
+    diagramTop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+})();
 """ % json.dumps({"commit": run.get("commit"), "dirty": run.get("dirty")})
 
     result = _tpl("report.html").substitute(
-        project=_esc(bundle["project"]), checked_at=_esc(bundle["generated_at"]),
+        project=_esc(bundle["project"]), posture=_esc(post),
+        checked_at=_esc(bundle["generated_at"]),
         run_label=_esc((run.get("commit") or "no-git")[:7] + (" · uncommitted changes present" if run.get("dirty") else "")),
         verdict_line=verdict, asks_section=asks_section, diagram_section=diagram_section,
         behavior_detail_section=behavior_detail_section,
