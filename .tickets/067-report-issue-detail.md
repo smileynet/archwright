@@ -1,7 +1,7 @@
 ---
 id: "067"
 title: "Report: issue-detail drill-down (wf-issue-detail)"
-status: open
+status: done
 blocked_by: ["064", "066"]
 priority: medium
 ---
