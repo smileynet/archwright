@@ -85,23 +85,49 @@ def _smcat_src(actor, transitions):
     return src
 
 
-def _mermaid_src(actor, transitions, actor_id):
-    """Mermaid stateDiagram-v2 source for one actor."""
+def _mermaid_src(actor, transitions, actor_id, state_rollups=None):
+    """Mermaid stateDiagram-v2 source for one actor with click-to-detail links."""
     lines = ["stateDiagram-v2"]
+    state_ids = []
+    rollups = state_rollups or {}
+    # Determine if any state has a non-zero rollup; if none do, all are "pending"
+    any_rollup = any(sum(r.values()) > 0 for r in rollups.values()) if rollups else False
     states = actor.get("states") if isinstance(actor.get("states"), dict) else actor.get("states", [])
     if isinstance(states, dict):
         for sname, sdef in states.items():
-            label = sdef.get("description", sname) if isinstance(sdef, dict) else sname
             sid = sname.replace("-", "_")
-            lines.append("    %s: %s" % (sid, sname))
+            label = sname.replace("_", " ")
+            # Append verification badge (ticket 063)
+            r = rollups.get(sname, {})
+            if r.get("fail"):
+                label += " ✗"
+            elif r.get("pass") and not r.get("pending"):
+                label += " ✓"
+            elif r.get("pending") or not any_rollup:
+                label += " ○"
+            lines.append("    %s: %s" % (sid, label))
+            state_ids.append((sid, sname))
     else:
         for st in states:
-            sid = st["id"] if isinstance(st, dict) else st
-            label = (st.get("label") if isinstance(st, dict) else None) or sid
-            lines.append("    %s: %s" % (sid.replace("-", "_"), label))
+            raw_id = st["id"] if isinstance(st, dict) else st
+            sid = raw_id.replace("-", "_")
+            label = (st.get("label") if isinstance(st, dict) else None) or raw_id.replace("_", " ")
+            r = rollups.get(raw_id, {})
+            if r.get("fail"):
+                label += " ✗"
+            elif r.get("pass") and not r.get("pending"):
+                label += " ✓"
+            elif r.get("pending") or not any_rollup:
+                label += " ○"
+            lines.append("    %s: %s" % (sid, label))
+            state_ids.append((sid, raw_id))
     for tr in transitions:
         lines.append("    %s --> %s: %s" % (
             tr["from"].replace("-", "_"), tr["to"].replace("-", "_"), tr["label"]))
+    # Click directives: link each state to its behavior-detail anchor (ticket 062)
+    for sid, raw_id in state_ids:
+        anchor = "detail-%s-%s" % (actor_id, raw_id.replace("_", "-"))
+        lines.append('    click %s href "#%s"' % (sid, anchor))
     return "\n".join(lines)
 
 
@@ -117,12 +143,23 @@ def _diagram_section(model, model_view):
     if not actors:
         return None, None
     all_transitions = model_view.get("transitions") or []
-    # Pick the first actor that has transitions; fallback to first with states
-    actor = next((a for a in actors
-                  if any(t["actor"] == a["id"] for t in all_transitions)), actors[0])
+    # Pick the actor with the most transitions (most informative front door).
+    # Ties broken by state count, then actor order (ticket 076).
+    actor_transition_counts = {}
+    for t in all_transitions:
+        actor_transition_counts[t["actor"]] = actor_transition_counts.get(t["actor"], 0) + 1
+    actor = max(actors,
+                key=lambda a: (actor_transition_counts.get(a["id"], 0),
+                               len(a["states"]) if isinstance(a["states"], dict) else len(a.get("states", []))),
+                default=actors[0]) if actors else actors[0]
     actor_id = actor["id"]
     transitions = [t for t in all_transitions if t["actor"] == actor_id]
-    mermaid_src = _mermaid_src(actor, transitions, actor_id)
+    # Build per-state rollups for verification badges (ticket 063)
+    state_rollups = {}
+    for st in model_view.get("states") or []:
+        if st["actor"] == actor_id:
+            state_rollups[st["id"]] = st.get("rollup", {})
+    mermaid_src = _mermaid_src(actor, transitions, actor_id, state_rollups)
     return mermaid_src, actor
 
 

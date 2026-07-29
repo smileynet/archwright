@@ -1,7 +1,7 @@
 ---
 id: "076"
 title: "Report: diagram shows most informative actor, not just first with transitions"
-status: open
+status: done
 blocked_by: []
 priority: medium
 ---

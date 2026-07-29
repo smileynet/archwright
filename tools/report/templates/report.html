@@ -25,6 +25,8 @@
 
 /* === Base === */
 *, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { font-family: system-ui, -apple-system, sans-serif; font-size: 15px; line-height: 1.5;
   color: var(--fg); background: var(--bg); max-width: 960px; margin: 0 auto; padding: 24px 16px 80px; }
 code, pre { font-family: ui-monospace, 'Cascadia Code', 'SF Mono', monospace; font-size: 13px; }
@@ -176,6 +178,23 @@ $mermaid_js
     var els = document.querySelectorAll('.mermaid');
     if (els.length === 0) return;
     mermaid.run({ nodes: els });
+    // Fix Mermaid's click links after render completes (ticket 062)
+    setTimeout(function() {
+      var links = document.querySelectorAll('.diagram svg a');
+      for (var i = 0; i < links.length; i++) {
+        var href = links[i].getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+        if (href && href.charAt(0) === '#') {
+          links[i].removeAttribute('target');
+          links[i].setAttribute('href', href);
+          links[i].style.cursor = 'pointer';
+          links[i].addEventListener('click', function(e) {
+            e.preventDefault();
+            var target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        }
+      }
+    }, 500);
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', renderDiagrams);

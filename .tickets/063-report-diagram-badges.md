@@ -1,7 +1,7 @@
 ---
 id: "063"
 title: "Report: verification badges on diagram state nodes"
-status: open
+status: done
 blocked_by: ["061"]
 priority: high
 ---

@@ -1,7 +1,7 @@
 ---
 id: "078"
 title: "Report: behavior-detail 'WHAT THIS PROTECTS' shows all experiences instead of state-specific"
-status: open
+status: done
 blocked_by: []
 priority: medium
 ---
