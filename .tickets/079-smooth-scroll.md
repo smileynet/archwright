@@ -1,7 +1,7 @@
 ---
 id: "079"
 title: "Report: smooth scroll for anchor navigation with reduced-motion respect"
-status: open
+status: done
 blocked_by: []
 priority: low
 ---

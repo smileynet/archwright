@@ -156,6 +156,31 @@ def _model_transitions(model, vocab):
     return transitions
 
 
+def _actor_experiences(actor_id, model):
+    """Filter experiences to those whose protected_by references this actor (ticket 078).
+
+    Matching heuristic: experience.protected_by[].spec contains the actor id,
+    OR the experience links to a spec in spec_projections that maps to this actor.
+    Falls back to empty list (state has no specific experience) rather than dumping all."""
+    experiences = model.get("experiences") or []
+    if not experiences:
+        return []
+    # Build set of spec refs that map to this actor
+    actor_specs = set()
+    for proj in model.get("spec_projections") or []:
+        if actor_id in proj.get("from", "") or actor_id in str(proj.get("pattern", "")):
+            actor_specs.add(proj["spec"])
+    result = []
+    for exp in experiences:
+        for prot in exp.get("protected_by") or []:
+            spec_ref = prot.get("spec", "")
+            # Match if spec ref mentions this actor or is in the actor's projections
+            if actor_id in spec_ref or spec_ref in actor_specs:
+                result.append(exp["id"])
+                break
+    return result
+
+
 def build_model_view(model, doc, vocab):
     """model_view block: elements with plain labels + per-element rollups.
 
@@ -196,7 +221,7 @@ def build_model_view(model, doc, vocab):
                 "label": (st.get("label") if isinstance(st, dict) else None) or str(st),
                 "rollup": rollup,
                 "rules": rules,
-                "protects": [e["id"] for e in model.get("experiences") or []],
+                "protects": _actor_experiences(actor["id"], model),
             })
     return {"front_door": front_door, "states": states, "transitions": transitions,
             "source_model": model.get("_path"),

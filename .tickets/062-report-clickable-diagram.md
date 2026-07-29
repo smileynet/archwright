@@ -1,7 +1,7 @@
 ---
 id: "062"
 title: "Report: clickable diagram states link to behavior-detail anchors"
-status: open
+status: done
 blocked_by: ["061"]
 priority: high
 ---
