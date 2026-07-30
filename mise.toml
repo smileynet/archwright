@@ -82,6 +82,43 @@ rm -f "$TMP"
 echo "Report: $OUT/report.html"
 """
 
+[tasks.report-publish]
+description = "Generate report + commit + push to target project: mise run report-publish -- --project <path> [--name <display>]"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+PROJECT=""
+NAME=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --project) PROJECT="$2"; shift 2 ;;
+    --name) NAME="$2"; shift 2 ;;
+    *) echo "Unknown arg: $1"; exit 2 ;;
+  esac
+done
+if [ -z "$PROJECT" ]; then echo "Usage: mise run report-publish -- --project <path> [--name <display>]"; exit 2; fi
+DESIGN="$PROJECT/design"
+OUT="$DESIGN/report"
+SPECS="$DESIGN/specs"
+if [ -z "$NAME" ]; then NAME="$(basename "$PROJECT")"; fi
+# Generate
+mkdir -p "$OUT"
+TMP=$(mktemp)
+python tools/archwright-check.py --all "$SPECS" --target "$PROJECT" --json > "$TMP" 2>/dev/null || true
+python tools/report/generate.py --check-json "$TMP" --design "$DESIGN" --project "$NAME" --out "$OUT"
+rm -f "$TMP"
+# Commit + push in the target project
+cd "$PROJECT"
+git add design/report/
+if git diff --cached --quiet; then
+  echo "No changes to commit."
+else
+  git commit -m "chore: regenerate archwright report"
+  git push
+  echo "Report published to $(git remote get-url origin)"
+fi
+"""
+
 [tasks.test]
 description = "Fixture suite over tests/fixtures/ + examples/ lifecycle corpora — the repo's regression net (count: AGENTS.md test row)"
 run = "bash tools/run-fixture-tests.sh"
