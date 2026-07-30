@@ -183,3 +183,12 @@ When a spec derivation failure reveals a reusable lesson:
 2. **Global** (methodology-level, all projects): add to `.memory/reflections/global.md` in the archwright repo
 3. **Project** (target-project-specific): add to `.memory/reflections/` in the target project
 4. `archwright-derive` Step 1b reads both sets before generating specs
+
+## Report Reference Commits
+
+Every ticket that changes the report's visual rendering or content structure MUST commit the regenerated reference report to the target project (currently lacrosse-bosse) as proof of the work. The committed output IS the acceptance evidence.
+
+- After implementation: `mise run report-publish -- --project <target-path>`
+- The commit message references the ticket(s) that motivated the change
+- Tickets are not closed until the reference report is pushed
+- Screenshots (via `tools/report/playwright-check.js --screenshots`) are advisory, not required to commit — but a Playwright pass (`node tools/report/playwright-check.js <report.html>`) must succeed before closing
