@@ -515,11 +515,17 @@ def render_html(bundle, model, vocab, out_dir):
     run = (doc.get("code_state") or {})
     page_wiring = """
 var page = ArchwrightReport.newPage(%s);
+var _totalAsks = document.querySelectorAll('.card.ask').length;
 function _rec(el, response) {
   var card = el.closest('.ask');
   ArchwrightReport.pageRecord(page, card.dataset.askId, response);
+  card.classList.add('answered');
+  card.style.transition = 'box-shadow .3s';
+  card.style.boxShadow = '0 0 0 3px var(--success)';
+  setTimeout(function() { card.style.boxShadow = ''; }, 600);
   var n = Object.keys(page.responses).length;
-  document.getElementById('response-count').textContent = n + ' response' + (n>1?'s':'') + ' recorded';
+  var remaining = _totalAsks - n;
+  document.getElementById('response-count').textContent = n + ' of ' + _totalAsks + ' answered' + (remaining > 0 ? ' \\u00b7 ' + remaining + ' remaining' : ' \\u00b7 all done!');
   document.getElementById('response-bar').style.display = 'block';
 }
 function approveFix(el) { _rec(el, { kind: 'approve-fix' }); }

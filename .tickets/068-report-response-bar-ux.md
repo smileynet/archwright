@@ -1,7 +1,7 @@
 ---
 id: "068"
 title: "Report: response bar UX — progress, feedback, keyboard access"
-status: open
+status: done
 blocked_by: ["064"]
 priority: low
 ---

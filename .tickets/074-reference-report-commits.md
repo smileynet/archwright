@@ -1,7 +1,7 @@
 ---
 id: "074"
 title: "Reference: lacrosse-bosse report committed after each visual track"
-status: open
+status: done
 blocked_by: ["061"]
 priority: high
 ---
