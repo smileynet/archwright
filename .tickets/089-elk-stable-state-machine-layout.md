@@ -1,7 +1,7 @@
 ---
 id: "089"
 title: "ELK diagram: stable layout for state machines"
-status: open
+status: done
 priority: low
 blocked_by: []
 ---

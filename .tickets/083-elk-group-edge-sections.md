@@ -1,7 +1,7 @@
 ---
 id: "083"
 title: "ELK diagram: group multi-section edges under one element"
-status: open
+status: done
 priority: medium
 blocked_by: []
 ---

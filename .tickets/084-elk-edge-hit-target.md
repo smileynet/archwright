@@ -1,7 +1,7 @@
 ---
 id: "084"
 title: "ELK diagram: wider invisible hit target for edges"
-status: open
+status: done
 priority: medium
 blocked_by: []
 ---

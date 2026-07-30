@@ -1,7 +1,7 @@
 ---
 id: "088"
 title: "ELK diagram: export + figure semantics + aria-live"
-status: open
+status: done
 priority: medium
 blocked_by: []
 ---
