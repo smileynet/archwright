@@ -314,8 +314,15 @@ def _behavior_detail_sections(model, model_view, vocab):
                 glyph = vocab.status_glyph(status) if status in ("pass", "fail", "warn", "skip", "pending") else "?"
                 glyph_class = "status-%s" % status if status in ("pass", "fail", "warn", "skip", "pending") else ""
                 statement = r.get("statement") or r.get("spec", "")
+                # Link failing rules to issue-detail (P2a from codex review)
+                stmt_html = _esc(statement)
+                if status == "fail":
+                    spec_ref = r.get("spec", "")
+                    spec_id = spec_ref.split(":", 1)[-1] if ":" in spec_ref else spec_ref
+                    issue_anchor = "issue-%s" % spec_id.replace("_", "-")
+                    stmt_html = '<a href="#%s">%s</a>' % (_esc(issue_anchor), stmt_html)
                 parts.append('<p><span class="glyph %s">%s</span>%s</p>'
-                             % (glyph_class, glyph, _esc(statement)))
+                             % (glyph_class, glyph, stmt_html))
             if not rules and invariants:
                 for inv in invariants:
                     desc_text = inv.get("description") or inv.get("id", "")
@@ -380,7 +387,8 @@ def _issue_detail_sections(doc, vocab):
         cp = v.get("contrast_pair") or {}
 
         parts = []
-        parts.append('<div class="card issue-detail" id="%s">' % _esc(anchor))
+        parts.append('<div class="card ask issue-detail" data-ask-id="%s" data-ask-type="approval" id="%s">'
+                     % (_esc((v.get("fingerprints") or [spec_id])[0]), _esc(anchor)))
         parts.append('<p><a href="#diagram-top">&larr; back to overview</a></p>')
 
         # Header with status + title
