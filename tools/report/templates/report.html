@@ -61,6 +61,11 @@ header h1 .meta { font-weight: 400; margin-left: 8px; }
 .card.ask[data-ask-type="approval"] { border-left: 4px solid var(--danger); }
 .card.ask[data-ask-type="suggestion"] { border-left: 4px solid var(--info); }
 
+/* Answered card state (ticket 068) */
+.card.ask.answered { opacity: .7; }
+.card.ask.answered::after { content: "✓ answered"; position: absolute; top: 8px; right: 12px;
+  font-size: 11px; font-weight: 600; color: var(--success); }
+
 /* Behavior detail cards */
 .behavior-detail { border-left: 4px solid var(--info); scroll-margin-top: 24px; }
 .behavior-detail h4 { font-size: 11px; letter-spacing: .06em; margin: 20px 0 6px; }
