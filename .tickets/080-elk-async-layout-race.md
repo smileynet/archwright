@@ -1,7 +1,7 @@
 ---
 id: "080"
 title: "ELK diagram: async layout race condition"
-status: open
+status: done
 priority: high
 blocked_by: []
 ---

@@ -1,7 +1,7 @@
 ---
 id: "086"
 title: "ELK diagram: arrowhead color follows edge highlight state"
-status: open
+status: done
 priority: medium
 blocked_by: []
 ---

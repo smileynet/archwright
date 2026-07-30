@@ -1,7 +1,7 @@
 ---
 id: "085"
 title: "ELK diagram: measure label width with SVG text metrics"
-status: open
+status: done
 priority: high
 blocked_by: []
 ---

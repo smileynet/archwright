@@ -1,7 +1,7 @@
 ---
 id: "081"
 title: "ELK diagram: render splines as SVG cubic bezier curves"
-status: open
+status: done
 priority: high
 blocked_by: []
 ---

@@ -1,7 +1,7 @@
 ---
 id: "082"
 title: "ELK diagram: keyboard accessibility"
-status: open
+status: done
 priority: high
 blocked_by: []
 ---

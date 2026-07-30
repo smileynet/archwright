@@ -1,7 +1,7 @@
 ---
 id: "087"
 title: "ELK diagram: zoom/pan controls"
-status: open
+status: done
 priority: medium
 blocked_by: []
 ---
