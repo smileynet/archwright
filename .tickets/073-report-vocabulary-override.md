@@ -1,7 +1,7 @@
 ---
 id: "073"
 title: "Report: per-project vocabulary override for domain events"
-status: open
+status: done
 blocked_by: []
 priority: low
 ---

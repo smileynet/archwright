@@ -39,7 +39,17 @@ def main():
 
     try:
         doc = json.loads(Path(args.check_json).read_text(encoding="utf-8"))
-        vocab = Vocabulary(args.vocabulary)
+
+        # Vocabulary: auto-discover project override from design/vocabulary.yaml
+        override_path = None
+        if args.vocabulary:
+            override_path = args.vocabulary
+        else:
+            candidate = Path(args.design) / "vocabulary.yaml"
+            if candidate.exists():
+                override_path = str(candidate)
+
+        vocab = Vocabulary(override=override_path)
         model = derive.load_model(Path(args.design) / "models")
 
         auto = os.environ.get("ARCHWRIGHT_AUTO_APPROVE", "off")
@@ -70,6 +80,16 @@ def main():
         json_bundle["asks"] = dict(asks_block, posture=bundle["posture"])
         (out / "report.json").write_text(json.dumps(json_bundle, indent=2), encoding="utf-8")
         print(f"Report bundle written to {out} (posture: {bundle['posture']})")
+
+        # Warn about events that fell back to humanization (no vocabulary mapping)
+        missing = vocab.missing_events
+        if missing:
+            print(f"  warning: {len(missing)} event(s) fell back to humanization (no vocabulary override):")
+            for term in missing:
+                raw = term[len("event "):]
+                print(f"    {raw} → \"{raw.replace('_', ' ').lower()}\"")
+            print(f"  hint: add these to design/vocabulary.yaml as \"event <NAME>\": \"plain label\"")
+
         return 0
     except GenerationError as e:
         print(f"Error: {e}")
