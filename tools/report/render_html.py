@@ -349,10 +349,10 @@ def _behavior_detail_sections(model, model_view, vocab):
             if desc:
                 parts.append("<p>%s</p>" % _esc(desc))
             if arrives:
-                from_labels = ", ".join("%s (%s)" % (_esc(t["from"]), _esc(t["label"])) for t in arrives)
+                from_labels = ", ".join("%s (%s)" % (_esc(t["from"].replace("_", " ").replace("-", " ")), _esc(t["label"])) for t in arrives)
                 parts.append('<p class="meta">arrives from: %s</p>' % from_labels)
             if leads:
-                to_labels = ", ".join("%s (%s)" % (_esc(t["to"]), _esc(t["label"])) for t in leads)
+                to_labels = ", ".join("%s (%s)" % (_esc(t["to"].replace("_", " ").replace("-", " ")), _esc(t["label"])) for t in leads)
                 parts.append('<p class="meta">leads to: %s</p>' % to_labels)
 
         # Rules that apply (from model_view join or model invariants)

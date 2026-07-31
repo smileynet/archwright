@@ -14,6 +14,12 @@
   var _viewBox = null;
   var _measureSvg = null;
 
+  // Empty graph guard
+  if (!graphData.states || graphData.states.length === 0) {
+    document.getElementById('elk-diagram').innerHTML = '<p style="color:var(--neutral);text-align:center;padding:40px">No states to display for this actor.</p>';
+    return;
+  }
+
   function measureText(text, fontSize) {
     if (!_measureSvg) {
       _measureSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -98,9 +104,9 @@
     var stateCount = graphData.states.length;
     var transCount = graphData.transitions.length;
 
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '">';
-    svg += '<title>State machine diagram: ' + esc(actorLabel) + '</title>';
-    svg += '<desc>' + stateCount + ' states, ' + transCount + ' transitions. Click states or edges for details.</desc>';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-labelledby="elk-title elk-desc">';
+    svg += '<title id="elk-title">State machine diagram: ' + esc(actorLabel) + '</title>';
+    svg += '<desc id="elk-desc">' + stateCount + ' states, ' + transCount + ' transitions. Click states or edges for details.</desc>';
     svg += '<defs>';
     svg += '<marker id="arr" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 3 L0 6Z" fill="var(--neutral)"/></marker>';
     svg += '<marker id="arr-hl" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 3 L0 6Z" fill="var(--info)"/></marker>';
@@ -367,20 +373,50 @@
   if (btnExport) btnExport.addEventListener('click', function() {
     var svg = document.querySelector('#elk-diagram svg');
     if (!svg) return;
-    var data = new XMLSerializer().serializeToString(svg);
+    // Resolve CSS variables to computed values before serialization (they don't
+    // resolve when rendered via Image→Canvas for PNG export)
+    var root = getComputedStyle(document.documentElement);
+    var neutralColor = root.getPropertyValue('--neutral').trim() || '#6e7781';
+    var infoColor = root.getPropertyValue('--info').trim() || '#0969da';
+    var cardColor = root.getPropertyValue('--card').trim() || '#f6f8fa';
+    var clone = svg.cloneNode(true);
+    // Replace CSS var references in markers with computed values
+    clone.querySelectorAll('marker#arr path').forEach(function(p) { p.setAttribute('fill', neutralColor); });
+    clone.querySelectorAll('marker#arr-hl path').forEach(function(p) { p.setAttribute('fill', infoColor); });
+    // Replace CSS var references in edge/node styles
+    clone.querySelectorAll('.edge-group path.edge-line').forEach(function(p) {
+      if (!p.closest('.highlighted')) p.style.stroke = neutralColor;
+    });
+    clone.querySelectorAll('.state-node rect').forEach(function(r) {
+      r.style.stroke = infoColor;
+      r.style.fill = cardColor;
+    });
+    clone.querySelectorAll('.state-node text').forEach(function(t) {
+      t.style.fill = root.getPropertyValue('--fg').trim() || '#1f2328';
+    });
+    clone.querySelectorAll('.edge-label text').forEach(function(t) {
+      t.style.fill = root.getPropertyValue('--fg').trim() || '#1f2328';
+    });
+    clone.querySelectorAll('.edge-label rect').forEach(function(r) {
+      r.style.fill = cardColor;
+    });
+    var data = new XMLSerializer().serializeToString(clone);
     var canvas = document.createElement('canvas');
     var box = svg.viewBox.baseVal;
     canvas.width = box.width * 2; canvas.height = box.height * 2;
     var ctx = canvas.getContext('2d');
     var img = new Image();
     img.onload = function() {
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--card').trim();
+      ctx.fillStyle = cardColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       var a = document.createElement('a');
       a.href = canvas.toDataURL('image/png');
       a.download = 'state-diagram.png';
       a.click();
+    };
+    img.onerror = function() {
+      console.error('PNG export failed — SVG could not be rendered as image');
     };
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
   });
