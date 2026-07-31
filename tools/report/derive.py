@@ -215,10 +215,17 @@ def build_model_view(model, doc, vocab):
             rules.append({"spec": spec_ref, "status": status, "statement": surface})
             rollup[status if status in rollup else "warn"] += 1
         for st in actor["states"]:
+            raw_id = st["id"] if isinstance(st, dict) else st
+            # Label priority: explicit label field > vocabulary > humanized ID
+            explicit = st.get("label") if isinstance(st, dict) else None
+            if explicit:
+                label = explicit
+            else:
+                label = str(raw_id).replace("_", " ").replace("-", " ")
             states.append({
-                "id": st["id"] if isinstance(st, dict) else st,
+                "id": raw_id,
                 "actor": actor["id"],
-                "label": (st.get("label") if isinstance(st, dict) else None) or str(st),
+                "label": label,
                 "rollup": rollup,
                 "rules": rules,
                 "protects": _actor_experiences(actor["id"], model),

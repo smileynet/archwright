@@ -225,13 +225,18 @@ def _diagram_section(model, model_view):
             state_rollups[st["id"]] = st.get("rollup", {})
     # Determine if any state has a non-zero rollup
     any_rollup = any(sum(r.values()) > 0 for r in state_rollups.values()) if state_rollups else False
-    # Build ELK graph data
+    # Build ELK graph data — labels from model_view (single source of truth)
     states_data = []
     detail_anchors = {}
+    # Build label + description lookup from model_view
+    mv_labels = {}  # state_id -> label (already humanized by derive.py)
+    for st in model_view.get("states") or []:
+        if st["actor"] == actor_id:
+            mv_labels[st["id"]] = st["label"]
     raw_states = actor.get("states")
     if isinstance(raw_states, dict):
         for sname in raw_states:
-            label = sname.replace("_", " ")
+            label = mv_labels.get(sname, sname.replace("_", " ").replace("-", " "))
             r = state_rollups.get(sname, {})
             if r.get("fail"):
                 label += " \u2717"
@@ -248,7 +253,7 @@ def _diagram_section(model, model_view):
     else:
         for st in (raw_states or []):
             raw_id = st["id"] if isinstance(st, dict) else st
-            label = (st.get("label") if isinstance(st, dict) else None) or raw_id.replace("_", " ")
+            label = mv_labels.get(raw_id, (st.get("label") if isinstance(st, dict) else None) or raw_id.replace("_", " ").replace("-", " "))
             r = state_rollups.get(raw_id, {})
             if r.get("fail"):
                 label += " \u2717"
