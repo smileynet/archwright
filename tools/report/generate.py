@@ -61,10 +61,20 @@ def main():
         model_view = derive.build_model_view(model, doc, vocab)
         derive.pin_violations(asks_block, model_view, model)
 
+        # Evidence ledger: auto-discover from design/ parent or project root
+        evidence_path = None
+        for candidate in [Path(args.design) / ".archwright-evidence.json",
+                          Path(args.design).parent / ".archwright-evidence.json"]:
+            if candidate.is_file():
+                evidence_path = str(candidate)
+                break
+        stability = derive.build_stability(evidence_path)
+
         bundle = {
             "canonical": doc,
             "model_view": model_view,
             "asks": asks_block,
+            "stability": stability,
             "posture": derive.posture(doc, asks_block),
             "project": args.project or Path.cwd().name,
             "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),

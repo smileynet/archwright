@@ -324,3 +324,87 @@ def posture(doc, asks_block):
     blocking = [a for a in asks_block["asks"]
                 if a["ask_type"] in (ASK_DECISION, ASK_APPROVAL) and not a["auto_approved"]]
     return "needs-attention" if blocking else "all-clear"
+
+
+def build_stability(evidence_path):
+    """Build stability block from the evidence ledger (ADR 0009).
+
+    Returns a dict with:
+      streaks: [{key, invariant, confidence, streak}] sorted by streak desc
+      promotion_candidates: [{key, invariant, confidence, reason, at}]
+      demotion_candidates: [{key, invariant, confidence, reason, at}]
+      last_failure: ISO timestamp of most recent demotion-candidate event (or None)
+      longest_streak: int (max streak across all invariants)
+      total_events: int
+
+    Returns None when no evidence ledger exists (graceful degradation).
+    """
+    import json
+
+    path = Path(evidence_path) if evidence_path else None
+    if path is None or not path.is_file():
+        return None
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    if not isinstance(data, dict):
+        return None
+
+    events = data.get("events") or []
+    streaks_raw = data.get("streaks") or {}
+
+    # Build streak list from the streaks dict
+    streaks = []
+    for skey, count in streaks_raw.items():
+        # skey format: "kind:spec_id#invariant"
+        parts = skey.split("#", 1)
+        key = parts[0] if parts else skey
+        invariant = parts[1] if len(parts) > 1 else ""
+        # Find the confidence for this key from the most recent event
+        conf = "★"
+        for ev in reversed(events):
+            if ev.get("key") == key and ev.get("invariant") == invariant:
+                conf = ev.get("confidence", "★")
+                break
+        streaks.append({"key": key, "invariant": invariant, "confidence": conf, "streak": count})
+    streaks.sort(key=lambda s: s["streak"], reverse=True)
+
+    # Extract promotion and demotion candidates
+    promotion_candidates = []
+    demotion_candidates = []
+    last_failure = None
+
+    for ev in events:
+        if ev.get("event") == "promotion-candidate":
+            promotion_candidates.append({
+                "key": ev.get("key", ""),
+                "invariant": ev.get("invariant", ""),
+                "confidence": ev.get("confidence", ""),
+                "reason": ev.get("reason", ""),
+                "at": ev.get("at", ""),
+            })
+        elif ev.get("event") == "demotion-candidate":
+            demotion_candidates.append({
+                "key": ev.get("key", ""),
+                "invariant": ev.get("invariant", ""),
+                "confidence": ev.get("confidence", ""),
+                "reason": ev.get("reason", ""),
+                "at": ev.get("at", ""),
+            })
+            ts = ev.get("at")
+            if ts and (last_failure is None or ts > last_failure):
+                last_failure = ts
+
+    longest_streak = max((s["streak"] for s in streaks), default=0)
+
+    return {
+        "streaks": streaks,
+        "promotion_candidates": promotion_candidates,
+        "demotion_candidates": demotion_candidates,
+        "last_failure": last_failure,
+        "longest_streak": longest_streak,
+        "total_events": len(events),
+    }

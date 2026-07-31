@@ -1,7 +1,7 @@
 ---
 id: "056"
 title: "Report: stability section — run history, trust-earning, promotion suggestions"
-status: open
+status: done
 blocked_by: ["053"]
 priority: low
 ---
