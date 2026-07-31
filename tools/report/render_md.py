@@ -64,4 +64,22 @@ def render_md(bundle, vocab):
     for v in baselined:
         lines.append("- %s %s — %s" % (vocab.status_glyph("warn"), vocab.surface("baselined"), v.get("message")))
     lines.append("")
+
+    # Stability section (ticket 056)
+    stability = bundle.get("stability")
+    if stability:
+        lines += ["## Stability", ""]
+        if stability["longest_streak"] > 0:
+            summary = "rules holding **%d runs** straight" % stability["longest_streak"]
+            if stability["last_failure"]:
+                summary += " · last failure %s" % stability["last_failure"][:10]
+            lines.append(summary)
+            lines.append("")
+        for pc in stability["promotion_candidates"]:
+            spec_label = pc["key"].split(":", 1)[-1] if ":" in pc["key"] else pc["key"]
+            lines.append("- 💡 **%s** has earned trust (%s) — consider promoting to a firm rule" %
+                         (spec_label, pc["reason"].replace("-", " ")))
+        if stability["promotion_candidates"]:
+            lines.append("")
+
     return "\n".join(lines)

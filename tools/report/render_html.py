@@ -592,9 +592,49 @@ def render_html(bundle, model, vocab, out_dir):
     unverified_section = "\n".join(unverified)
 
     stability_section = ""
-    if suggestions:
-        stability_section = "<h2>STABILITY</h2>" + "\n".join(
-            _ask_card(a, vocab, violation_by_ref) for a in suggestions)
+    stability = bundle.get("stability")
+    if stability or suggestions:
+        parts = ["<h2>STABILITY</h2>"]
+        if stability:
+            # Run history summary
+            if stability["longest_streak"] > 0:
+                parts.append('<p>rules holding <strong>%d runs</strong> straight' %
+                             stability["longest_streak"])
+                if stability["last_failure"]:
+                    # Show just the date portion
+                    failure_date = stability["last_failure"][:10]
+                    parts.append(' · last failure %s</p>' % _esc(failure_date))
+                else:
+                    parts.append(' · no failures recorded</p>')
+            # Promotion candidates
+            for pc in stability["promotion_candidates"]:
+                spec_label = pc["key"].split(":", 1)[-1] if ":" in pc["key"] else pc["key"]
+                parts.append(
+                    '<div class="card ask" data-ask-type="suggestion">'
+                    '<p><span class="glyph status-pass">\U0001f4a1</span>'
+                    '<strong>%s</strong> has earned trust (%s)</p>'
+                    '<p>consider promoting to a firm rule '
+                    '<button onclick="dismissAsk(this)">Not now</button></p></div>'
+                    % (_esc(spec_label), _esc(pc["reason"].replace("-", " "))))
+            # Top streaks (show up to 5)
+            if stability["streaks"]:
+                shown = stability["streaks"][:5]
+                parts.append('<details class="detail-fold"><summary>%d rule%s with pass streaks</summary>'
+                             '<div class="disclosure-body"><ul class="meta">' %
+                             (len(stability["streaks"]),
+                              "s" if len(stability["streaks"]) != 1 else ""))
+                for s in shown:
+                    spec_label = s["key"].split(":", 1)[-1] if ":" in s["key"] else s["key"]
+                    parts.append('<li>%s — %d consecutive passes</li>' %
+                                 (_esc(spec_label), s["streak"]))
+                if len(stability["streaks"]) > 5:
+                    parts.append('<li class="meta">+ %d more</li>' %
+                                 (len(stability["streaks"]) - 5))
+                parts.append('</ul></div></details>')
+        # Existing suggestion cards (skip-based)
+        for a in suggestions:
+            parts.append(_ask_card(a, vocab, violation_by_ref))
+        stability_section = "\n".join(parts)
 
     page_js = Path(TEMPLATES / "page.js").read_text(encoding="utf-8")
     elk_vendor = Path(__file__).parent / "vendor" / "elk.bundled.min.js"
