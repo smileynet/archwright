@@ -197,11 +197,10 @@ def _mermaid_src(actor, transitions, actor_id, state_rollups=None):
 
 
 def _diagram_section(model, model_view):
-    """Generate diagram content: Mermaid source for client-side rendering.
+    """Generate diagram content: ELK graph data JSON + interactive container.
 
-    Primary path: emit <pre class="mermaid"> with stateDiagram-v2 source.
-    Mermaid.js (inlined in template) renders it to SVG on page load.
-    Fallback (JS disabled): the Mermaid source is readable as-is."""
+    ELK.js computes the layout client-side; the SVG renderer draws edges with
+    computed bend points (obstacle avoidance). Click/hover/zoom/pan interactive."""
     if model is None:
         return None, None
     actors = [a for a in model.get("actors") or [] if a.get("states")]
@@ -224,8 +223,57 @@ def _diagram_section(model, model_view):
     for st in model_view.get("states") or []:
         if st["actor"] == actor_id:
             state_rollups[st["id"]] = st.get("rollup", {})
-    mermaid_src = _mermaid_src(actor, transitions, actor_id, state_rollups)
-    return mermaid_src, actor
+    # Determine if any state has a non-zero rollup
+    any_rollup = any(sum(r.values()) > 0 for r in state_rollups.values()) if state_rollups else False
+    # Build ELK graph data
+    states_data = []
+    detail_anchors = {}
+    raw_states = actor.get("states")
+    if isinstance(raw_states, dict):
+        for sname in raw_states:
+            label = sname.replace("_", " ")
+            r = state_rollups.get(sname, {})
+            if r.get("fail"):
+                label += " \u2717"
+            elif r.get("pass") and not r.get("pending"):
+                label += " \u2713"
+            elif r.get("pending") or not any_rollup:
+                label += " \u25cb"
+            desc = ""
+            sdef = raw_states[sname]
+            if isinstance(sdef, dict):
+                desc = sdef.get("description", "")
+            states_data.append({"id": sname, "label": label, "description": desc})
+            detail_anchors[sname] = "detail-%s-%s" % (actor_id, sname.replace("_", "-"))
+    else:
+        for st in (raw_states or []):
+            raw_id = st["id"] if isinstance(st, dict) else st
+            label = (st.get("label") if isinstance(st, dict) else None) or raw_id.replace("_", " ")
+            r = state_rollups.get(raw_id, {})
+            if r.get("fail"):
+                label += " \u2717"
+            elif r.get("pass") and not r.get("pending"):
+                label += " \u2713"
+            elif r.get("pending") or not any_rollup:
+                label += " \u25cb"
+            desc = st.get("description", "") if isinstance(st, dict) else ""
+            states_data.append({"id": raw_id, "label": label, "description": desc})
+            detail_anchors[raw_id] = "detail-%s-%s" % (actor_id, raw_id.replace("_", "-"))
+
+    transitions_data = []
+    for i, t in enumerate(transitions):
+        transitions_data.append({
+            "id": "e%d" % i, "from": t["from"], "to": t["to"], "label": t["label"]
+        })
+
+    graph_data = {
+        "actorLabel": actor.get("label") or actor_id.replace("_", " "),
+        "actorId": actor_id,
+        "states": states_data,
+        "transitions": transitions_data,
+        "detailAnchors": detail_anchors
+    }
+    return graph_data, actor
 
 
 def _behavior_detail_sections(model, model_view, vocab):
@@ -472,16 +520,42 @@ def render_html(bundle, model, vocab, out_dir):
     svg = _diagram_section(model, model_view)
     diagram_section = ""
     if svg:
-        mermaid_src, diagram_actor = svg
-        if mermaid_src:
+        graph_data, diagram_actor = svg
+        if graph_data:
             badge = ("every step verified " + vocab.status_glyph("pass")) if post == "all-clear" \
                 else "steps needing attention are marked " + vocab.status_glyph("fail")
-            # Mermaid source needs < and & escaped but NOT > (arrows use -->)
-            safe_src = mermaid_src.replace("&", "&amp;").replace("<", "&lt;")
-            diagram_section = ('<div id="diagram-top"><h2>HOW %s WORKS</h2>'
-                               '<div class="diagram"><pre class="mermaid">\n%s\n</pre></div>'
-                               '<p class="meta">%s · click any step for details</p></div>'
-                               % (_esc(bundle["project"].upper()), safe_src, _esc(badge)))
+            graph_json = json.dumps(graph_data, separators=(",", ":"))
+            # Escape < and & in JSON for safe HTML embedding (no </script> in data)
+            safe_json = graph_json.replace("&", "&amp;").replace("<", "&lt;")
+            diagram_section = (
+                '<div id="diagram-top"><h2>HOW %s WORKS</h2>'
+                '<div class="diagram">'
+                '<div class="elk-toolbar">'
+                '<label>Direction:</label>'
+                '<select id="ctl-direction"><option value="DOWN" selected>\u2193 Down</option><option value="RIGHT">\u2192 Right</option><option value="UP">\u2191 Up</option><option value="LEFT">\u2190 Left</option></select>'
+                '<label>Routing:</label>'
+                '<select id="ctl-routing"><option value="SPLINES" selected>Splines</option><option value="ORTHOGONAL">Orthogonal</option><option value="POLYLINE">Polyline</option></select>'
+                '<label>Spacing:</label>'
+                '<select id="ctl-spacing"><option value="compact">Compact</option><option value="normal" selected>Normal</option><option value="spacious">Spacious</option></select>'
+                '<label>Clearance:</label>'
+                '<select id="ctl-clearance"><option value="tight">Tight</option><option value="normal" selected>Normal</option><option value="wide">Wide</option></select>'
+                '<label>Labels:</label>'
+                '<select id="ctl-labels"><option value="show" selected>Show</option><option value="hide">Hide</option></select>'
+                '<div class="separator"></div>'
+                '<button class="btn-icon" id="btn-zoom-in" title="Zoom in">\uff0b</button>'
+                '<button class="btn-icon" id="btn-zoom-out" title="Zoom out">\uff0d</button>'
+                '<button class="btn-icon" id="btn-fit" title="Fit to view">\u229e</button>'
+                '<button id="btn-export" title="Export PNG">\U0001f4f7</button>'
+                '</div>'
+                '<figure id="elk-diagram" role="img" aria-label="State machine diagram for %s">'
+                '<p style="color:var(--neutral);text-align:center;padding:40px">Computing layout\u2026</p>'
+                '</figure>'
+                '<div id="elk-info-panel" class="empty">Click a state or transition for details. Double-click a state to jump to its detail section.</div>'
+                '</div>'
+                '<script type="application/json" id="elk-graph-data">%s</script>'
+                '<p class="meta">%s \u00b7 click any step for details</p></div>'
+                % (_esc(bundle["project"].upper()), _esc(graph_data["actorLabel"]),
+                   safe_json, _esc(badge)))
         else:
             diagram_section = '<div id="diagram-top"><p class="meta">%s</p></div>' % _esc(model_view.get("note", ""))
     elif model_view.get("note"):
@@ -518,8 +592,9 @@ def render_html(bundle, model, vocab, out_dir):
             _ask_card(a, vocab, violation_by_ref) for a in suggestions)
 
     page_js = Path(TEMPLATES / "page.js").read_text(encoding="utf-8")
-    mermaid_vendor = Path(__file__).parent / "vendor" / "mermaid.min.js"
-    mermaid_js_content = mermaid_vendor.read_text(encoding="utf-8") if mermaid_vendor.exists() else ""
+    elk_vendor = Path(__file__).parent / "vendor" / "elk.bundled.min.js"
+    elk_js_content = elk_vendor.read_text(encoding="utf-8") if elk_vendor.exists() else ""
+    elk_diagram_js = Path(TEMPLATES / "elk-diagram.js").read_text(encoding="utf-8")
     run = (doc.get("code_state") or {})
     page_wiring = """
 var page = ArchwrightReport.newPage(%s);
@@ -572,7 +647,8 @@ function saveResponses() {
         behavior_detail_section=behavior_detail_section,
         issue_detail_section=issue_detail_section,
         unverified_section=unverified_section, stability_section=stability_section,
-        mermaid_js="/* __MERMAID_PLACEHOLDER__ */", page_js=page_js, page_wiring=page_wiring)
-    # Insert mermaid.js AFTER template substitution to avoid $ escaping conflicts
-    # (mermaid.min.js has ~10K $ signs in template literals that break string.Template)
-    return result.replace("/* __MERMAID_PLACEHOLDER__ */", mermaid_js_content)
+        elk_js="/* __ELK_PLACEHOLDER__ */", elk_diagram_js=elk_diagram_js,
+        page_js=page_js, page_wiring=page_wiring)
+    # Insert ELK vendor JS AFTER template substitution to avoid $ escaping conflicts
+    # (elk.bundled.min.js has $ signs in minified code that break string.Template)
+    return result.replace("/* __ELK_PLACEHOLDER__ */", elk_js_content)

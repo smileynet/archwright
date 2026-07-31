@@ -108,11 +108,47 @@ input[type="text"]:focus { outline: 2px solid var(--info); outline-offset: 1px; 
 
 /* === Diagram === */
 #diagram-top { margin: 24px 0; }
-.diagram { margin: 16px 0; padding: 16px; background: var(--card); border-radius: var(--radius);
-  border: 1px solid var(--border); box-shadow: var(--shadow); overflow-x: auto; }
-.diagram svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-.diagram pre.mermaid { margin: 0; padding: 0; background: transparent; border: none;
-  white-space: pre-wrap; font-size: 13px; }
+.diagram { margin: 16px 0; padding: 0; background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; position: relative; }
+#elk-diagram { width: 100%; height: 480px; position: relative; }
+#elk-diagram svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.elk-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--card); }
+.elk-toolbar label { font-size: 11px; color: var(--neutral); font-weight: 500; }
+.elk-toolbar select, .elk-toolbar button { font-size: 11px; padding: 3px 6px; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--fg); cursor: pointer; }
+.elk-toolbar button:hover { background: var(--card); border-color: var(--neutral); }
+.elk-toolbar .separator { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+.elk-toolbar .btn-icon { font-size: 14px; padding: 3px 6px; line-height: 1; }
+/* ELK SVG elements */
+#elk-diagram .state-node { cursor: pointer; }
+#elk-diagram .state-node rect { fill: var(--bg); stroke: var(--info); stroke-width: 2; rx: 8; ry: 8;
+  transition: stroke-width 0.2s, fill 0.15s; }
+#elk-diagram .state-node:hover rect, #elk-diagram .state-node:focus rect { stroke-width: 3; fill: var(--info-bg); }
+#elk-diagram .state-node.highlighted rect { stroke-width: 3; fill: var(--info); }
+#elk-diagram .state-node.highlighted text { fill: #ffffff; }
+#elk-diagram .state-node.dimmed { opacity: 0.12; }
+#elk-diagram .state-node text { fill: var(--fg); font-family: system-ui, sans-serif;
+  font-size: 13px; font-weight: 500; pointer-events: none; }
+#elk-diagram .state-node:focus { outline: none; }
+#elk-diagram .state-node:focus rect { outline: 2px solid var(--info); outline-offset: 2px; }
+#elk-diagram .edge-group { cursor: pointer; }
+#elk-diagram .edge-group path.edge-line { fill: none; stroke: var(--neutral); stroke-width: 2;
+  transition: stroke 0.2s, stroke-width 0.2s; }
+#elk-diagram .edge-group path.edge-hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; }
+#elk-diagram .edge-group:hover path.edge-line { stroke-width: 3; stroke: var(--info); }
+#elk-diagram .edge-group.highlighted path.edge-line { stroke-width: 3; stroke: var(--info); }
+#elk-diagram .edge-group.highlighted marker path { fill: var(--info); }
+#elk-diagram .edge-group.dimmed { opacity: 0.12; }
+#elk-diagram .edge-label { pointer-events: none; }
+#elk-diagram .edge-label rect { fill: var(--card); stroke: var(--border); stroke-width: 0.5; rx: 3; ry: 3; }
+#elk-diagram .edge-label text { fill: var(--fg); font-family: system-ui, sans-serif; font-size: 11px; }
+#elk-diagram .edge-label.dimmed { opacity: 0.12; }
+#elk-info-panel { padding: 8px 12px; background: var(--card); border-top: 1px solid var(--border);
+  min-height: 36px; font-size: 13px; }
+#elk-info-panel.empty { color: var(--neutral); }
+#elk-info-panel h3 { font-size: 13px; margin: 0; font-weight: 600; }
+#elk-info-panel p { font-size: 12px; color: var(--neutral); margin: 2px 0 0; }
 
 /* === Disclosure / Details === */
 details { margin: 12px 0; }
@@ -215,46 +251,10 @@ $stability_section
   <button onclick="saveResponses()">Save responses for the agent</button>
 </div>
 <script>
-$mermaid_js
+$elk_js
 </script>
 <script>
-(function() {
-  if (typeof mermaid === 'undefined') return;
-  var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: isDark ? 'dark' : 'default',
-    state: { useMaxWidth: true },
-    securityLevel: 'loose'
-  });
-  function renderDiagrams() {
-    var els = document.querySelectorAll('.mermaid');
-    if (els.length === 0) return;
-    mermaid.run({ nodes: els });
-    // Fix Mermaid's click links after render completes (ticket 062)
-    setTimeout(function() {
-      var links = document.querySelectorAll('.diagram svg a');
-      for (var i = 0; i < links.length; i++) {
-        var href = links[i].getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-        if (href && href.charAt(0) === '#') {
-          links[i].removeAttribute('target');
-          links[i].setAttribute('href', href);
-          links[i].style.cursor = 'pointer';
-          links[i].addEventListener('click', function(e) {
-            e.preventDefault();
-            var target = document.querySelector(this.getAttribute('href'));
-            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          });
-        }
-      }
-    }, 500);
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderDiagrams);
-  } else {
-    renderDiagrams();
-  }
-})();
+$elk_diagram_js
 </script>
 <script>
 $page_js
