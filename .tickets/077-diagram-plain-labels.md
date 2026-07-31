@@ -1,7 +1,7 @@
 ---
 id: "077"
 title: "Report: diagram state labels use plain language, not raw IDs"
-status: open
+status: done
 blocked_by: ["073"]
 priority: medium
 ---
