@@ -15,3 +15,15 @@ When rendering ELK edge sections as SVG:
 - Set `refX` to the marker width (tip exactly at path endpoint).
 - Do NOT shorten the path — ELK's endpoints are pre-computed to the node boundary.
 - For highlighted state: use separate `<marker>` definitions with different fill colors (CSS can't target markers inside `<defs>` via parent selectors).
+
+
+## Playwright Interaction with SVG Elements
+
+**Session:** 2026-07-31 (ELK integration + visual validation)
+
+SVG `<g>` elements (edge-groups) can't be clicked normally by Playwright because the parent `<svg>` element "intercepts pointer events" — the SVG covers the full container and Playwright's actionability check sees the SVG as the target.
+
+- **State nodes** work because they have a visible `<rect>` filling their bounds (Playwright can hit-test it).
+- **Edges** (thin `<path>` elements inside a `<g>`) fail because the visible stroke is too narrow and the SVG element gets reported as the interceptor.
+- **Fix:** Use `{ force: true }` on edge clicks, or use `page.evaluate()` to dispatch the event programmatically.
+- **Alternative:** The invisible hit-target path (`.edge-hit`, 14px stroke-width) exists for mouse interaction but Playwright still sees the SVG intercept.
