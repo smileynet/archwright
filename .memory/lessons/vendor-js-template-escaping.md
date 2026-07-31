@@ -9,6 +9,8 @@ Never pass third-party vendor JS through `string.Template` substitution. The `$`
 
 **Pattern:** Use a placeholder string in the template (`/* __PLACEHOLDER__ */`), let Template process everything else, then do a final `.replace("/* __PLACEHOLDER__ */", vendor_content)` after substitution.
 
+**Confirmed cases:** Mermaid.js (3.4MB, ~10K `$`), ELK.js (1.4MB, `$` in minified variable names). Same `__PLACEHOLDER__` trick works for both.
+
 ## Also
 
 - Always test inlined vendor JS with Playwright (headless browser) before claiming it works. `python -c "import ..."` doesn't catch DOM-dependent failures.
