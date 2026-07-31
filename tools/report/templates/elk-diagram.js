@@ -5,9 +5,21 @@
   var dataEl = document.getElementById('elk-graph-data');
   if (!dataEl) return;
 
-  var graphData;
-  try { graphData = JSON.parse(dataEl.textContent); }
+  var allData;
+  try { allData = JSON.parse(dataEl.textContent); }
   catch (e) { return; }
+
+  // Multi-actor support: data is either {actors: [...], defaultActorId} or legacy single-actor
+  var actorsMap = {};
+  var graphData;
+  if (allData.actors && Array.isArray(allData.actors)) {
+    allData.actors.forEach(function(a) { actorsMap[a.actorId] = a; });
+    graphData = actorsMap[allData.defaultActorId] || allData.actors[0];
+  } else {
+    // Legacy single-actor format
+    graphData = allData;
+    actorsMap[graphData.actorId] = graphData;
+  }
 
   var elk = new ELK();
   var _layoutId = 0;
@@ -363,6 +375,17 @@
     var el = document.getElementById(id);
     if (el) el.addEventListener('change', doLayout);
   });
+  // Actor selector: switch graphData and re-layout
+  var actorSelect = document.getElementById('ctl-actor');
+  if (actorSelect) {
+    actorSelect.addEventListener('change', function() {
+      var selected = actorsMap[this.value];
+      if (selected) {
+        graphData = selected;
+        doLayout();
+      }
+    });
+  }
   var btnZoomIn = document.getElementById('btn-zoom-in');
   var btnZoomOut = document.getElementById('btn-zoom-out');
   var btnFit = document.getElementById('btn-fit');

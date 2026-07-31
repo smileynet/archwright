@@ -200,85 +200,92 @@ def _diagram_section(model, model_view):
     """Generate diagram content: ELK graph data JSON + interactive container.
 
     ELK.js computes the layout client-side; the SVG renderer draws edges with
-    computed bend points (obstacle avoidance). Click/hover/zoom/pan interactive."""
+    computed bend points (obstacle avoidance). Click/hover/zoom/pan interactive.
+    All actors' graph data is embedded; a dropdown selector switches between them."""
     if model is None:
         return None, None
     actors = [a for a in model.get("actors") or [] if a.get("states")]
     if not actors:
         return None, None
     all_transitions = model_view.get("transitions") or []
-    # Pick the actor with the most transitions (most informative front door).
-    # Ties broken by state count, then actor order (ticket 076).
+    # Pick the default actor (most transitions, ties broken by state count)
     actor_transition_counts = {}
     for t in all_transitions:
         actor_transition_counts[t["actor"]] = actor_transition_counts.get(t["actor"], 0) + 1
-    actor = max(actors,
-                key=lambda a: (actor_transition_counts.get(a["id"], 0),
-                               len(a["states"]) if isinstance(a["states"], dict) else len(a.get("states", []))),
-                default=actors[0]) if actors else actors[0]
-    actor_id = actor["id"]
-    transitions = [t for t in all_transitions if t["actor"] == actor_id]
-    # Build per-state rollups for verification badges (ticket 063)
-    state_rollups = {}
-    for st in model_view.get("states") or []:
-        if st["actor"] == actor_id:
-            state_rollups[st["id"]] = st.get("rollup", {})
-    # Determine if any state has a non-zero rollup
-    any_rollup = any(sum(r.values()) > 0 for r in state_rollups.values()) if state_rollups else False
-    # Build ELK graph data — labels from model_view (single source of truth)
-    states_data = []
-    detail_anchors = {}
-    # Build label + description lookup from model_view
-    mv_labels = {}  # state_id -> label (already humanized by derive.py)
-    for st in model_view.get("states") or []:
-        if st["actor"] == actor_id:
-            mv_labels[st["id"]] = st["label"]
-    raw_states = actor.get("states")
-    if isinstance(raw_states, dict):
-        for sname in raw_states:
-            label = mv_labels.get(sname, sname.replace("_", " ").replace("-", " "))
-            r = state_rollups.get(sname, {})
-            if r.get("fail"):
-                label += " \u2717"
-            elif r.get("pass") and not r.get("pending"):
-                label += " \u2713"
-            elif r.get("pending") or not any_rollup:
-                label += " \u25cb"
-            desc = ""
-            sdef = raw_states[sname]
-            if isinstance(sdef, dict):
-                desc = sdef.get("description", "")
-            states_data.append({"id": sname, "label": label, "description": desc})
-            detail_anchors[sname] = "detail-%s-%s" % (actor_id, sname.replace("_", "-"))
-    else:
-        for st in (raw_states or []):
-            raw_id = st["id"] if isinstance(st, dict) else st
-            label = mv_labels.get(raw_id, (st.get("label") if isinstance(st, dict) else None) or raw_id.replace("_", " ").replace("-", " "))
-            r = state_rollups.get(raw_id, {})
-            if r.get("fail"):
-                label += " \u2717"
-            elif r.get("pass") and not r.get("pending"):
-                label += " \u2713"
-            elif r.get("pending") or not any_rollup:
-                label += " \u25cb"
-            desc = st.get("description", "") if isinstance(st, dict) else ""
-            states_data.append({"id": raw_id, "label": label, "description": desc})
-            detail_anchors[raw_id] = "detail-%s-%s" % (actor_id, raw_id.replace("_", "-"))
+    default_actor = max(actors,
+                        key=lambda a: (actor_transition_counts.get(a["id"], 0),
+                                       len(a["states"]) if isinstance(a["states"], dict) else len(a.get("states", []))),
+                        default=actors[0]) if actors else actors[0]
 
-    transitions_data = []
-    for i, t in enumerate(transitions):
-        transitions_data.append({
-            "id": "e%d" % i, "from": t["from"], "to": t["to"], "label": t["label"]
+    # Build graph data for ALL actors
+    all_actors_data = []
+    for actor in actors:
+        actor_id = actor["id"]
+        transitions = [t for t in all_transitions if t["actor"] == actor_id]
+        # Per-state rollups
+        state_rollups = {}
+        for st in model_view.get("states") or []:
+            if st["actor"] == actor_id:
+                state_rollups[st["id"]] = st.get("rollup", {})
+        any_rollup = any(sum(r.values()) > 0 for r in state_rollups.values()) if state_rollups else False
+        # Labels from model_view
+        mv_labels = {}
+        for st in model_view.get("states") or []:
+            if st["actor"] == actor_id:
+                mv_labels[st["id"]] = st["label"]
+        # Build states
+        states_data = []
+        detail_anchors = {}
+        raw_states = actor.get("states")
+        if isinstance(raw_states, dict):
+            for sname in raw_states:
+                label = mv_labels.get(sname, sname.replace("_", " ").replace("-", " "))
+                r = state_rollups.get(sname, {})
+                if r.get("fail"):
+                    label += " \u2717"
+                elif r.get("pass") and not r.get("pending"):
+                    label += " \u2713"
+                elif r.get("pending") or not any_rollup:
+                    label += " \u25cb"
+                desc = ""
+                sdef = raw_states[sname]
+                if isinstance(sdef, dict):
+                    desc = sdef.get("description", "")
+                states_data.append({"id": sname, "label": label, "description": desc})
+                detail_anchors[sname] = "detail-%s-%s" % (actor_id, sname.replace("_", "-"))
+        else:
+            for st in (raw_states or []):
+                raw_id = st["id"] if isinstance(st, dict) else st
+                label = mv_labels.get(raw_id, (st.get("label") if isinstance(st, dict) else None) or raw_id.replace("_", " ").replace("-", " "))
+                r = state_rollups.get(raw_id, {})
+                if r.get("fail"):
+                    label += " \u2717"
+                elif r.get("pass") and not r.get("pending"):
+                    label += " \u2713"
+                elif r.get("pending") or not any_rollup:
+                    label += " \u25cb"
+                desc = st.get("description", "") if isinstance(st, dict) else ""
+                states_data.append({"id": raw_id, "label": label, "description": desc})
+                detail_anchors[raw_id] = "detail-%s-%s" % (actor_id, raw_id.replace("_", "-"))
+        # Build transitions
+        transitions_data = []
+        for i, t in enumerate(transitions):
+            transitions_data.append({
+                "id": "e%d" % i, "from": t["from"], "to": t["to"], "label": t["label"]
+            })
+        all_actors_data.append({
+            "actorLabel": actor.get("label") or actor_id.replace("_", " ").replace("-", " "),
+            "actorId": actor_id,
+            "states": states_data,
+            "transitions": transitions_data,
+            "detailAnchors": detail_anchors
         })
 
     graph_data = {
-        "actorLabel": actor.get("label") or actor_id.replace("_", " "),
-        "actorId": actor_id,
-        "states": states_data,
-        "transitions": transitions_data,
-        "detailAnchors": detail_anchors
+        "defaultActorId": default_actor["id"],
+        "actors": all_actors_data
     }
-    return graph_data, actor
+    return graph_data, default_actor
 
 
 def _behavior_detail_sections(model, model_view, vocab):
@@ -532,10 +539,30 @@ def render_html(bundle, model, vocab, out_dir):
             graph_json = json.dumps(graph_data, separators=(",", ":"))
             # Escape < and & in JSON for safe HTML embedding (no </script> in data)
             safe_json = graph_json.replace("&", "&amp;").replace("<", "&lt;")
+            # Actor selector (only shown when multiple actors)
+            actor_selector = ""
+            if len(graph_data["actors"]) > 1:
+                options = ""
+                for ad in graph_data["actors"]:
+                    sel = " selected" if ad["actorId"] == graph_data["defaultActorId"] else ""
+                    label = _esc(ad["actorLabel"])
+                    count = "%d states" % len(ad["states"])
+                    options += '<option value="%s"%s>%s (%s)</option>' % (
+                        _esc(ad["actorId"]), sel, label, count)
+                actor_selector = (
+                    '<label>Actor:</label>'
+                    '<select id="ctl-actor">%s</select>'
+                    '<div class="separator"></div>' % options)
+            default_label = graph_data["actors"][0]["actorLabel"]
+            for ad in graph_data["actors"]:
+                if ad["actorId"] == graph_data["defaultActorId"]:
+                    default_label = ad["actorLabel"]
+                    break
             diagram_section = (
                 '<div id="diagram-top"><h2>HOW %s WORKS</h2>'
                 '<div class="diagram">'
                 '<div class="elk-toolbar">'
+                '%s'
                 '<label>Direction:</label>'
                 '<select id="ctl-direction"><option value="DOWN" selected>\u2193 Down</option><option value="RIGHT">\u2192 Right</option><option value="UP">\u2191 Up</option><option value="LEFT">\u2190 Left</option></select>'
                 '<label>Routing:</label>'
@@ -559,8 +586,8 @@ def render_html(bundle, model, vocab, out_dir):
                 '</div>'
                 '<script type="application/json" id="elk-graph-data">%s</script>'
                 '<p class="meta">%s \u00b7 click any step for details</p></div>'
-                % (_esc(bundle["project"].upper()), _esc(graph_data["actorLabel"]),
-                   safe_json, _esc(badge)))
+                % (_esc(bundle["project"].upper()), actor_selector,
+                   _esc(default_label), safe_json, _esc(badge)))
         else:
             diagram_section = '<div id="diagram-top"><p class="meta">%s</p></div>' % _esc(model_view.get("note", ""))
     elif model_view.get("note"):
