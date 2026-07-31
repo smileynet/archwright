@@ -38,7 +38,7 @@ class Vocabulary:
             override_path = Path(override)
             if override_path.exists():
                 override_data = yaml.safe_load(override_path.read_text(encoding="utf-8"))
-                if override_data and isinstance(override_data.get("tokens"), dict):
+                if isinstance(override_data, dict) and isinstance(override_data.get("tokens"), dict):
                     self.tokens.update(override_data["tokens"])
 
     def surface(self, term):
