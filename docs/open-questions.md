@@ -154,3 +154,28 @@ When a pattern changes, which specs MUST update — and what must an agent READ 
 **Trigger:** an agent misses a required downstream update after a pattern edit, or context exhaustion during a pipeline phase traces to over-reading.
 **Deliverable:** a rule table in a skill's references (growth rules) and/or a per-phase read formula.
 **Current status:** provenance links make the dependency graph walkable, so both may be derivable rather than hand-authored.
+
+### 18. Property-Based Testing from Behavior Specs ← NEW (from Hillel Wayne interview 2026-07-29)
+
+Can behavior spec invariants be compiled to PBT harnesses (Hypothesis/fast-check) that generate random event sequences and check invariants hold against the *actual implementation*? This bridges the abstraction gap: traces test specific paths, Alloy checks all paths in the *model* — PBT would check random paths in the *code*.
+
+**Trigger:** A behavior spec has invariants that traces can't exhaustively cover AND the system has a testable API (function calls, HTTP, signals).
+**Key question:** What's the interface between the generated harness and the system under test? Hypothesis stateful testing assumes callable methods. How does that map to a GDScript scene tree or a distributed service?
+**Prior art:** Hypothesis stateful testing, fast-check model-based testing, Erlang QuickCheck (the original PBT-for-state-machines tool).
+**Spike scope:** Generate a Hypothesis stateful test from `step-advancement.yaml`, run it against a Python mock of the FSM. Does it find a bug that traces missed?
+
+### 19. Alloy for Contract Spec Structural Invariants ← NEW (from Hillel Wayne interview 2026-07-29)
+
+Hillel's Alloy demo finds a non-transitive access control bug in a data model — structurally identical to what archwright contract specs describe. Can contract specs with typed schemas + relationship constraints be Alloy-checked for structural invariants (circular references, unreachable fields, non-transitive access, missing constraints)?
+
+**Trigger:** A contract spec has structural invariants beyond "field X exists" — relationships, transitivity, uniqueness across a graph.
+**Key question:** Is the compilation from contract YAML → Alloy signatures tractable? Behavior specs needed significant translation; contracts might map more directly (closer to Alloy's native domain).
+**Prior art:** Alloy's original use case (Jackson, MIT) was exactly this: data model analysis.
+
+### 20. Feedback Loop Speed as a First-Class Metric ← NEW (from Hillel Wayne interview 2026-07-29)
+
+Hillel's insight: he finds bugs faster than domain experts in *their own systems* because he has more *practice* — the rapid model-check feedback loop (write → click → see bug → fix → repeat) builds intuition that months-delayed production bugs never can. Should archwright measure and optimize feedback loop time? Should check output report "found in Xms" as a first-class signal?
+
+**Trigger:** Check runs taking >5s — the feedback loop degrades.
+**Current state:** Alloy checks report timing implicitly. Grep checks are fast (<100ms). No composite "total check time" or "time to first violation" metric.
+**Question:** Does surfacing timing change behavior? Does a "your check cycle is 94ms" readout encourage more frequent checking?
