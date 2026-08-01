@@ -57,7 +57,9 @@ check TransitiveRead for 5
 
 ## Acceptance criteria
 
+- [ ] Contract spec schema supports `structural_invariants:` section (grill 2026-08-01: coexists with `check:`)
 - [ ] At least one contract spec compiles to Alloy and checks successfully
 - [ ] Counterexample generation works (planted bug produces visual output)
-- [ ] Integrated into `archwright-check.py` dispatch (kind: contract + has invariants → Alloy path)
+- [ ] Integrated into `archwright-check.py` dispatch (kind: contract + has structural_invariants → Alloy path)
+- [ ] Both paths run in one invocation: structural_invariants (Alloy) + check (grep/semgrep)
 - [ ] Suite green

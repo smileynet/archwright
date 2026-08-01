@@ -52,11 +52,16 @@ machine + invariants into the target language's PBT framework.
 
 ## Research needed (before implementation)
 
-- [ ] Spike: can Hypothesis stateful testing consume a YAML state machine definition?
-- [ ] Spike: how does fast-check model-based testing map to our spec format?
-- [ ] What's the right interface between PBT harness and the system under test?
-      (function calls? HTTP? signal observation?)
-- [ ] Should the generated harness be a one-shot file or a live `--pbt` mode?
+- [x] Spike: can Hypothesis stateful testing consume a YAML state machine definition?
+      → YES. GitHub gist (technillogue) demonstrates exact pattern. ~80 lines adapter.
+- [x] Spike: how does fast-check model-based testing map to our spec format?
+      → YES. Command factory pattern maps cleanly. Good async support.
+- [x] What's the right interface between PBT harness and the system under test?
+      → DECIDED (grill 2026-08-01): Hybrid (Option D). User provides step(event, context),
+        PBT drives, trace emitter observes state. See .memory/grill/pbt-contract-alloy-architecture.md
+- [x] Should the generated harness be a one-shot file or a live `--pbt` mode?
+      → DECIDED (grill 2026-08-01): Inline default + --emit for files (Option C).
+        Fast feedback is primary; --emit produces CI artifact.
 
 ## Acceptance criteria
 
