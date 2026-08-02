@@ -2181,5 +2181,30 @@ fi
 
 
 echo ""
+echo "=== PBT Harness Conformance (ticket 091) ==="
+
+# PBT requires hypothesis — SKIP if not installed
+if python3 -c "import hypothesis" 2>/dev/null; then
+  # Passing step: invariants hold under random event sequences
+  rc=0; PBT_PASS=$(python3 "$CHECK" --pbt "$TOOLS/../tests/fixtures/pbt-harness/counter-cap.yaml" --step "$TOOLS/../tests/fixtures/pbt-harness/step_correct.py" --examples 50 --json 2>&1) || rc=$?
+  if [ $rc -eq 0 ] && echo "$PBT_PASS" | python3 -c "import json,sys; assert json.load(sys.stdin)['status']=='pass'" 2>/dev/null; then
+    report PASS "pbt-harness: correct step function passes all invariants (50 examples)"
+  else
+    report FAIL "pbt-harness: correct step function passes all invariants" "exit=$rc"
+  fi
+
+  # Violating step: PBT finds the invariant violation
+  rc=0; PBT_FAIL=$(python3 "$CHECK" --pbt "$TOOLS/../tests/fixtures/pbt-harness/counter-cap.yaml" --step "$TOOLS/../tests/fixtures/pbt-harness/step_violating.py" --examples 50 --json 2>&1) || rc=$?
+  if [ $rc -eq 1 ] && echo "$PBT_FAIL" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['status']=='fail' and 'capacity' in d.get('message','')" 2>/dev/null; then
+    report PASS "pbt-harness: buggy step function triggers invariant FAIL (capacity-never-exceeded)"
+  else
+    report FAIL "pbt-harness: buggy step function triggers invariant FAIL" "exit=$rc"
+  fi
+else
+  report SKIP "pbt-harness: hypothesis not installed"
+  report SKIP "pbt-harness: hypothesis not installed (violating)"
+fi
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

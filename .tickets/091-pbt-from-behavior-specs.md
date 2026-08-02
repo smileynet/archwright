@@ -1,7 +1,7 @@
 ---
 id: 091
 title: "Property-based testing harness generation from behavior specs"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
