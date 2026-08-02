@@ -2194,7 +2194,8 @@ def main():
         print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] "
               "[--changed-only [--base <ref>]] | --trace <spec> <trace> [--evidence <file>] | "
               "--probe <spec> | --trace-coverage <specs-dir> <traces-dir> | "
-              "--coverage <specs-dir> [--target <root>]\n"
+              "--coverage <specs-dir> [--target <root>] | "
+              "--pbt <spec> --step <module.py> [--emit <dir>] [--examples N]\n"
               "Common flags: --json  --baseline <file>  --update-baseline  --evidence <file>")
         sys.exit(2)
 
@@ -2258,6 +2259,57 @@ def main():
         except Exception as e:  # exit-code contract: tool error = 2 (ticket 043)
             print(f"ERROR: coverage failed: {e}", file=sys.stderr)
             sys.exit(2)
+
+    # Handle --pbt mode early (different flow)
+    if sys.argv[1] == "--pbt":
+        rest = sys.argv[2:]
+        pbt_spec = None
+        pbt_step = None
+        pbt_emit = None
+        pbt_json = "--json" in rest
+        pbt_examples = 200
+        args_remaining = [a for a in rest if a != "--json"]
+        i = 0
+        while i < len(args_remaining):
+            if args_remaining[i] == "--step" and i + 1 < len(args_remaining):
+                pbt_step = args_remaining[i + 1]
+                i += 2
+            elif args_remaining[i] == "--emit" and i + 1 < len(args_remaining):
+                pbt_emit = args_remaining[i + 1]
+                i += 2
+            elif args_remaining[i] == "--examples" and i + 1 < len(args_remaining):
+                pbt_examples = int(args_remaining[i + 1])
+                i += 2
+            elif pbt_spec is None:
+                pbt_spec = args_remaining[i]
+                i += 1
+            else:
+                i += 1
+        if not pbt_spec or not pbt_step:
+            print("Usage: archwright-check --pbt <spec.yaml> --step <step_module.py> "
+                  "[--emit <dir>] [--examples N] [--json]")
+            sys.exit(2)
+        # Import and run the PBT adapter
+        pbt_adapter = Path(__file__).parent / "stacks" / "python" / "pbt_harness" / "adapter.py"
+        if not pbt_adapter.exists():
+            print(f"ERROR: PBT adapter not found: {pbt_adapter}", file=sys.stderr)
+            sys.exit(2)
+        import importlib.util
+        pbt_mod_spec = importlib.util.spec_from_file_location("pbt_adapter", str(pbt_adapter))
+        pbt_mod = importlib.util.module_from_spec(pbt_mod_spec)
+        pbt_mod_spec.loader.exec_module(pbt_mod)
+        result = pbt_mod.load_and_run(pbt_spec, pbt_step, max_examples=pbt_examples)
+        if pbt_json:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        else:
+            status = result.get("status", "error")
+            if status == "pass":
+                print(f"PBT PASS: {result.get('examples_run', '?')} examples, all invariants held")
+            elif status == "fail":
+                print(f"PBT FAIL: {result.get('message', 'invariant violated')}")
+            else:
+                print(f"PBT ERROR: {result.get('message', 'unknown error')}")
+        sys.exit({"pass": 0, "fail": 1, "error": 2}.get(result.get("status"), 2))
 
     files = []
     target_root = None

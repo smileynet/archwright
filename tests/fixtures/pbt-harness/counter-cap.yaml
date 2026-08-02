@@ -1,0 +1,28 @@
+kind: behavior
+id: counter-cap
+from_patterns:
+  - "pattern:guarded-counter"
+
+initial: active
+
+context:
+  variables:
+    count:
+      type: int
+      initial: 0
+    max_count:
+      type: int
+      initial: 3
+
+states:
+  active:
+    "on":
+      INCREMENT:
+        target: active
+      RESET:
+        target: active
+
+invariants:
+  - id: capacity-never-exceeded
+    predicate: "count <= max_count"
+    confidence: "★★"
