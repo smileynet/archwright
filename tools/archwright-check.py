@@ -576,6 +576,138 @@ def _project_root_for(spec_path):
     return project_root
 
 
+def check_contract(data, spec_path):
+    """Check a contract spec: structural_invariants via Alloy + check section via conformance.
+
+    Both paths run in one invocation (grill 2026-08-01 Q2). If neither section
+    is present, falls back to the schema-only pass-through.
+    """
+    import shutil
+    import tempfile
+
+    results = []
+    has_structural = bool(data.get("structural_invariants"))
+    has_check = bool(data.get("check"))
+
+    if not has_structural and not has_check:
+        return [{"invariant": data.get("id", "?"), "status": "pass",
+                 "message": "contract validation: schema only (no runtime check)"}]
+
+    # Path 1: structural_invariants → Alloy
+    if has_structural:
+        results.extend(_check_structural_invariants(data, spec_path))
+
+    # Path 2: check section → grep/semgrep/script (reuse conformance logic)
+    if has_check:
+        results.extend(check_conformance(data, spec_path))
+
+    return results
+
+
+def _check_structural_invariants(data, spec_path):
+    """Compile structural_invariants to Alloy and run the model checker."""
+    import shutil
+    import tempfile
+
+    results = []
+    invariants = data.get("structural_invariants", [])
+
+    def skip_all(message, assurance="none"):
+        return [{
+            "invariant": inv.get("id", "unknown"),
+            "status": "skipped",
+            "message": message,
+            "confidence": inv.get("confidence", "—"),
+            "assurance": assurance,
+        } for inv in invariants]
+
+    alloy_jar = _find_alloy_jar()
+    if alloy_jar is None:
+        return skip_all("Alloy JAR not found — set ARCHWRIGHT_ALLOY_JAR or place alloy6.jar in .references/")
+
+    java = shutil.which("java")
+    if java is None:
+        return skip_all("java not on PATH — required to run alloy6.jar")
+
+    # All invariants need alloy: expression
+    checkable = [inv for inv in invariants if inv.get("alloy")]
+    prose_only = [inv for inv in invariants if not inv.get("alloy")]
+
+    for inv in prose_only:
+        results.append({
+            "invariant": inv.get("id", "unknown"),
+            "status": "skipped",
+            "message": "no `alloy:` expression — structural predicate not mechanically checkable",
+            "confidence": inv.get("confidence", "—"),
+            "assurance": "none",
+        })
+
+    if not checkable:
+        return results
+
+    # Compile contract spec → .als using the contract-specific compiler
+    compiler = SCRIPT_DIR / "archwright-compile-contract-alloy.py"
+    with tempfile.TemporaryDirectory(prefix="archwright-contract-alloy-") as tmp:
+        als_path = Path(tmp) / (Path(spec_path).stem + ".als")
+        comp = subprocess.run(
+            [sys.executable, str(compiler), str(spec_path), "-o", str(als_path)],
+            capture_output=True, text=True,
+        )
+        if comp.returncode != 0 or not als_path.exists():
+            return results + [{
+                "invariant": inv.get("id", "unknown"),
+                "status": "error",
+                "message": f"Contract Alloy compilation failed: {(comp.stderr or comp.stdout)[:200]}",
+            } for inv in checkable]
+
+        try:
+            run = subprocess.run(
+                [java, "-Djava.awt.headless=true", "-jar", str(alloy_jar), "exec", str(als_path)],
+                capture_output=True, text=True, cwd=tmp, timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            return results + [{
+                "invariant": inv.get("id", "unknown"),
+                "status": "error",
+                "message": "Alloy solver timed out (120s)",
+            } for inv in checkable]
+
+        # Parse verdicts: SAT = counterexample found (FAIL), UNSAT = no counterexample (PASS)
+        combined = (run.stderr or "") + "\n" + (run.stdout or "")
+        verdicts = {}
+        for m in re.finditer(r"check\s+(\w+)\b[^\n]*?\b(UNSAT|SAT)\b", combined):
+            verdicts[m.group(1)] = m.group(2)
+
+        if not verdicts:
+            return results + [{
+                "invariant": inv.get("id", "unknown"),
+                "status": "error",
+                "message": f"Alloy produced no verdict: {combined.strip()[:300]}",
+            } for inv in checkable]
+
+        for inv in checkable:
+            assert_name = _alloy_field_name(inv.get("id", "unknown"))
+            verdict = verdicts.get(assert_name)
+            entry = {
+                "invariant": inv.get("id", "unknown"),
+                "confidence": inv.get("confidence", "—"),
+                "assurance": "bounded",
+            }
+            if verdict == "UNSAT":
+                entry["status"] = "pass"
+                entry["message"] = "no counterexample within scope (structural model, bounded)"
+            elif verdict == "SAT":
+                entry["status"] = "fail"
+                entry["message"] = "counterexample found — structural invariant violated in data model"
+                entry["from_pattern"] = data.get("from_patterns", [None])[0] if data.get("from_patterns") else None
+            else:
+                entry["status"] = "error"
+                entry["message"] = f"no verdict for assertion '{assert_name}' (got: {verdicts})"
+            results.append(entry)
+
+    return results
+
+
 def check_conformance(data, spec_path):
     """Check a constraint or dependency spec using its self-described check field."""
     check = data.get("check")
@@ -1176,8 +1308,7 @@ def check_file(spec_path):
     elif kind in ("constraint", "dependency"):
         results = check_conformance(data, spec_path)
     elif kind == "contract":
-        results = [{"invariant": data.get("id", "?"), "status": "pass",
-                    "message": "contract validation: schema only (no runtime check)"}]
+        results = check_contract(data, spec_path)
     elif kind == "pattern":
         results = [{"invariant": data.get("id", "?"), "status": "skipped",
                     "message": "patterns are not checked — check their resolved specs"}]

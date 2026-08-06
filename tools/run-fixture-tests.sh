@@ -2206,5 +2206,40 @@ else
 fi
 
 echo ""
+echo "=== Contract Alloy Structural Verification (ticket 092) ==="
+CA_SPECS="$TOOLS/../tests/fixtures/contract-alloy/design/specs"
+CA_JAR="${ARCHWRIGHT_ALLOY_JAR:-$TOOLS/../.references/alloy6.jar}"
+if [ ! -d "$CA_SPECS" ]; then
+  report SKIP "contract-alloy (fixture missing)"
+elif [ ! -f "$CA_JAR" ] || ! command -v java >/dev/null 2>&1; then
+  report SKIP "contract-alloy: passing (alloy jar or java unavailable)"
+  report SKIP "contract-alloy: counterexample (alloy jar or java unavailable)"
+else
+  # Passing: token-registry has type-enforced invariant → PASS
+  rc=0; python3 "$CHECK" "$CA_SPECS/token-registry.yaml" >/dev/null 2>&1 || rc=$?
+  if [ $rc -eq 0 ]; then
+    report PASS "contract-alloy: token-registry structural invariant passes (UNSAT)"
+  else
+    report FAIL "contract-alloy: token-registry structural invariant passes" "exit=$rc"
+  fi
+
+  # Counterexample: resource-access-buggy has violable invariant → FAIL
+  rc=0; python3 "$CHECK" "$CA_SPECS/resource-access-buggy.yaml" >/dev/null 2>&1 || rc=$?
+  if [ $rc -eq 1 ]; then
+    report PASS "contract-alloy: resource-access-buggy counterexample found (SAT → FAIL)"
+  else
+    report FAIL "contract-alloy: resource-access-buggy counterexample found" "exit=$rc expected=1"
+  fi
+
+  # Both paths in one invocation: validate schema + check → results combined
+  rc=0; python3 "$VALIDATE" "$CA_SPECS/token-registry.yaml" >/dev/null 2>&1 || rc=$?
+  if [ $rc -eq 0 ]; then
+    report PASS "contract-alloy: schema validation accepts structural_invariants"
+  else
+    report FAIL "contract-alloy: schema validation accepts structural_invariants" "exit=$rc"
+  fi
+fi
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed, $SKIP skipped ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

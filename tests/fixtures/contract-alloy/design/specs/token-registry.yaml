@@ -1,0 +1,33 @@
+kind: contract
+id: token-registry
+from_patterns:
+  - "pattern:token-management"
+confidence: "★★"
+
+protects_experience: "session-integrity"
+user_story: "Every active session token maps to exactly one user; no token is shared."
+
+fields:
+  owner:
+    type: reference
+    element_type: user
+    nullable: false
+    description: "The user who owns this token (exactly one)"
+  expires_at:
+    type: int
+    required: true
+    description: "Expiration timestamp"
+
+sub_schemas:
+  User:
+    fields:
+      name:
+        type: string
+        required: true
+
+structural_invariants:
+  - id: token-has-owner
+    description: "Every token has exactly one owner (type-enforced by 'one' multiplicity)"
+    predicate: "all t: Token | one t.owner"
+    alloy: "all t: TokenRegistry | one t.owner"
+    confidence: "★★"
