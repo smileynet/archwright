@@ -142,6 +142,64 @@ properties:
           note:
             type: string
 
+  structural_invariants:
+    type: array
+    description: "Model-level structural truths, Alloy-checked. Coexists with check: (code conformance)."
+    items:
+      type: object
+      required: [id, alloy]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9-]+$"
+        description:
+          type: string
+        predicate:
+          type: string
+          description: "Human-readable statement of the invariant."
+        alloy:
+          type: string
+          description: "Alloy 6 assertion body (refers to sig/field names from schemas)."
+        confidence:
+          type: string
+          enum: ["★★", "★", "—"]
+        from_model:
+          type: string
+
+  check:
+    type: object
+    description: "Code-conformance check (grep/semgrep/script). Runs alongside structural_invariants."
+    properties:
+      method:
+        type: string
+        enum: [grep, semgrep, script]
+      target:
+        type: string
+      pattern:
+        type: string
+      expect:
+        type: string
+        enum: [present, absent]
+      target_status:
+        type: string
+        enum: [pending]
+      command:
+        type: string
+      script:
+        type: string
+      include:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+      exclude:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+
   links:
     type: array
     items:

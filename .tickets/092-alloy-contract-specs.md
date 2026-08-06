@@ -1,7 +1,7 @@
 ---
 id: 092
 title: "Alloy structural verification for contract specs (data model invariants)"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -57,9 +57,17 @@ check TransitiveRead for 5
 
 ## Acceptance criteria
 
-- [ ] Contract spec schema supports `structural_invariants:` section (grill 2026-08-01: coexists with `check:`)
-- [ ] At least one contract spec compiles to Alloy and checks successfully
-- [ ] Counterexample generation works (planted bug produces visual output)
-- [ ] Integrated into `archwright-check.py` dispatch (kind: contract + has structural_invariants → Alloy path)
-- [ ] Both paths run in one invocation: structural_invariants (Alloy) + check (grep/semgrep)
-- [ ] Suite green
+- [x] Contract spec schema supports `structural_invariants:` section (grill 2026-08-01: coexists with `check:`)
+- [x] At least one contract spec compiles to Alloy and checks successfully
+- [x] Counterexample generation works (planted bug produces visual output)
+- [x] Integrated into `archwright-check.py` dispatch (kind: contract + has structural_invariants → Alloy path)
+- [x] Both paths run in one invocation: structural_invariants (Alloy) + check (grep/semgrep)
+- [x] Suite green
+
+## Resolution (2026-08-06)
+
+Implemented via new `archwright-compile-contract-alloy.py` module (static structural
+model — sigs from fields/sub_schemas, assertions from structural_invariants[].alloy,
+check commands per assertion). Contract check dispatch in `archwright-check.py`
+runs both paths: structural_invariants → Alloy (SAT=fail, UNSAT=pass) + check →
+grep/semgrep conformance. Suite: 160 passed, 0 failed, 2 skipped.

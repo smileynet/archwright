@@ -1,0 +1,33 @@
+kind: contract
+id: resource-access-buggy
+from_patterns:
+  - "pattern:access-control"
+confidence: "★★"
+
+protects_experience: "data-integrity"
+user_story: "Users can only access resources they have permission to reach through the hierarchy."
+
+fields:
+  parent:
+    type: reference
+    element_type: resource-access-buggy
+    nullable: true
+    description: "Parent resource in the hierarchy (allows cycles — the bug)"
+  readable_by:
+    type: list
+    element_type: user
+    description: "Users who can read this resource"
+
+sub_schemas:
+  User:
+    fields:
+      name:
+        type: string
+        required: true
+
+structural_invariants:
+  - id: all-resources-reachable-from-root
+    description: "Every resource is reachable from some root (parent = none). This is FALSE when cycles exist without a root."
+    predicate: "all r: Resource | some root: Resource | root.parent = none and r in root.*parent"
+    alloy: "all r: ResourceAccessBuggy | some root: ResourceAccessBuggy | root.parent = none and r in root.^parent + root"
+    confidence: "★★"
