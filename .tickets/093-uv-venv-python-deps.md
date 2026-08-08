@@ -1,7 +1,7 @@
 ---
 id: "093"
 title: "Migrate Python deps to uv + _.python.venv (fix broken setup)"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -32,9 +32,16 @@ Update `mise.toml`:
 
 ## Acceptance criteria
 
-- [ ] `mise run setup` succeeds regardless of pip's `require-virtualenv` setting
-- [ ] Python deps install into `.venv/` (not the global mise Python)
-- [ ] `mise run test` passes (160/0/0 — suite green at current count)
-- [ ] `.venv/` is gitignored
-- [ ] AGENTS.md bootstrap instructions updated
-- [ ] `hypothesis` installed by default (PBT tests no longer skip)
+- [x] `mise run setup` succeeds regardless of pip's `require-virtualenv` setting
+- [x] Python deps install into `.venv/` (not the global mise Python)
+- [x] `mise run test` passes (162/0/0 — suite green at current count)
+- [x] `.venv/` is gitignored
+- [x] AGENTS.md bootstrap instructions updated
+- [x] `hypothesis` installed by default (PBT tests no longer skip)
+
+## Resolution (2026-08-08)
+
+Migrated to `uv = "latest"` + `_.python.venv = { path = ".venv", create = true }`.
+`mise run setup` now uses `uv pip install pyyaml hypothesis` — bypasses pip config
+entirely (uv ignores pip environment variables), installs into auto-created .venv,
+completes in <1s. Suite: 162/0/0 (PBT tests no longer skip).
