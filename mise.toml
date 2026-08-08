@@ -1,10 +1,11 @@
 # mise.toml — archwright tool management
 # Bootstrap on a fresh machine: install mise (winget install jdx.mise | brew install mise),
-# then: mise install && mise run setup && mise run rehydrate-alloy
+# then: mise trust && mise install && mise run setup && mise run rehydrate-alloy
 # See AGENTS.md "Dependency Rehydration".
 
 [tools]
 python = "3.12"
+uv = "latest"
 java = "temurin-21"
 node = "22"
 "npm:state-machine-cat" = "latest"  # smcat — FSM rendering (PNG additionally needs Graphviz `dot`)
@@ -12,6 +13,9 @@ node = "22"
 # toolchain for an optional renderer. Manual: `cargo install merman-cli`.
 
 [env]
+# Auto-create and activate a project venv — uv pip installs land here.
+# Bypasses pip's require-virtualenv config entirely (uv ignores pip config).
+_.python.venv = { path = ".venv", create = true }
 # ★/— glyphs break on cp1252 consoles without this (.memory/lessons/utf8-encoding-explicit.md)
 PYTHONIOENCODING = "utf-8"
 # Python UTF-8 mode (PEP 686): open() defaults to UTF-8 instead of the system
@@ -23,8 +27,8 @@ PYTHONUTF8 = "1"
 ARCHWRIGHT_ALLOY_JAR = "{{config_root}}/.references/alloy6.jar"
 
 [tasks.setup]
-description = "One-time: python libs the tools need"
-run = "python -m pip install pyyaml"
+description = "Install Python dependencies into the project venv (one-time after mise install)"
+run = "uv pip install pyyaml hypothesis"
 
 [tasks.rehydrate-alloy]
 description = "Fetch Alloy 6.2.0 dist jar into .references/ with SHA-256 verification (exec CLI needs >= 6.2.0)"

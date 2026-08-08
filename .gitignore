@@ -4,7 +4,9 @@
 # Reference repos (large, not project source)
 .references/
 __pycache__/
-.scratch/
+
+# Python venv (auto-created by mise via _.python.venv)
+.venv/
 
 # Generated at deploy time by tools/deploy-skills.sh (sources of truth:
 # tools/domains/, tools/stacks/REGISTRY.yaml, docs/glossary.md). With global
