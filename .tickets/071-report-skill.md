@@ -1,7 +1,7 @@
 ---
 id: "071"
 title: "Skill: archwright-report — generation, consumption, vocabulary overrides"
-status: open
+status: done
 blocked_by: []
 priority: low
 ---
@@ -22,7 +22,15 @@ Report generation is currently documented ad-hoc in AGENTS.md's Commands table. 
 
 ## Acceptance criteria
 
-- [ ] Skill file created and deployable
-- [ ] Documents generate, consume-response, vocabulary-override workflows
-- [ ] AGENTS.md updated with tool→skill ownership
-- [ ] Skill triggers correctly on "generate report" / "run report"
+- [x] Skill file created and deployable
+- [x] Documents generate, consume-response, vocabulary-override workflows
+- [x] AGENTS.md updated with tool→skill ownership
+- [x] Skill triggers correctly on "generate report" / "run report"
+
+## Resolution (2026-08-09)
+
+Created `skills/archwright-report/SKILL.md` covering: generation (mise run report),
+publishing (mise run report-publish), postures, vocabulary overrides (project
+design/vocabulary.yaml merge), asks taxonomy (DECISIONS/APPROVALS/SUGGESTIONS),
+auto-approve config, field cases. AGENTS.md tool→skill ownership transferred from
+interim archwright-check. Deployed as kiro symlink.
