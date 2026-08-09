@@ -113,6 +113,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 - `archwright-contract` — derive typed data contracts from domain model
 - `archwright-derive` — generate specs from domain models
 - `archwright-check` — verify specs against implementation
+- `archwright-report` — generate, publish, and consume design reports (interactive HTML diagrams, vocabulary overrides, response handling)
 - `archwright-review` — review code for design alignment (structural + behavioral + semantic)
 - `archwright-audit` — audit docs for truth (surface contradictions between docs and code)
 - `archwright-diagram` — render models/patterns as Mermaid diagrams
@@ -135,7 +136,7 @@ A **methodology embodied as agent skills** with supporting tools. The AI agent I
 | Tool | Owning skill |
 |------|--------------|
 | `archwright-check.py`, `archwright-validate.py`, `archwright-compile-alloy.py` (debug use) | `archwright-check` |
-| `tools/report/generate.py` (bundle generation; response-file consumption contract) | `archwright-check` — interim owner until a report skill exists (ticket 041) |
+| `tools/report/generate.py` (bundle generation; response-file consumption contract) | `archwright-report` |
 | `archwright-check-compile.mjs`, `alloy:` expression authoring | `archwright-derive` |
 | `archwright-forces-gen.py` | `archwright-forces` |
 | `archwright-import-woz.py` | `archwright-woz-import` |
