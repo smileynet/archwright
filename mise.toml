@@ -30,6 +30,10 @@ ARCHWRIGHT_ALLOY_JAR = "{{config_root}}/.references/alloy6.jar"
 description = "Install Python dependencies into the project venv (one-time after mise install)"
 run = "uv pip install pyyaml hypothesis"
 
+[tasks.doctor]
+description = "Check all dependencies and report capability gaps"
+run = "python tools/doctor.py"
+
 [tasks.rehydrate-alloy]
 description = "Fetch Alloy 6.2.0 dist jar into .references/ with SHA-256 verification (exec CLI needs >= 6.2.0)"
 run = "python {{config_root}}/tools/install-alloy.py"

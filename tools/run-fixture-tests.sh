@@ -61,6 +61,13 @@ if [ -z "$forces" ] && [ -z "$patterns" ] && [ -z "$specs" ]; then
   exit 0
 fi
 
+# --- Capability warnings (surface gaps before 100+ lines of output) ---
+_ALLOY_JAR="${ARCHWRIGHT_ALLOY_JAR:-$TOOLS/../.references/alloy6.jar}"
+command -v java >/dev/null 2>&1 || echo "WARN: java not installed — Alloy checks will SKIP"
+[ -f "$_ALLOY_JAR" ] || echo "WARN: alloy6.jar missing — behavior/contract checks will SKIP (mise run rehydrate-alloy)"
+python3 -c "import hypothesis" 2>/dev/null || echo "WARN: hypothesis not installed — PBT tests will SKIP (mise run setup)"
+command -v node >/dev/null 2>&1 || echo "WARN: node not installed — JS-dependent tests will SKIP"
+
 echo "=== Schema Validation ==="
 for f in $forces $patterns $specs; do
   if python3 "$VALIDATE" "$f" > /dev/null 2>&1; then
