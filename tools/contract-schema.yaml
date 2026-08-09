@@ -5,7 +5,7 @@ $schema: "https://json-schema.org/draft/2020-12/schema"
 $id: "archwright/spec/contract/v0.1"
 title: "Archwright Contract Spec"
 type: object
-required: [kind, id, from_patterns]
+required: [kind, id]
 
 properties:
   kind:

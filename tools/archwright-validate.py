@@ -183,10 +183,14 @@ def validate_pattern(data, path):
 def validate_behavior(data, path):
     """Validate a behavior spec (YAML)."""
     errors = []
-    required = ["kind", "id", "from_patterns", "initial", "states"]
+    required = ["kind", "id", "initial", "states"]
     for field in required:
         if field not in data:
             errors.append(f"required field '{field}' missing")
+
+    # Provenance: at least one of from_patterns or from_model must be present
+    if not data.get("from_patterns") and not data.get("from_model"):
+        errors.append("provenance required: at least one of 'from_patterns' or 'from_model' must be present")
 
     if data.get("kind") != "behavior":
         errors.append(f"kind must be 'behavior', got '{data.get('kind')}'")
@@ -207,10 +211,14 @@ def validate_behavior(data, path):
 def validate_constraint_or_dependency(data, path):
     """Validate a constraint or dependency spec (frontmatter)."""
     errors = []
-    required = ["kind", "id", "from_patterns", "confidence"]
+    required = ["kind", "id", "confidence"]
     for field in required:
         if field not in data:
             errors.append(f"required field '{field}' missing")
+
+    # Provenance: at least one of from_patterns or from_model must be present
+    if not data.get("from_patterns") and not data.get("from_model"):
+        errors.append("provenance required: at least one of 'from_patterns' or 'from_model' must be present")
 
     kind = data.get("kind")
     if kind not in ("constraint", "dependency"):
@@ -235,10 +243,14 @@ def validate_constraint_or_dependency(data, path):
 def validate_contract(data, path):
     """Validate a contract spec (mirrors tools/contract-schema.yaml)."""
     errors = []
-    required = ["kind", "id", "from_patterns"]
+    required = ["kind", "id"]
     for field in required:
         if field not in data:
             errors.append(f"required field '{field}' missing")
+
+    # Provenance: at least one of from_patterns or from_model must be present
+    if not data.get("from_patterns") and not data.get("from_model"):
+        errors.append("provenance required: at least one of 'from_patterns' or 'from_model' must be present")
 
     if data.get("id") and not re.match(r"^[a-z][a-z0-9-]+$", data["id"]):
         errors.append(f"id '{data['id']}' must be lowercase slug (a-z, 0-9, hyphens)")

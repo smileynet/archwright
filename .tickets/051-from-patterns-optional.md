@@ -1,7 +1,7 @@
 ---
 id: "051"
 title: "Make from_patterns optional when from_model is present"
-status: open
+status: done
 blocked_by: []
 priority: low
 ---
@@ -27,8 +27,15 @@ This makes `from_patterns: []` unnecessary boilerplate on specs that derive from
 
 ## Acceptance criteria
 
-- [ ] Specs with `from_model` but no `from_patterns` pass validation
-- [ ] Specs with `from_patterns` but no `from_model` still pass (backward compat)
-- [ ] Specs with neither `from_model` nor `from_patterns` fail
-- [ ] Existing fixture specs still pass (no regression)
-- [ ] Suite green at current count
+- [x] Specs with `from_model` but no `from_patterns` pass validation
+- [x] Specs with `from_patterns` but no `from_model` still pass (backward compat)
+- [x] Specs with neither `from_model` nor `from_patterns` fail
+- [x] Existing fixture specs still pass (no regression)
+- [x] Suite green at current count
+
+## Resolution (2026-08-08)
+
+Removed `from_patterns` from required fields in contract-schema.yaml, spec-schema.yaml,
+and all three validator functions. Added provenance check: "at least one of from_patterns
+or from_model must be present." Added 2 fixture tests (pass with from_model only, fail
+with neither). Suite: 164/0/0.

@@ -1,0 +1,11 @@
+kind: contract
+id: no-provenance
+confidence: "★"
+
+protects_experience: "session-integrity"
+user_story: "Missing provenance — should fail validation."
+
+fields:
+  user_id:
+    type: string
+    required: true
