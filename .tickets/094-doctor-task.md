@@ -1,7 +1,7 @@
 ---
 id: "094"
 title: "Add mise run doctor task (dependency and capability checker)"
-status: open
+status: done
 blocked_by: ["093"]
 ---
 
@@ -32,8 +32,15 @@ full suite.
 
 ## Acceptance criteria
 
-- [ ] `mise run doctor` reports all dep categories (required/capability/optional)
-- [ ] Missing required dep → exit 1 with clear install instructions
-- [ ] Missing capability dep → exit 0 with warning + what's lost
-- [ ] Suite header emits WARN lines for capability gaps before tests start
-- [ ] Doctor output includes install commands for each missing item
+- [x] `mise run doctor` reports all dep categories (required/capability/optional)
+- [x] Missing required dep → exit 1 with clear install instructions
+- [x] Missing capability dep → exit 0 with warning + what's lost
+- [x] Suite header emits WARN lines for capability gaps before tests start
+- [x] Doctor output includes install commands for each missing item
+
+## Resolution (2026-08-08)
+
+`tools/doctor.py` checks 10 deps across 3 tiers (required/capability/optional),
+reports versions and install hints. `[tasks.doctor]` added to mise.toml.
+Suite header in `run-fixture-tests.sh` emits WARN lines for java, alloy jar,
+hypothesis, and node before any tests run — gaps are visible immediately.
