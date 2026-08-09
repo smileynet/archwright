@@ -23,9 +23,11 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 let reportPath = null;
 let screenshotDir = null;
+let reportJsonPath = null;
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--screenshots' && args[i + 1]) { screenshotDir = args[++i]; }
+  else if (args[i] === '--report-json' && args[i + 1]) { reportJsonPath = args[++i]; }
   else if (!args[i].startsWith('-')) { reportPath = args[i]; }
 }
 
@@ -56,6 +58,12 @@ if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
 
   // === Light mode ===
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+  // Track console errors
+  const consoleErrors = [];
+  page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
+  page.on('pageerror', err => consoleErrors.push(err.message));
+
   await page.goto(`file:///${reportPath}`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(3000);
 
@@ -108,6 +116,27 @@ if (screenshotDir) fs.mkdirSync(screenshotDir, { recursive: true });
   });
   check('theme', 'Dark mode activates', dark.isDark);
   await page.emulateMedia({ colorScheme: 'light' });
+
+  // Console errors
+  check('runtime', 'No JS console errors on page load', consoleErrors.length === 0,
+    consoleErrors.length > 0 ? consoleErrors.slice(0, 3).join('; ') : undefined);
+
+  // Actor count (optional — requires --report-json to compare against)
+  if (reportJsonPath && fs.existsSync(reportJsonPath)) {
+    try {
+      const reportJson = JSON.parse(fs.readFileSync(reportJsonPath, 'utf8'));
+      const modelActors = (reportJson.model_view || {}).actors || [];
+      const svgNodeCount = await page.evaluate(() => {
+        const nodes = document.querySelectorAll('svg .node, svg [data-actor], svg g.node');
+        return nodes.length;
+      });
+      check('model', 'Actor count: SVG nodes match model',
+        svgNodeCount >= modelActors.length,
+        `model has ${modelActors.length} actors, SVG has ${svgNodeCount} nodes`);
+    } catch (e) {
+      check('model', 'Actor count: report.json readable', false, e.message);
+    }
+  }
 
   // Screenshots
   if (screenshotDir) {

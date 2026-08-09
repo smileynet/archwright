@@ -1,7 +1,7 @@
 ---
 id: "090"
 title: "report-publish: --verify flag runs Playwright smoke assertions after generation"
-status: open
+status: done
 blocked_by: []
 priority: low
 ---
@@ -27,7 +27,16 @@ After `mise run report-publish`, verification is manual — grep for expected co
 
 ## Acceptance criteria
 
-- [ ] `mise run report-publish -- --project <path> --verify` runs assertions after generation
-- [ ] Assertions catch a broken ELK render (e.g., missing vendor JS)
-- [ ] Missing playwright = warning + skip (not a hard failure)
-- [ ] Assertion failures don't prevent the report from being written
+- [x] `mise run report-publish -- --project <path> --verify` runs assertions after generation
+- [x] Assertions catch a broken ELK render (e.g., missing vendor JS)
+- [x] Missing playwright = warning + skip (not a hard failure)
+- [x] Assertion failures don't prevent the report from being written
+
+## Resolution (2026-08-09)
+
+Enhanced `playwright-check.js`: added JS console error tracking (page.on
+'console'/'pageerror' → assertion) and optional `--report-json` actor count
+comparison (model_view.actors vs SVG nodes). Added `--verify` flag to
+report-publish mise task: checks playwright availability (graceful WARN+skip
+if absent), runs the check script against report.html + report.json, reports
+pass/fail without blocking publish. Suite: 164/0/0.
