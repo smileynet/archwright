@@ -2213,6 +2213,24 @@ else
 fi
 
 echo ""
+echo "=== Provenance: from_patterns optional (ticket 051) ==="
+PROV_DIR="$TOOLS/../tests/fixtures/provenance"
+# from_model only → passes
+rc=0; python3 "$VALIDATE" "$PROV_DIR/from-model-only.yaml" >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 0 ]; then
+  report PASS "provenance: from_model only passes (no from_patterns needed)"
+else
+  report FAIL "provenance: from_model only passes" "exit=$rc"
+fi
+# neither from_patterns nor from_model → fails
+rc=0; python3 "$VALIDATE" "$PROV_DIR/no-provenance.yaml" >/dev/null 2>&1 || rc=$?
+if [ $rc -eq 1 ]; then
+  report PASS "provenance: neither from_patterns nor from_model → FAIL (non-vacuous)"
+else
+  report FAIL "provenance: neither from_patterns nor from_model → FAIL" "exit=$rc expected=1"
+fi
+
+echo ""
 echo "=== Contract Alloy Structural Verification (ticket 092) ==="
 CA_SPECS="$TOOLS/../tests/fixtures/contract-alloy/design/specs"
 CA_JAR="${ARCHWRIGHT_ALLOY_JAR:-$TOOLS/../.references/alloy6.jar}"

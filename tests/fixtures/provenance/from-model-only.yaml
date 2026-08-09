@@ -1,0 +1,12 @@
+kind: contract
+id: model-only-provenance
+from_model: "model:session-actor"
+confidence: "★"
+
+protects_experience: "session-integrity"
+user_story: "Sessions are tracked per user."
+
+fields:
+  user_id:
+    type: string
+    required: true
