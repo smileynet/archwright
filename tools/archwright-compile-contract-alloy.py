@@ -80,7 +80,10 @@ def _field_type(field_def, all_sigs):
     if ftype == "enum":
         return mult, None  # handled at field level
 
-    mapped = _TYPE_MAP.get(ftype, "univ")
+    mapped = _TYPE_MAP.get(ftype)
+    if mapped is None:
+        print(f"WARN: unknown field type '{ftype}' — mapping to 'univ' (universal set)", file=sys.stderr)
+        mapped = "univ"
     return mult, mapped
 
 
