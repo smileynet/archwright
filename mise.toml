@@ -152,6 +152,10 @@ fi
 description = "Fixture suite over tests/fixtures/ + examples/ lifecycle corpora — the repo's regression net (count: AGENTS.md test row)"
 run = "bash tools/run-fixture-tests.sh"
 
+[tasks.visual-check]
+description = "Visual conformance: generate reports → capture screenshots → run battery → produce findings"
+run = "python tools/report/visual-check.py"
+
 [tasks.deploy-skills]
 description = "Sync skills + steering + overlays to agent tools (kiro copies are symlinks — needed only for NEW skills, regenerated references, or other tools)"
 run = "bash tools/deploy-skills.sh"
