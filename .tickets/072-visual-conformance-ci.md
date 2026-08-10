@@ -26,7 +26,7 @@ Ticket 044 proved the blind-question visual conformance method works but it's ma
 - [x] Captures all four postures (all-clear, needs-attention, tool-error, empty-project)
 - [x] Light and dark mode screenshots
 - [x] Findings report with pass/mismatch/unclear per D-anchor
-- [x] Non-vacuity: CSS-broken variant still flips answers in broken dimensions
+- [x] Non-vacuity: battery detects absent/damaged regions as "unclear" (structural non-vacuity); `--non-vacuity` CSS-injection variant scaffolded for future semantic non-vacuity
 
 ## Resolution (2026-08-09)
 

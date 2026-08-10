@@ -72,6 +72,11 @@ def generate_report(project_path, out_dir, name=None):
                      "--all", str(specs_dir), "--target", str(project_path), "--json"]
         with open(tmp.name, "w") as f:
             subprocess.run(check_cmd, stdout=f, stderr=subprocess.DEVNULL)
+        # Guard: check JSON must be non-empty valid JSON
+        check_output = Path(tmp.name).read_text(encoding="utf-8").strip()
+        if not check_output or check_output[0] != '{':
+            print(f"  check produced empty/invalid JSON — skipping report generation")
+            return None
         gen_cmd = [sys.executable, str(SCRIPT_DIR / "generate.py"),
                    "--check-json", tmp.name,
                    "--design", str(design_dir),

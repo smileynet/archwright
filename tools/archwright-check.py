@@ -582,9 +582,6 @@ def check_contract(data, spec_path):
     Both paths run in one invocation (grill 2026-08-01 Q2). If neither section
     is present, falls back to the schema-only pass-through.
     """
-    import shutil
-    import tempfile
-
     results = []
     has_structural = bool(data.get("structural_invariants"))
     has_check = bool(data.get("check"))

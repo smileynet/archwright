@@ -60,6 +60,12 @@ OUTPUT_SECTIONS = {"hands to", "graduates to patterns"}
 CONSUMER_EXEMPT_SECTIONS = {"decisions", "unconsumed decisions", "not resolved here", "todo", "todos"}
 
 
+def _check_provenance(data, errors):
+    """Require at least one of from_patterns or from_model for spec provenance."""
+    if not data.get("from_patterns") and not data.get("from_model"):
+        errors.append("provenance required: at least one of 'from_patterns' or 'from_model' must be present")
+
+
 def extract_frontmatter(path):
     """Extract YAML frontmatter from a markdown file.
 
@@ -189,8 +195,7 @@ def validate_behavior(data, path):
             errors.append(f"required field '{field}' missing")
 
     # Provenance: at least one of from_patterns or from_model must be present
-    if not data.get("from_patterns") and not data.get("from_model"):
-        errors.append("provenance required: at least one of 'from_patterns' or 'from_model' must be present")
+    _check_provenance(data, errors)
 
     if data.get("kind") != "behavior":
         errors.append(f"kind must be 'behavior', got '{data.get('kind')}'")
@@ -217,8 +222,7 @@ def validate_constraint_or_dependency(data, path):
             errors.append(f"required field '{field}' missing")
 
     # Provenance: at least one of from_patterns or from_model must be present
-    if not data.get("from_patterns") and not data.get("from_model"):
-        errors.append("provenance required: at least one of 'from_patterns' or 'from_model' must be present")
+    _check_provenance(data, errors)
 
     kind = data.get("kind")
     if kind not in ("constraint", "dependency"):
@@ -248,9 +252,7 @@ def validate_contract(data, path):
         if field not in data:
             errors.append(f"required field '{field}' missing")
 
-    # Provenance: at least one of from_patterns or from_model must be present
-    if not data.get("from_patterns") and not data.get("from_model"):
-        errors.append("provenance required: at least one of 'from_patterns' or 'from_model' must be present")
+    _check_provenance(data, errors)
 
     if data.get("id") and not re.match(r"^[a-z][a-z0-9-]+$", data["id"]):
         errors.append(f"id '{data['id']}' must be lowercase slug (a-z, 0-9, hyphens)")
