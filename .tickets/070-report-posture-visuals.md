@@ -21,8 +21,8 @@ All four postures (all-clear, needs-attention, tool-error, empty-project) curren
 
 ## Acceptance criteria
 
-- [ ] Each posture has a visually distinct verdict area
-- [ ] All-clear: green/calm, diagram-first, no action needed
-- [ ] Needs-attention: urgency cues, asks sections prominent
-- [ ] Tool-error: warning banner, not confused with violations
-- [ ] Empty-project: onboarding guidance, no broken/empty sections
+- [x] Each posture has a visually distinct verdict area
+- [x] All-clear: green/calm, diagram-first, no action needed
+- [x] Needs-attention: urgency cues, asks sections prominent
+- [x] Tool-error: warning banner, not confused with violations
+- [x] Empty-project: onboarding guidance, no broken/empty sections

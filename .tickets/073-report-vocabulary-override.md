@@ -22,8 +22,8 @@ Domain-specific events (like fieldball-practice's `play_changed`, `ready_pressed
 
 ## Acceptance criteria
 
-- [ ] Target project can provide `design/vocabulary.yaml` with event overrides
-- [ ] Overrides merge with base vocabulary (base terms preserved)
-- [ ] Missing events reported at generation time (warning, not error)
-- [ ] fieldball-practice vocabulary file maps key events to plain language
-- [ ] Report with override shows custom labels instead of humanized fallbacks
+- [x] Target project can provide `design/vocabulary.yaml` with event overrides
+- [x] Overrides merge with base vocabulary (base terms preserved)
+- [x] Missing events reported at generation time (warning, not error)
+- [x] fieldball-practice vocabulary file maps key events to plain language
+- [x] Report with override shows custom labels instead of humanized fallbacks

@@ -21,7 +21,7 @@ Navigation between sections is functional (anchor links work) but lacks polish: 
 
 ## Acceptance criteria
 
-- [ ] Clicking diagram state smoothly scrolls to detail section
-- [ ] "← back to diagram" visible as sticky element when in detail area
-- [ ] Browser Back button returns to previous scroll position
-- [ ] `prefers-reduced-motion`: instant scroll, no animation
+- [x] Clicking diagram state smoothly scrolls to detail section
+- [x] "← back to diagram" visible as sticky element when in detail area
+- [x] Browser Back button returns to previous scroll position
+- [x] `prefers-reduced-motion`: instant scroll, no animation

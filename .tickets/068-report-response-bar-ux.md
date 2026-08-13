@@ -21,7 +21,7 @@ The response bar works functionally but lacks polish: no progress indicator, no 
 
 ## Acceptance criteria
 
-- [ ] Response bar shows progress: "N of M answered"
-- [ ] Recording a response triggers visible card feedback
-- [ ] Tab key navigates between ask cards
-- [ ] Answered cards visually distinct from unanswered
+- [x] Response bar shows progress: "N of M answered"
+- [x] Recording a response triggers visible card feedback
+- [x] Tab key navigates between ask cards
+- [x] Answered cards visually distinct from unanswered

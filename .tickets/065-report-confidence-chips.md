@@ -22,7 +22,7 @@ Confidence levels render as plain text in brackets (`[★★]`). The wireframe s
 
 ## Acceptance criteria
 
-- [ ] Confidence rendered as colored pill badges with plain-language labels
-- [ ] Visually distinct from status glyphs (badges are background-colored; glyphs are text-colored)
-- [ ] Readable in both light and dark modes (AA contrast on chip background)
-- [ ] Applied consistently on approval cards and behavior-detail rule rows
+- [x] Confidence rendered as colored pill badges with plain-language labels
+- [x] Visually distinct from status glyphs (badges are background-colored; glyphs are text-colored)
+- [x] Readable in both light and dark modes (AA contrast on chip background)
+- [x] Applied consistently on approval cards and behavior-detail rule rows

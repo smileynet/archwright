@@ -26,7 +26,7 @@ miscalibrated, not the corpus.
 
 ## Acceptance criteria
 
-- [ ] The 13 DemoAR patterns pass the recalibrated gate unmodified (they were
+- [x] The 13 DemoAR patterns pass the recalibrated gate unmodified (they were
       judged good) OR the gate's failure messages identify real substance gaps
 - [x] A deliberately evidence-free pattern still FAILs the gate
 - [x] Formalize skill template and gate agree (template output passes its own gate)

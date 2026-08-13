@@ -35,11 +35,11 @@ Status colors: success/danger/warning/neutral/info (existing vars)
 
 ## Acceptance criteria
 
-- [ ] Verdict line visually dominant (size, color, weight)
-- [ ] Cards have visible elevation (box-shadow, not flat border-only)
-- [ ] Decision vs approval cards visually distinguishable without reading content
-- [ ] Buttons styled as primary/secondary variants
-- [ ] Readable at 360px viewport width (mobile portrait)
-- [ ] Print: diagram prints, response bar hidden, cards clean
-- [ ] All interactive elements have visible :focus-visible outline
-- [ ] Dark mode: all elements maintain AA contrast
+- [x] Verdict line visually dominant (size, color, weight)
+- [x] Cards have visible elevation (box-shadow, not flat border-only)
+- [x] Decision vs approval cards visually distinguishable without reading content
+- [x] Buttons styled as primary/secondary variants
+- [x] Readable at 360px viewport width (mobile portrait)
+- [x] Print: diagram prints, response bar hidden, cards clean
+- [x] All interactive elements have visible :focus-visible outline
+- [x] Dark mode: all elements maintain AA contrast

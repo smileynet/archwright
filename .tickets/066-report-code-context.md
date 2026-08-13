@@ -22,9 +22,9 @@ Evidence from violations renders as a plain `<pre>` dump of grep output. The wir
 
 ## Acceptance criteria
 
-- [ ] Evidence renders as formatted code block with line numbers
-- [ ] Flagged line visually highlighted (background color)
-- [ ] File path displayed as header above code context
-- [ ] Multiple locations: first shown, rest behind disclosure
-- [ ] Horizontal scroll on long lines (no line wrapping in code blocks)
-- [ ] Dark mode: code highlighting visible with adequate contrast
+- [x] Evidence renders as formatted code block with line numbers
+- [x] Flagged line visually highlighted (background color)
+- [x] File path displayed as header above code context
+- [x] Multiple locations: first shown, rest behind disclosure
+- [x] Horizontal scroll on long lines (no line wrapping in code blocks)
+- [x] Dark mode: code highlighting visible with adequate contrast

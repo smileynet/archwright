@@ -65,9 +65,9 @@ machine + invariants into the target language's PBT framework.
 
 ## Acceptance criteria
 
-- [ ] `--pbt` mode generates a runnable Hypothesis test from a behavior spec
-- [ ] Generated test uses spec's state machine as the generation strategy
-- [ ] Invariants checked after each transition
-- [ ] Failing runs produce shrunk counterexamples
-- [ ] At least one stack adapter at ★ (conformance corpus passes)
-- [ ] Suite green; AGENTS.md flags note updated
+- [x] `--pbt` mode generates a runnable Hypothesis test from a behavior spec
+- [x] Generated test uses spec's state machine as the generation strategy
+- [x] Invariants checked after each transition
+- [x] Failing runs produce shrunk counterexamples
+- [x] At least one stack adapter at ★ (conformance corpus passes)
+- [x] Suite green; AGENTS.md flags note updated

@@ -26,7 +26,7 @@ condition.
 
 ## Acceptance criteria
 
-- [ ] persistent-room-with-reset re-statused without its disclaimer paragraph
+- [x] persistent-room-with-reset re-statused without its disclaimer paragraph
 - [x] validate rejects `deferred` without `gated_on:`
 - [x] fog definition unchanged; fixture suite gains one pass + one violating case
 

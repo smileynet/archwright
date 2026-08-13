@@ -36,10 +36,10 @@ responses:
 
 ## Acceptance criteria
 
-- [ ] Clicking a decision option or approval button stores a response in page state
-- [ ] Response bar appears after first interaction, shows accurate count
-- [ ] "Save" button downloads a JSON file matching the response-file contract
-- [ ] Response file includes run_id (commit + check timestamp from the report data)
-- [ ] Agent can consume the response file on next check run (documented in skill contract)
-- [ ] Responses survive page scroll (not lost on DOM recycle)
-- [ ] Multiple responses for the same ask-id: last wins (supersede, not accumulate)
+- [x] Clicking a decision option or approval button stores a response in page state
+- [x] Response bar appears after first interaction, shows accurate count
+- [x] "Save" button downloads a JSON file matching the response-file contract
+- [x] Response file includes run_id (commit + check timestamp from the report data)
+- [x] Agent can consume the response file on next check run (documented in skill contract)
+- [x] Responses survive page scroll (not lost on DOM recycle)
+- [x] Multiple responses for the same ask-id: last wins (supersede, not accumulate)

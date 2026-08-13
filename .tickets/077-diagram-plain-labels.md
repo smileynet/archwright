@@ -20,7 +20,7 @@ F03: State node labels in the diagram show raw identifiers with underscores (`li
 
 ## Acceptance criteria
 
-- [ ] Diagram state nodes show human-readable labels (no underscores)
-- [ ] Labels sourced from model state descriptions when available
-- [ ] Fallback: humanized ID (underscores → spaces)
-- [ ] Verified via Playwright: SVG text content has no underscores in state labels
+- [x] Diagram state nodes show human-readable labels (no underscores)
+- [x] Labels sourced from model state descriptions when available
+- [x] Fallback: humanized ID (underscores → spaces)
+- [x] Verified via Playwright: SVG text content has no underscores in state labels

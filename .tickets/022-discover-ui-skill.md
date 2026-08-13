@@ -13,6 +13,6 @@ Hard "Does NOT": no behavior specs, no model edits, no skipping per-wireframe ap
 
 ## Acceptance
 - [x] Skill + `tools/templates/wireframe.md` + `tools/templates/design-system.md` exist, deploy via deploy-skills.sh
-- [ ] Passes skill-authoring review; templates carry citation fields (Q6) + artifact-gap section
+- [x] Passes skill-authoring review; templates carry citation fields (Q6) + artifact-gap section
 
 Context: ADR 0011; spec T4/D1; grill Q3/Q4/Q6.
