@@ -1,8 +1,8 @@
 ---
-id: 027
+id: "027"
 title: "Seam integration: make pipeline skills discovery-aware"
 status: done
-blocked_by: [020]
+blocked_by: ["020"]
 ---
 
 # Seam integration in existing skills

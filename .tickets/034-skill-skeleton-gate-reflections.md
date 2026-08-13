@@ -1,5 +1,5 @@
 ---
-id: 034
+id: "034"
 title: "Add skeleton spec gate and reflections layer to skills"
 status: done
 blocked_by: []

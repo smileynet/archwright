@@ -1,5 +1,5 @@
 ---
-id: 037
+id: "037"
 title: "deploy-skills.sh: stop overwriting crew-research's subagent-reliability steering"
 status: done
 blocked_by: []

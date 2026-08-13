@@ -1,5 +1,5 @@
 ---
-id: 008
+id: "008"
 title: Compile transition guards into Alloy models (currently comments)
 status: done
 blocked_by: []

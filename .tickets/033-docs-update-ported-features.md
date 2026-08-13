@@ -1,8 +1,8 @@
 ---
-id: 033
+id: "033"
 title: "Update docs for ported features (AGENTS, README, conventions, open-questions)"
 status: done
-blocked_by: [029, 030, 031, 032]
+blocked_by: ["029", "030", "031", "032"]
 ---
 
 # Update docs for ported features

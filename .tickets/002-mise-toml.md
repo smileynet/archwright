@@ -1,8 +1,8 @@
 ---
-id: 002
+id: "002"
 title: mise.toml — tools, env, tasks for archwright
 status: done
-blocked_by: [001]
+blocked_by: ["001"]
 created: 2026-07-17
 ---
 

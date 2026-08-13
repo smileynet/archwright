@@ -1,5 +1,5 @@
 ---
-id: 011
+id: "011"
 title: "Pattern status vocabulary: add deferred/gated (fog is being repurposed)"
 status: done
 blocked_by: []

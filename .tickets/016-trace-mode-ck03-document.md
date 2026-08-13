@@ -1,5 +1,5 @@
 ---
-id: 016
+id: "016"
 title: "Trace mode ignores --json and emits a bespoke shape — wire into the CK-03 document"
 status: done
 blocked_by: []

@@ -1,5 +1,5 @@
 ---
-id: 010
+id: "010"
 title: "Explore: independent-verification rule in check skill (changed verdicts)"
 status: done
 closed: 2026-07-17

@@ -1,8 +1,8 @@
 ---
-id: 022
+id: "022"
 title: "archwright-discover-ui skill + wireframe/design-system templates"
 status: done
-blocked_by: [019, 020, 021]
+blocked_by: ["019", "020", "021"]
 ---
 
 # archwright-discover-ui skill (T4)

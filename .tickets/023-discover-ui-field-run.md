@@ -1,8 +1,8 @@
 ---
-id: 023
+id: "023"
 title: "Field run: archwright-discover-ui on the operator's game project"
 status: open
-blocked_by: [022, 027]
+blocked_by: ["022", "027"]
 ---
 
 # Field run (T5)

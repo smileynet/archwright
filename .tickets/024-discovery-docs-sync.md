@@ -1,8 +1,8 @@
 ---
-id: 024
+id: "024"
 title: "Discovery track docs sync: steering, AGENTS.md, audit scope"
 status: done
-blocked_by: [022]
+blocked_by: ["022"]
 ---
 
 # Docs sync (T6)

@@ -1,5 +1,5 @@
 ---
-id: 014
+id: "014"
 title: "Pattern quality gate: 70% evidence-share threshold measures the wrong thing"
 status: done
 blocked_by: []

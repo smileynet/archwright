@@ -1,5 +1,5 @@
 ---
-id: 006
+id: "006"
 title: "Multi-target support for grep checks (list-valued target:)"
 status: done
 blocked_by: []
