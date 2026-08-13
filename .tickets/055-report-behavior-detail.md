@@ -33,10 +33,10 @@ Lacrosse-bosse `step-transition` actor has 4 states (completing, repositioning, 
 
 ## Acceptance criteria
 
-- [ ] Clicking a state on the diagram shows its behavior-detail section
-- [ ] "What happens here" populated from model state descriptions
-- [ ] "Rules that apply" shows relevant specs with status badges
-- [ ] "What this protects" shows the product experience in plain language
-- [ ] "How we arrived at this" folds out with provenance (force → decision → spec)
-- [ ] Navigation: "← back to the diagram" returns to overview
-- [ ] Works as in-page anchors (self-contained, no routing framework)
+- [x] Clicking a state on the diagram shows its behavior-detail section
+- [x] "What happens here" populated from model state descriptions
+- [x] "Rules that apply" shows relevant specs with status badges
+- [x] "What this protects" shows the product experience in plain language
+- [x] "How we arrived at this" folds out with provenance (force → decision → spec)
+- [x] Navigation: "← back to the diagram" returns to overview
+- [x] Works as in-page anchors (self-contained, no routing framework)

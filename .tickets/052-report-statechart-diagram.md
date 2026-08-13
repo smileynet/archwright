@@ -32,9 +32,9 @@ Lacrosse Bosse `design/models/gameplay-ui-actors.yaml` — 7 actors, multiple st
 
 ## Acceptance criteria
 
-- [ ] States rendered as nodes with vocabulary-mapped names
-- [ ] Transitions rendered as labeled edges between states
-- [ ] Verification badges (✓/✗/○/…) appear per state
-- [ ] Diagram renders inline in the self-contained HTML (no external dependencies)
-- [ ] Click a state → shows its rules and what it protects (behavior-detail pattern)
-- [ ] Lacrosse-bosse report shows the step-transition lifecycle as a readable diagram
+- [x] States rendered as nodes with vocabulary-mapped names
+- [x] Transitions rendered as labeled edges between states
+- [x] Verification badges (✓/✗/○/…) appear per state
+- [x] Diagram renders inline in the self-contained HTML (no external dependencies)
+- [x] Click a state → shows its rules and what it protects (behavior-detail pattern)
+- [x] Lacrosse-bosse report shows the step-transition lifecycle as a readable diagram

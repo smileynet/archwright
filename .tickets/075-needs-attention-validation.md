@@ -21,8 +21,8 @@ The all-clear posture is the standing lacrosse-bosse report. The needs-attention
 
 ## Acceptance criteria
 
-- [ ] Needs-attention report generated from planted violation
-- [ ] Verdict line shows ask-type counts
-- [ ] Approval card visible with contrast pair and action buttons
-- [ ] Diagram shows affected state with ✗ badge (after ticket 063)
-- [ ] Visual output compared against wf-overview wireframe structure
+- [x] Needs-attention report generated from planted violation
+- [x] Verdict line shows ask-type counts
+- [x] Approval card visible with contrast pair and action buttons
+- [x] Diagram shows affected state with ✗ badge (after ticket 063)
+- [x] Visual output compared against wf-overview wireframe structure

@@ -26,9 +26,9 @@ This provides temporal context — not just "is it passing now?" but "has it bee
 
 ## Acceptance criteria
 
-- [ ] Stability section shows when evidence ledger exists
-- [ ] Consecutive-pass streak count per rule displayed
-- [ ] Last failure date shown (or "never failed" for new rules)
-- [ ] Promotion candidates highlighted with suggestion text
-- [ ] Section absent when no evidence ledger exists (graceful degradation)
-- [ ] Lacrosse-bosse report shows stability data after 2+ check runs
+- [x] Stability section shows when evidence ledger exists
+- [x] Consecutive-pass streak count per rule displayed
+- [x] Last failure date shown (or "never failed" for new rules)
+- [x] Promotion candidates highlighted with suggestion text
+- [x] Section absent when no evidence ledger exists (graceful degradation)
+- [x] Lacrosse-bosse report shows stability data after 2+ check runs

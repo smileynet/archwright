@@ -20,6 +20,6 @@ Selection heuristic: max(transitions count) → ties broken by max(states count)
 
 ## Acceptance criteria
 
-- [ ] Diagram shows the actor with the most transitions
-- [ ] Lacrosse-bosse shows practice-hud (active → step_transitioning → play_complete → returning_to_clipboard)
-- [ ] Verified via Playwright: diagram SVG contains the expected state names
+- [x] Diagram shows the actor with the most transitions
+- [x] Lacrosse-bosse shows practice-hud (active → step_transitioning → play_complete → returning_to_clipboard)
+- [x] Verified via Playwright: diagram SVG contains the expected state names

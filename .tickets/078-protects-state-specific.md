@@ -24,7 +24,7 @@ F06: Every behavior-detail card shows the same full list of ALL experiences (avg
 
 ## Acceptance criteria
 
-- [ ] Each behavior-detail card shows ONLY experiences relevant to its actor (or state)
-- [ ] Different actors' cards show different experience text
-- [ ] States with no relevant experience omit the section
-- [ ] Verified via Playwright: avg content length varies between cards
+- [x] Each behavior-detail card shows ONLY experiences relevant to its actor (or state)
+- [x] Different actors' cards show different experience text
+- [x] States with no relevant experience omit the section
+- [x] Verified via Playwright: avg content length varies between cards

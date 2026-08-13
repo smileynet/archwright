@@ -30,9 +30,9 @@ The markdown already emits correct Mermaid `stateDiagram-v2` syntax with labeled
 
 ## Acceptance criteria
 
-- [ ] Report HTML renders a visible statechart diagram with nodes and labeled edges
-- [ ] Works in Firefox and Chrome when opened via file://
-- [ ] No external network requests (fully self-contained)
-- [ ] Lacrosse-bosse report shows the step-transition lifecycle as a visual diagram
-- [ ] Dark mode: diagram respects the page color scheme
-- [ ] Fallback: if JS is disabled, the Mermaid source text is readable as-is
+- [x] Report HTML renders a visible statechart diagram with nodes and labeled edges
+- [x] Works in Firefox and Chrome when opened via file://
+- [x] No external network requests (fully self-contained)
+- [x] Lacrosse-bosse report shows the step-transition lifecycle as a visual diagram
+- [x] Dark mode: diagram respects the page color scheme
+- [x] Fallback: if JS is disabled, the Mermaid source text is readable as-is

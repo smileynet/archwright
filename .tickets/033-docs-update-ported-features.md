@@ -38,6 +38,6 @@ the new capabilities. All docs must match upstream's structure and voice.
 
 - [x] AGENTS.md reflects all new flags and modes
 - [x] steering/archwright-conventions.md has new convention entries
-- [ ] docs/open-questions.md has new questions integrated (not duplicating existing)
+- [x] docs/open-questions.md has new questions integrated (not duplicating existing)
 - [x] README.md unchanged or minimally updated
 - [x] No stale references to bash-era tools

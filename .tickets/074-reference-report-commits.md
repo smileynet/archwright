@@ -22,7 +22,7 @@ After each visual track milestone, regenerate and commit the lacrosse-bosse repo
 
 ## Acceptance criteria
 
-- [ ] Report committed after Mermaid rendering works (diagram visible)
-- [ ] Report committed after CSS overhaul (visually polished)
-- [ ] Final report structurally matches wf-all-clear wireframe
-- [ ] Both postures demonstrated (all-clear committed; needs-attention documented)
+- [x] Report committed after Mermaid rendering works (diagram visible)
+- [x] Report committed after CSS overhaul (visually polished)
+- [x] Final report structurally matches wf-all-clear wireframe
+- [x] Both postures demonstrated (all-clear committed; needs-attention documented)

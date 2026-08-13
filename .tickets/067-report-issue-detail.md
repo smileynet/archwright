@@ -26,9 +26,9 @@ The three-level drill hierarchy is incomplete. Level 1 (behavior-detail from dia
 
 ## Acceptance criteria
 
-- [ ] Clicking a failing rule in behavior-detail opens issue-detail section
-- [ ] Contrast pair rendered prominently at top
-- [ ] Provenance chain shows Because/Decided/So format
-- [ ] Action buttons (Approve Fix / Review / Amend Rule) present and functional
-- [ ] "← back to overview" navigates to diagram area
-- [ ] Works as in-page anchor (no routing framework)
+- [x] Clicking a failing rule in behavior-detail opens issue-detail section
+- [x] Contrast pair rendered prominently at top
+- [x] Provenance chain shows Because/Decided/So format
+- [x] Action buttons (Approve Fix / Review / Amend Rule) present and functional
+- [x] "← back to overview" navigates to diagram area
+- [x] Works as in-page anchor (no routing framework)

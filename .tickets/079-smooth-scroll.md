@@ -22,7 +22,7 @@ html { scroll-behavior: smooth; }
 
 ## Acceptance criteria
 
-- [ ] Clicking "← back to the diagram" smoothly scrolls
-- [ ] Anchor links (#detail-*) smoothly scroll
-- [ ] `prefers-reduced-motion`: instant scroll (no animation)
-- [ ] Verified via Playwright: scroll position changes over multiple frames (not instant)
+- [x] Clicking "← back to the diagram" smoothly scrolls
+- [x] Anchor links (#detail-*) smoothly scroll
+- [x] `prefers-reduced-motion`: instant scroll (no animation)
+- [x] Verified via Playwright: scroll position changes over multiple frames (not instant)

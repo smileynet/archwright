@@ -21,8 +21,8 @@ The wireframe (wf-all-clear) shows per-step verification badges (✓/✗/○) on
 
 ## Acceptance criteria
 
-- [ ] All-clear: every state shows ✓ badge
-- [ ] Needs-attention: failing states show ✗ with visual highlight
-- [ ] Pending states show ○ (neutral)
-- [ ] Badges are readable in both light and dark mode
-- [ ] Planted violation on lacrosse-bosse shows ✗ on the affected state
+- [x] All-clear: every state shows ✓ badge
+- [x] Needs-attention: failing states show ✗ with visual highlight
+- [x] Pending states show ○ (neutral)
+- [x] Badges are readable in both light and dark mode
+- [x] Planted violation on lacrosse-bosse shows ✗ on the affected state

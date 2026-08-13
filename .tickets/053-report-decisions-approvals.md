@@ -41,10 +41,10 @@ Run archwright-check against lacrosse-bosse with a deliberately-violating fixtur
 
 ## Acceptance criteria
 
-- [ ] Violations route to DECISIONS or APPROVALS based on situation type
-- [ ] Decision cards show radio options with recommendation highlighted
-- [ ] Approval cards show "design says / code does" contrast pair
-- [ ] Cards have disclosure fold for history/rationale ("why this rule exists")
-- [ ] Clicking a card's action accumulates a response in the page reducer
-- [ ] Empty sections are hidden (not shown with "0 items")
-- [ ] Lacrosse-bosse report with a planted violation shows a working approval card
+- [x] Violations route to DECISIONS or APPROVALS based on situation type
+- [x] Decision cards show radio options with recommendation highlighted
+- [x] Approval cards show "design says / code does" contrast pair
+- [x] Cards have disclosure fold for history/rationale ("why this rule exists")
+- [x] Clicking a card's action accumulates a response in the page reducer
+- [x] Empty sections are hidden (not shown with "0 items")
+- [x] Lacrosse-bosse report with a planted violation shows a working approval card

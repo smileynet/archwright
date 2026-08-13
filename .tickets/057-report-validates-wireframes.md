@@ -44,7 +44,7 @@ This happened because the ACs on 041 tested the **pipeline plumbing** (generate 
 
 ## Acceptance criteria
 
-- [ ] Tickets 052-056 each have a visual-conformance AC citing the specific wireframe
-- [ ] Lacrosse-bosse design/ directory used as the test target for report generation
-- [ ] A fixture test validates report structure (not just generation success)
-- [ ] After 052-056 complete: lacrosse-bosse report visually matches wf-overview / wf-all-clear / wf-behavior-detail patterns
+- [x] Tickets 052-056 each have a visual-conformance AC citing the specific wireframe
+- [x] Lacrosse-bosse design/ directory used as the test target for report generation
+- [x] A fixture test validates report structure (not just generation success)
+- [x] After 052-056 complete: lacrosse-bosse report visually matches wf-overview / wf-all-clear / wf-behavior-detail patterns

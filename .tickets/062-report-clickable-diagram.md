@@ -22,8 +22,8 @@ The diagram says "click any step for details" but no click handlers exist. State
 
 ## Acceptance criteria
 
-- [ ] Clicking a state node in the diagram scrolls to its behavior-detail section
-- [ ] States show pointer cursor on hover
-- [ ] Smooth scroll animation to target section
-- [ ] "← back to the diagram" links scroll back to #diagram-top
-- [ ] Works with keyboard (Tab into diagram, Enter to follow link)
+- [x] Clicking a state node in the diagram scrolls to its behavior-detail section
+- [x] States show pointer cursor on hover
+- [x] Smooth scroll animation to target section
+- [x] "← back to the diagram" links scroll back to #diagram-top
+- [x] Works with keyboard (Tab into diagram, Enter to follow link)

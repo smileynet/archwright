@@ -30,7 +30,7 @@ expressed without a false FAIL.
 
 ## Acceptance criteria
 
-- [ ] DemoAR `design/` link check passes with from_model pointing at
+- [x] DemoAR `design/` link check passes with from_model pointing at
       content-authority (no spec edit required)
 - [x] A from_model ref to a nonexistent id still FAILs (no vacuous acceptance)
 - [x] Fixture suite gains a violating scenario that FAILs (conformance-at-birth rule)
