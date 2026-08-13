@@ -1,8 +1,8 @@
 ---
-id: 003
+id: "003"
 title: Fixture suite green via mise (incl. Alloy behavior check)
 status: done
-blocked_by: [002]
+blocked_by: ["002"]
 created: 2026-07-17
 ---
 

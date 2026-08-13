@@ -1,5 +1,5 @@
 ---
-id: 012
+id: "012"
 title: "Check schema: expect present/absent semantics ambiguous for positive-condition checks"
 status: done
 blocked_by: []

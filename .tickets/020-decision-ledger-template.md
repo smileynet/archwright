@@ -1,5 +1,5 @@
 ---
-id: 020
+id: "020"
 title: "Generic decision-ledger template (seam contract)"
 status: done
 blocked_by: []

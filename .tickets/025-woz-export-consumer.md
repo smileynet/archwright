@@ -1,8 +1,8 @@
 ---
-id: 025
+id: "025"
 title: "woz-export consumer: skill interpretation + category mapping"
 status: done
-blocked_by: [020]
+blocked_by: ["020"]
 ---
 
 # woz-export consumer (T7b)

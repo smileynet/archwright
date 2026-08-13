@@ -1,5 +1,5 @@
 ---
-id: 032
+id: "032"
 title: "Audit trace hardening fixes against upstream check_trace()"
 status: done
 blocked_by: []

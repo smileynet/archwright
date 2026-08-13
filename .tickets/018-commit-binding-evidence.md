@@ -1,5 +1,5 @@
 ---
-id: 018
+id: "018"
 title: "Commit-binding of check evidence (EDA signoff precedent)"
 status: done
 blocked_by: []

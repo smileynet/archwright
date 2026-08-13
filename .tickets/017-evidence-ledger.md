@@ -1,5 +1,5 @@
 ---
-id: 017
+id: "017"
 title: "Evidence ledger (ADR 0009): auto-appended confidence events in archwright-check"
 status: done
 blocked_by: []

@@ -1,5 +1,5 @@
 ---
-id: 092
+id: "092"
 title: "Alloy structural verification for contract specs (data model invariants)"
 status: done
 blocked_by: []

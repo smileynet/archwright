@@ -1,5 +1,5 @@
 ---
-id: 009
+id: "009"
 title: "Explore: alloy-authoring guidance in derive skill (safety skeletons + non-vacuity probe)"
 status: done
 closed: 2026-07-17

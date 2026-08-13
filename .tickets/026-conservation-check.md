@@ -1,8 +1,8 @@
 ---
-id: 026
+id: "026"
 title: "Conservation-check validator rule for seam artifacts"
 status: done
-blocked_by: [020, 022]
+blocked_by: ["020", "022"]
 ---
 
 # Conservation check (T8)

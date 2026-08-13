@@ -1,5 +1,5 @@
 ---
-id: 001
+id: "001"
 title: Bootstrap mise on this machine
 status: done
 blocked_by: []
