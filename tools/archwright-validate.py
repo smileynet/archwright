@@ -22,6 +22,7 @@ Exit codes: 0 = all valid (warnings allowed), 1 = validation failures,
 import sys
 import os
 import re
+import argparse
 import yaml
 import json
 from pathlib import Path
@@ -953,21 +954,40 @@ def _build_json_doc(mode, per_item):
     }
 
 
-def main():
-    args = [a for a in sys.argv[1:] if a != "--json"]
-    json_output = "--json" in sys.argv[1:]
+class _ValidateParser(argparse.ArgumentParser):
+    """ArgumentParser subclass that exits 2 on parse errors (matching existing contract)."""
 
-    if not args:
-        print("Usage: archwright-validate [--json] <file>... | --links <dir>")
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        sys.stderr.write(f"error: {message}\n")
         sys.exit(2)
 
-    if args[0] == "--links":
-        if len(args) < 2:
-            print("Usage: archwright-validate [--json] --links <directory>")
-            sys.exit(2)
-        errors, warnings = validate_links(args[1])
-        if json_output:
-            doc = _build_json_doc("links", [(args[1], "links", errors, warnings)])
+
+def _build_parser():
+    parser = _ValidateParser(
+        prog="archwright-validate",
+        description="Schema + link validation for archwright patterns, specs, contracts, and models.",
+        epilog="Exit codes: 0 = pass, 1 = validation errors found, 2 = usage/tool error",
+        allow_abbrev=False,
+    )
+    parser.add_argument("--json", dest="json_output", action="store_true",
+                        help="Emit CK-03 JSON document instead of human-readable output")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--links", metavar="DIR",
+                      help="Validate links (citations, cross-references) in a directory")
+    parser.add_argument("files", nargs="*", metavar="FILE",
+                        help="Pattern, spec, contract, or model files to validate")
+    return parser
+
+
+def main():
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    if args.links:
+        errors, warnings = validate_links(args.links)
+        if args.json_output:
+            doc = _build_json_doc("links", [(args.links, "links", errors, warnings)])
             print(json.dumps(doc, indent=2, ensure_ascii=False))
         else:
             if errors:
@@ -980,16 +1000,19 @@ def main():
                 print(f"  WARN: {w}")
         sys.exit(1 if errors else 0)
 
+    if not args.files:
+        parser.error("one of --links DIR or FILE... is required")
+
     exit_code = 0
     per_item = []
-    for filepath in args:
+    for filepath in args.files:
         status, errors, warnings = validate_file(filepath)
         path = Path(filepath)
         data, kind, _ = load_file(path)
         kind_str = f" (kind: {kind})" if kind else ""
         per_item.append((str(path), kind, errors, warnings))
 
-        if not json_output:
+        if not args.json_output:
             if status == "pass":
                 print(f"PASS: {path}{kind_str}")
             else:
@@ -1001,7 +1024,7 @@ def main():
         if status != "pass":
             exit_code = 1
 
-    if json_output:
+    if args.json_output:
         print(json.dumps(_build_json_doc("validate", per_item), indent=2, ensure_ascii=False))
 
     sys.exit(exit_code)
