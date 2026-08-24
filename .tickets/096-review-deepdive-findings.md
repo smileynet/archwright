@@ -1,7 +1,7 @@
 ---
 id: "096"
 title: "Triage deep-dive findings; implement validated in-repo improvements"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
