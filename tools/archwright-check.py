@@ -40,6 +40,7 @@ import os
 import re
 import fnmatch
 import hashlib
+import argparse
 import yaml
 import subprocess
 import json
@@ -516,9 +517,7 @@ def check_behavior(data, spec_path):
         # Verdict lines (stderr): "NN. check <assertName>  ...  SAT|UNSAT"
         # UNSAT = no counterexample within scope (pass, bounded). SAT = violation.
         combined = (run.stderr or "") + "\n" + (run.stdout or "")
-        verdicts = {}
-        for m in re.finditer(r"check\s+(\w+)\b[^\n]*?\b(UNSAT|SAT)\b", combined):
-            verdicts[m.group(1)] = m.group(2)
+        verdicts = parse_alloy_verdicts(combined)
 
         if not verdicts:
             return results + [{
@@ -552,6 +551,26 @@ def check_behavior(data, spec_path):
             results.append(entry)
 
     return results
+
+
+def parse_alloy_verdicts(combined_output):
+    """Parse SAT/UNSAT verdicts from Alloy 6 exec CLI combined stdout+stderr.
+
+    Expected format (undocumented, unversioned — Alloy 6.2.0+):
+        NN. check <assertName>  ...  SAT|UNSAT
+
+    Returns a dict mapping assertion names to verdict strings ("SAT" or "UNSAT").
+    Returns empty dict if no verdicts found (caller should treat as error — the
+    format may have changed or the solver produced no output).
+
+    The regex is pinned to the observed output of the SHA-256-verified jar in
+    tools/alloy-runtime.json. On jar upgrades, the fixture suite's format-break
+    test will fail loudly (exit 2) if the format changes.
+    """
+    verdicts = {}
+    for m in re.finditer(r"check\s+(\w+)\b[^\n]*?\b(UNSAT|SAT)\b", combined_output):
+        verdicts[m.group(1)] = m.group(2)
+    return verdicts
 
 
 def _alloy_field_name(name):
@@ -2317,107 +2336,124 @@ def coverage_report(specs_dir, target_root=None, json_output=False):
     return 0
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: archwright-check <spec>... | --all <dir> | --static <dir> [--target <root>] "
-              "[--changed-only [--base <ref>]] | --trace <spec> <trace> [--evidence <file>] | "
-              "--probe <spec> | --trace-coverage <specs-dir> <traces-dir> | "
-              "--coverage <specs-dir> [--target <root>] | "
-              "--pbt <spec> --step <module.py> [--emit <dir>] [--examples N]\n"
-              "Common flags: --json  --baseline <file>  --update-baseline  --evidence <file>")
+class _CheckParser(argparse.ArgumentParser):
+    """ArgumentParser subclass that exits 2 on parse errors (matching existing contract)."""
+
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        sys.stderr.write(f"error: {message}\n")
         sys.exit(2)
 
-    # Handle --trace mode early (different flow). --json (anywhere after
-    # --trace) switches output to the CK-03 document shape (ticket 016);
-    # --evidence <file> names an explicit evidence ledger (ADR 0009).
-    if sys.argv[1] == "--trace":
-        rest = sys.argv[2:]
-        trace_json = "--json" in rest
-        trace_evidence = None
-        trace_args = []
-        i = 0
-        while i < len(rest):
-            if rest[i] == "--json":
-                pass
-            elif rest[i] == "--evidence":
-                i += 1
-                if i < len(rest):
-                    trace_evidence = rest[i]
-            else:
-                trace_args.append(rest[i])
-            i += 1
-        if len(trace_args) < 2:
-            print(json.dumps({"status": "error", "message": "Usage: archwright-check --trace <spec.yaml> <trace.json> [--json] [--evidence <file>]"}))
-            sys.exit(2)
-        sys.exit(check_trace(trace_args[0], trace_args[1], json_output=trace_json,
-                             evidence_arg=trace_evidence))
 
-    # Handle --probe mode early (different flow)
-    if sys.argv[1] == "--probe":
-        if len(sys.argv) < 3:
-            print("Usage: archwright-check --probe <behavior-spec.yaml>")
-            sys.exit(2)
-        sys.exit(probe_behavior(sys.argv[2]))
+def _build_check_parser():
+    parser = _CheckParser(
+        prog="archwright-check",
+        description=(
+            "Verify archwright specs against implementation.\n\n"
+            "Modes (mutually exclusive):\n"
+            "  <spec>...                     Check specific spec file(s)\n"
+            "  --all <dir>                   Check all specs in a directory\n"
+            "  --static <dir>                Batch static check (constraint + dependency only)\n"
+            "  --trace <spec> <trace>        Validate a trace against a behavior spec\n"
+            "  --probe <spec>                Non-vacuity probe on a behavior spec\n"
+            "  --trace-coverage <sdir> <tdir> Report trace coverage\n"
+            "  --coverage <specs-dir>        Report spec→implementation coverage\n"
+            "  --pbt <spec> --step <mod.py>  Property-based testing via Hypothesis"
+        ),
+        epilog="Exit codes: 0 = pass, 1 = violations/fail, 2 = usage/tool error",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False,
+    )
+    # Mode selection
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--all", metavar="DIR", dest="all_dir",
+                      help="Check all specs in DIR")
+    mode.add_argument("--static", metavar="DIR", dest="static_dir",
+                      help="Batch static check (constraint + dependency kinds only)")
+    mode.add_argument("--trace", nargs=2, metavar=("SPEC", "TRACE"),
+                      help="Validate a trace JSON against a behavior spec")
+    mode.add_argument("--probe", metavar="SPEC",
+                      help="Non-vacuity probe on a behavior spec")
+    mode.add_argument("--trace-coverage", nargs=2, metavar=("SPECS_DIR", "TRACES_DIR"),
+                      dest="trace_coverage",
+                      help="Report which behavior specs have matching traces")
+    mode.add_argument("--coverage", metavar="SPECS_DIR",
+                      help="Report spec→implementation coverage")
+    mode.add_argument("--pbt", metavar="SPEC",
+                      help="Property-based testing via Hypothesis")
 
-    # Handle --trace-coverage mode early (different flow)
-    if sys.argv[1] == "--trace-coverage":
-        if len(sys.argv) < 4:
-            print("Usage: archwright-check --trace-coverage <specs-dir> <traces-dir> [--json]")
-            sys.exit(2)
-        tc_json = "--json" in sys.argv[4:]
+    # Common options
+    parser.add_argument("--json", dest="json_output", action="store_true",
+                        help="Emit CK-03 JSON document instead of human-readable output")
+    parser.add_argument("--target", metavar="ROOT",
+                        help="Target project root for check resolution")
+    parser.add_argument("--baseline", metavar="FILE",
+                        help="Explicit baseline file path (CK-07)")
+    parser.add_argument("--update-baseline", action="store_true",
+                        help="Remove resolved entries from baseline (CK-08)")
+    parser.add_argument("--evidence", metavar="FILE",
+                        help="Explicit evidence ledger path (ADR 0009)")
+    parser.add_argument("--changed-only", action="store_true",
+                        help="Check only specs affected by git diff (CK-19)")
+    parser.add_argument("--base", metavar="REF", default="HEAD",
+                        help="Git ref for --changed-only diff (default: HEAD)")
+
+    # PBT-specific options
+    parser.add_argument("--step", metavar="MODULE",
+                        help="Step function module for --pbt")
+    parser.add_argument("--emit", metavar="DIR",
+                        help="Emit directory for --pbt generated tests")
+    parser.add_argument("--examples", type=int, default=200,
+                        help="Number of PBT examples (default: 200)")
+
+    # Positional spec files
+    parser.add_argument("files", nargs="*", metavar="SPEC",
+                        help="Spec files to check (default mode)")
+
+    return parser
+
+
+def main():
+    parser = _build_check_parser()
+
+    # No args at all → exit 2 with usage (preserve existing behavior)
+    if len(sys.argv) < 2:
+        parser.print_usage(sys.stderr)
+        sys.exit(2)
+
+    args = parser.parse_args()
+
+    # --- Dispatch early-return modes ---
+
+    if args.trace:
+        sys.exit(check_trace(args.trace[0], args.trace[1],
+                             json_output=args.json_output,
+                             evidence_arg=args.evidence))
+
+    if args.probe:
+        sys.exit(probe_behavior(args.probe))
+
+    if args.trace_coverage:
         try:
-            sys.exit(trace_coverage_report(sys.argv[2], sys.argv[3], json_output=tc_json))
-        except Exception as e:  # exit-code contract: tool error = 2 (ticket 043)
+            sys.exit(trace_coverage_report(args.trace_coverage[0],
+                                           args.trace_coverage[1],
+                                           json_output=args.json_output))
+        except Exception as e:
             print(f"ERROR: trace-coverage failed: {e}", file=sys.stderr)
             sys.exit(2)
 
-    # Handle --coverage mode early (different flow)
-    if sys.argv[1] == "--coverage":
-        if len(sys.argv) < 3:
-            print("Usage: archwright-check --coverage <specs-dir> [--target <root>] [--json]")
-            sys.exit(2)
-        cov_target = None
-        cov_json = "--json" in sys.argv[3:]
-        rest = [a for a in sys.argv[3:] if a != "--json"]
-        for idx, a in enumerate(rest):
-            if a == "--target" and idx + 1 < len(rest):
-                cov_target = rest[idx + 1]
+    if args.coverage:
         try:
-            sys.exit(coverage_report(sys.argv[2], target_root=cov_target, json_output=cov_json))
-        except Exception as e:  # exit-code contract: tool error = 2 (ticket 043)
+            sys.exit(coverage_report(args.coverage,
+                                     target_root=args.target,
+                                     json_output=args.json_output))
+        except Exception as e:
             print(f"ERROR: coverage failed: {e}", file=sys.stderr)
             sys.exit(2)
 
-    # Handle --pbt mode early (different flow)
-    if sys.argv[1] == "--pbt":
-        rest = sys.argv[2:]
-        pbt_spec = None
-        pbt_step = None
-        pbt_emit = None
-        pbt_json = "--json" in rest
-        pbt_examples = 200
-        args_remaining = [a for a in rest if a != "--json"]
-        i = 0
-        while i < len(args_remaining):
-            if args_remaining[i] == "--step" and i + 1 < len(args_remaining):
-                pbt_step = args_remaining[i + 1]
-                i += 2
-            elif args_remaining[i] == "--emit" and i + 1 < len(args_remaining):
-                pbt_emit = args_remaining[i + 1]
-                i += 2
-            elif args_remaining[i] == "--examples" and i + 1 < len(args_remaining):
-                pbt_examples = int(args_remaining[i + 1])
-                i += 2
-            elif pbt_spec is None:
-                pbt_spec = args_remaining[i]
-                i += 1
-            else:
-                i += 1
-        if not pbt_spec or not pbt_step:
-            print("Usage: archwright-check --pbt <spec.yaml> --step <step_module.py> "
-                  "[--emit <dir>] [--examples N] [--json]")
-            sys.exit(2)
-        # Import and run the PBT adapter
+    if args.pbt:
+        if not args.step:
+            parser.error("--pbt requires --step <step_module.py>")
         pbt_adapter = Path(__file__).parent / "stacks" / "python" / "pbt_harness" / "adapter.py"
         if not pbt_adapter.exists():
             print(f"ERROR: PBT adapter not found: {pbt_adapter}", file=sys.stderr)
@@ -2426,8 +2462,8 @@ def main():
         pbt_mod_spec = importlib.util.spec_from_file_location("pbt_adapter", str(pbt_adapter))
         pbt_mod = importlib.util.module_from_spec(pbt_mod_spec)
         pbt_mod_spec.loader.exec_module(pbt_mod)
-        result = pbt_mod.load_and_run(pbt_spec, pbt_step, max_examples=pbt_examples)
-        if pbt_json:
+        result = pbt_mod.load_and_run(args.pbt, args.step, max_examples=args.examples)
+        if args.json_output:
             print(json.dumps(result, indent=2, ensure_ascii=False))
         else:
             status = result.get("status", "error")
@@ -2439,63 +2475,34 @@ def main():
                 print(f"PBT ERROR: {result.get('message', 'unknown error')}")
         sys.exit({"pass": 0, "fail": 1, "error": 2}.get(result.get("status"), 2))
 
-    files = []
-    target_root = None
-    static_only = False
-    json_output = False
-    mode = "files"
-    baseline_arg = None
-    evidence_arg = None
-    update_baseline = False
-    changed_only = False
-    base_ref = "HEAD"
+    # --- Main loop modes (--all, --static, or bare files) ---
 
-    # Parse args
-    args = sys.argv[1:]
-    i = 0
-    while i < len(args):
-        if args[i] == "--all":
-            mode = "all"
-            i += 1
-            if i < len(args):
-                directory = Path(args[i])
-                files = sorted(
-                    [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
-                )
-        elif args[i] == "--static":
-            static_only = True
-            mode = "static"
-            i += 1
-            if i < len(args):
-                directory = Path(args[i])
-                files = sorted(
-                    [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
-                )
-        elif args[i] == "--target":
-            i += 1
-            if i < len(args):
-                target_root = Path(args[i]).resolve()
-        elif args[i] == "--baseline":
-            i += 1
-            if i < len(args):
-                baseline_arg = args[i]
-        elif args[i] == "--evidence":
-            i += 1
-            if i < len(args):
-                evidence_arg = args[i]
-        elif args[i] == "--update-baseline":
-            update_baseline = True
-        elif args[i] == "--changed-only":
-            changed_only = True
-        elif args[i] == "--base":
-            i += 1
-            if i < len(args):
-                base_ref = args[i]
-        elif args[i] == "--json":
-            json_output = True
-        else:
-            files.append(Path(args[i]))
-        i += 1
+    files = []
+    target_root = Path(args.target).resolve() if args.target else None
+    static_only = False
+    json_output = args.json_output
+    mode = "files"
+    baseline_arg = args.baseline
+    evidence_arg = args.evidence
+    update_baseline = args.update_baseline
+    changed_only = args.changed_only
+    base_ref = args.base
+
+    if args.all_dir:
+        mode = "all"
+        directory = Path(args.all_dir)
+        files = sorted(
+            [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
+        )
+    elif args.static_dir:
+        static_only = True
+        mode = "static"
+        directory = Path(args.static_dir)
+        files = sorted(
+            [f for f in directory.rglob("*") if f.suffix in (".yaml", ".yml", ".md")]
+        )
+    else:
+        files = [Path(f) for f in args.files]
 
     if not files:
         if json_output:

@@ -279,6 +279,47 @@ EOF
 fi
 
 echo ""
+echo "=== Alloy Verdict Format-Break Detection (ticket 096) ==="
+# Proves that parse_alloy_verdicts() returns empty on malformed output,
+# which check_behavior() converts to exit 2 (error status). If the Alloy
+# jar output format changes, the regex produces no match → loud failure,
+# never a silent pass.
+AV_RESULT=$(python3 -c "
+import sys; sys.path.insert(0, '$TOOLS')
+# Must be importable as a module for the function extraction
+# Use exec to import from file path directly
+from pathlib import Path
+import importlib.util
+spec = importlib.util.spec_from_file_location('check', '$TOOLS/archwright-check.py')
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+# Valid format produces verdicts
+valid = '1. check myAssert for 4 Sig expect 0  UNSAT'
+result = mod.parse_alloy_verdicts(valid)
+assert result == {'myAssert': 'UNSAT'}, f'valid parse failed: {result}'
+
+# Malformed formats produce empty dict (triggers error path)
+malformed_samples = [
+    'Result: SATISFIABLE',           # different tool's format
+    '1. myAssert is valid',          # missing check keyword
+    'check myAssert UNKNOWN',        # invalid verdict token
+    '',                              # empty output
+    'java.lang.Exception: error',    # crash output
+]
+for sample in malformed_samples:
+    result = mod.parse_alloy_verdicts(sample)
+    assert result == {}, f'malformed should return empty: {repr(sample)} → {result}'
+
+print('OK')
+" 2>&1)
+if [ "$AV_RESULT" = "OK" ]; then
+  report PASS "alloy-verdict: format-break → empty dict (triggers exit 2, not silent pass)"
+else
+  report FAIL "alloy-verdict: format-break → empty dict (triggers exit 2, not silent pass)" "$AV_RESULT"
+fi
+
+echo ""
 echo "=== Stack Adapter Conformance: typescript.trace_emitter ==="
 # Extension Protocol rules 3-5: spike output is the scenario; corpus includes a
 # violating trace that must FAIL; status is computed by this suite.

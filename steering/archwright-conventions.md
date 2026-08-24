@@ -192,3 +192,29 @@ Every ticket that changes the report's visual rendering or content structure MUS
 - The commit message references the ticket(s) that motivated the change
 - Tickets are not closed until the reference report is pushed
 - Screenshots (via `tools/report/playwright-check.js --screenshots`) are advisory, not required to commit — but a Playwright pass (`node tools/report/playwright-check.js <report.html>`) must succeed before closing
+
+## Field-Evidence Convention
+
+"Field-proven" claims in this repo (REGISTRY.yaml `★★` status, AGENTS.md field references, lesson provenance) require inspectable committed artifacts. Claims without evidence are assertions, not facts.
+
+**Format:** One YAML digest per field run at `field-evidence/<alias>-<date>.yaml`:
+
+```yaml
+alias: tilerush-demo          # sanitized project name (Key Constraints bullet 12)
+date: 2026-07-18              # run date
+duration_h: 3.2               # wall-clock hours
+specs_checked: 14             # total specs evaluated
+violations_found: 3           # violations surfaced
+violations_fixed: 3           # violations resolved same-session
+trace_coverage: 12/14         # traces validated / behavior specs total
+notable: "rule-4 violating scenario exposed translate_predicate defect"
+expires: 2027-01-18           # 6-month decay from run date
+```
+
+**Principles:**
+- Failure-and-recovery evidence is more credible than success counts — document what broke and how it was fixed
+- Evidence expires: 6-month decay. After expiry, re-run or delete — stale claims are worse than no claims
+- Sanitized aliases only (per Key Constraints "Sanitized field references")
+- No retroactive fabrication — this convention applies to future field runs only
+- Digests committed to THIS repo; raw traces and full output stay in target projects
+- The `expires` field is a signal, not enforcement — expired digests are flagged by `archwright-validate` but not auto-deleted
