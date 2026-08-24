@@ -1,7 +1,7 @@
 ---
 id: "096"
 title: "Triage deep-dive findings; implement validated in-repo improvements"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -128,16 +128,16 @@ Two placements:
 
 ## Acceptance criteria
 
-- [ ] Triage table recorded (above) with fresh evidence per finding
-- [ ] `python3 tools/archwright-check.py --help` and
+- [x] Triage table recorded (above) with fresh evidence per finding
+- [x] `python3 tools/archwright-check.py --help` and
       `python3 tools/archwright-validate.py --help` print usage and exit 0;
       no flag behavior changed
-- [ ] Fixture suite green: 164 passed, 0 failed, 0 skipped (or count+1 for
+- [x] Fixture suite green: 164 passed, 0 failed, 0 skipped (or count+1 for
       the new Alloy fixture — update AGENTS.md Commands row if count changes)
-- [ ] New fixture proves Alloy-format break → exit 2 (loud), not silent pass
-- [ ] Evidence-digest convention written into AGENTS.md Key Constraints +
+- [x] New fixture proves Alloy-format break → exit 2 (loud), not silent pass
+- [x] Evidence-digest convention written into AGENTS.md Key Constraints +
       steering/archwright-conventions.md
-- [ ] Scope check: `git diff` touches only tools/archwright-check.py,
+- [x] Scope check: `git diff` touches only tools/archwright-check.py,
       tools/archwright-validate.py, tools/run-fixture-tests.sh, AGENTS.md,
       steering/archwright-conventions.md, and this ticket file
 
@@ -150,3 +150,7 @@ Two placements:
 - `mise run test` → 164/0/0 (or 165/0/0 with new fixture)
 - grep `parse_alloy_verdicts` in check.py confirms extraction is a named function
 - grep `field-evidence` in conventions.md confirms new section exists
+
+## Resolution (2026-08-24)
+
+Implemented all 3 cheap wins: argparse --help for both CLIs (preserving all flag/exit semantics), Alloy verdict extraction isolated as parse_alloy_verdicts() with format-break fixture (165th check), field-evidence convention written. Monolith split deferred to ticket 097 (high priority).
