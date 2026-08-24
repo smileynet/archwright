@@ -38,56 +38,59 @@ gitignored — substance carried here).
 6. Trajectory: backlog exhausted (90/95 done before this ticket), last ADR
    Jul 27, momentum stalled awaiting a field driver.
 
-Out of scope here: the field run itself (023 owns it), Windows suite gaps
-(058–060 own those), packaging manifests (095 owns those).
+## Triage (2026-08-23, re-validated against current tree)
+
+| # | Finding | Verdict | Evidence |
+|---|---------|---------|----------|
+| 1 | check.py monolith (2,636 LOC) | **Defer → ticket 097** (high pri) | `wc -l` = 2636; `main()` is 315 lines of cascading `sys.argv[1] ==` checks |
+| 2 | No `--help` on either CLI | **Implement here** | Both use raw `sys.argv` slicing; `--help` would be treated as a filename path |
+| 3 | Alloy verdict regex brittle | **Implement here** | Lines 517-522: single inline `re.finditer` over combined stdout+stderr; already fail-loud but not fixture-proven |
+| 4 | Field claims have no in-repo artifacts | **Implement here (convention)** | Confirmed: no `design/report/` or digest committed in this repo for any field run |
+| 5 | GDScript adapters pending | **Reject** | By design — Extension Protocol allows pending-with-reason; no target project available |
+| 6 | Momentum stalled | **Reject** | Observational; not actionable as a code change |
 
 ## What to build
 
-Phase A — Triage (read-only):
-1. Re-validate each finding above against the current tree before acting
-   (line numbers drift; confirm each claim with fresh evidence).
-2. For each finding classify: implement now / defer-with-ticket /
-   reject-with-reason. Record the triage table in the Resolution below.
+With the monolith split deferred to 097, this ticket covers the three cheap wins:
 
-Phase B — Implement the cheap wins (expected to validate):
+### 1. argparse `--help` for both primary CLIs
 
-3. **argparse `--help` for both primary CLIs** — migrate
-   `archwright-check.py` + `archwright-validate.py` main-entry flag parsing
-   to argparse (or add a help path) without changing any existing flag or
-   exit-code semantics (0 pass / 1 violations / 2 tool error). All current
-   invocations in `tools/run-fixture-tests.sh` must behave identically.
-4. **Decouple Alloy verdict extraction** — isolate solver-output parsing into
-   one function with a documented contract; add a fixture test feeding a
-   synthetic verdict-format variant to prove a jar-bump fails loud (exit 2)
-   rather than silent-passes. Do NOT widen acceptance of malformed output.
-5. **Split `archwright-check.py`** — mechanical extraction into modules under
-   `tools/check/` (e.g., fingerprints, ledger, scoping, backends/, replay,
-   coverage, pbt), keeping the CLI entry stable and `archwright_common.py`
-   untouched. No behavior change: `mise run test` stays green at the same
-   count with zero skips. If the split proves riskier than valuable mid-work,
-   stop at module boundaries that are clean and record why in Resolution —
-   partial delivery is acceptable, silent half-refactor is not.
+Migrate `archwright-check.py` and `archwright-validate.py` main-entry flag
+parsing to argparse. Preserve all existing flags and exit-code semantics
+(0 pass / 1 violations / 2 tool error). All invocations in
+`tools/run-fixture-tests.sh` must behave identically.
 
-Phase C — Evidence externalization practice:
+### 2. Isolate Alloy verdict extraction + fixture
 
-6. Add a short section to `steering/archwright-conventions.md` (or AGENTS.md
-   Key Constraints) establishing that field runs must deposit a sanitized,
-   committed digest artifact (counts, violations found/fixed, timings) into
-   this repo — so "field-proven" claims become inspectable. One paragraph +
-   template pointer; do not invent retroactive digests for past runs.
+Extract `parse_alloy_verdicts(combined_output: str) -> dict[str, str]` as a
+named function with a docstring documenting the expected format. Add a fixture
+test in `tools/run-fixture-tests.sh` that feeds synthetic malformed Alloy
+output and asserts exit 2 (loud failure), not silent pass.
+
+### 3. Evidence-digest convention
+
+Add a short section to AGENTS.md Key Constraints (or
+`steering/archwright-conventions.md`) establishing that field runs must deposit
+a sanitized, committed digest artifact (counts, violations found/fixed,
+timings) into this repo — so "field-proven" claims become inspectable. One
+paragraph + template pointer; do not invent retroactive digests for past runs.
 
 ## Acceptance criteria
 
-- [ ] Triage table recorded in Resolution with fresh evidence per finding
-      (validated / rejected + reason)
+- [ ] Triage table recorded (above) with fresh evidence per finding
 - [ ] `python3 tools/archwright-check.py --help` and
       `python3 tools/archwright-validate.py --help` print usage and exit 0;
       no flag behavior changed
-- [ ] Fixture suite green: same check count as before this ticket, 0 failed,
-      0 skipped (count updated in AGENTS.md Commands row if it changes)
+- [ ] Fixture suite green: 164 passed, 0 failed, 0 skipped
 - [ ] New fixture proves Alloy-format break → exit 2 (loud), not silent pass
-- [ ] check.py split (if completed): imports work standalone, CLI entry
-      unchanged, `git diff` shows no semantic edits inside extracted code
-- [ ] Evidence-digest convention written into steering/AGENTS.md
-- [ ] Scope check: `git diff` touches only files this ticket names plus the
-      ticket file itself
+- [ ] Evidence-digest convention written into AGENTS.md or steering
+- [ ] Scope check: `git diff` touches only tools/archwright-check.py,
+      tools/archwright-validate.py, tools/run-fixture-tests.sh, AGENTS.md or
+      steering/archwright-conventions.md, and this ticket file
+
+## Validation criteria
+
+- `python3 tools/archwright-check.py --help` → exit 0, prints flags
+- `python3 tools/archwright-validate.py --help` → exit 0, prints usage
+- `mise run test` → 164/0/0 (or count+1 for the new Alloy fixture)
+- grep for new fixture in `run-fixture-tests.sh` confirms malformed-verdict test exists
