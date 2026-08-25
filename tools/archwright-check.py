@@ -52,246 +52,25 @@ from archwright_common import state_events
 SCRIPT_DIR = Path(__file__).parent
 
 # ---------------------------------------------------------------------------
-# Violation fingerprinting (R32, aw/v1) — CK-07/CK-08 baseline plumbing.
-# Identity = spec_id + invariant + normalized path + normalized evidence
-# content. Line numbers NEVER enter the hash (SARIF 2.1.0 Appendix B: inserting
-# lines above a result must not change its identity). Occurrence index among
-# identical tuples is appended AFTER hashing (semgrep convention) so sibling
-# duplicates stay visibly related. Algorithm changes bump the version tag —
-# entries with an unknown algo are unmatchable, never guessed at.
+# Shared constants and utilities — canonical source: check/common.py
+# Tombstone re-exports for backward compatibility during extraction.
 # ---------------------------------------------------------------------------
+from check.common import (
+    FINGERPRINT_ALGO, _EVIDENCE_RX, _EVIDENCE_CAP, _SEVERITY,
+    _find_up, extract_frontmatter, load_spec, _project_root_for,
+    _code_state, _extract_section, _expected_for,
+    _fingerprint_base, _split_evidence,
+)
 
-FINGERPRINT_ALGO = "aw/v1"
-BASELINE_FILENAME = ".archwright-baseline.json"
-_EVIDENCE_RX = re.compile(r"^(.*?):(\d+):(.*)$")
-_EVIDENCE_CAP = 100  # evidence[] and fingerprints[] stay aligned; both capped
-
-
-def _fingerprint_base(spec_id, invariant, path, content):
-    """aw/v1 fingerprint base: sha256 over NUL-joined identity inputs,
-    truncated to 64 bits (16 hex chars — GitHub's primaryLocationLineHash
-    width; collision space is per-project)."""
-    norm_content = " ".join((content or "").split())
-    basis = "\x00".join([spec_id or "", invariant or "", path or "", norm_content])
-    return hashlib.sha256(basis.encode("utf-8")).hexdigest()[:16]
+from check.baseline import BASELINE_FILENAME, find_baseline, load_baseline
 
 
-def _split_evidence(item):
-    """Decompose a 'path:line:content' evidence string into (path, content),
-    dropping the volatile line number. Items in another shape (script output,
-    Alloy counterexample lines) hash whole as content with an empty path."""
-    m = _EVIDENCE_RX.match(item)
-    if m:
-        return m.group(1), m.group(3)
-    return "", item
-
-
-def _find_up(start_dirs, filename):
-    """Walk up from each start dir looking for filename; stop at the repo
-    boundary (a file above the repo is never ours). Returns Path or None."""
-    seen = set()
-    for d in start_dirs:
-        d = Path(d).resolve()
-        if not d.is_dir():
-            d = d.parent
-        while d not in seen:
-            seen.add(d)
-            cand = d / filename
-            if cand.is_file():
-                return cand
-            if (d / ".git").exists() or d.parent == d:
-                break
-            d = d.parent
-    return None
-
-
-def find_baseline(start_dirs, explicit=None):
-    """Locate .archwright-baseline.json: explicit flag wins; otherwise walk up
-    from each start dir. Returns a Path or None. No baseline = no suppression
-    (never silently create one — baseline entries are a human decision)."""
-    if explicit:
-        return Path(explicit)
-    return _find_up(start_dirs, BASELINE_FILENAME)
-
-
-def load_baseline(path):
-    """Parse the baseline file. Returns (data, matchable-fingerprint-set).
-    Entries with an unknown algo are retained in data but excluded from
-    matching (stale, never guessed). Raises ValueError on malformed JSON."""
-    try:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as e:
-        raise ValueError(f"cannot read baseline {path}: {e}")
-    entries = data.get("entries", [])
-    if not isinstance(entries, list):
-        raise ValueError(f"baseline {path}: 'entries' must be a list")
-    fps = {e["fingerprint"] for e in entries
-           if isinstance(e, dict) and "fingerprint" in e
-           and e.get("algo", FINGERPRINT_ALGO) == FINGERPRINT_ALGO}
-    return data, fps
-
-
-# ---------------------------------------------------------------------------
-# Evidence ledger (ADR 0009) — tool-owned sibling of the baseline.
-# Machine evidence events (demotion/promotion candidates) are auto-appended
-# here so confidence stops being write-once; human RATIFICATION never happens
-# in this file (it happens in the artifact: confidence field + Evidence line;
-# ★★ transitions always block for HITL — ADR 0007).
-#
-# Activation by existence: writes happen only when the ledger file already
-# exists (discovered up-tree like the baseline) or --evidence names one
-# explicitly (create-if-missing — the flag states intent). No file, no flag =
-# events stay session-ephemeral (the ADR's accepted gap, opted out of per
-# project by touching design/.archwright-evidence.json). This also keeps
-# checked-in fixture trees clean.
-# ---------------------------------------------------------------------------
-
-EVIDENCE_FILENAME = ".archwright-evidence.json"
-PROMOTION_STREAK_DEFAULT = 5
-
-
-def find_evidence_ledger(start_dirs, explicit=None):
-    """Locate the evidence ledger. Explicit flag wins (missing file = will be
-    created on write); otherwise only an EXISTING file activates the ledger."""
-    if explicit:
-        return Path(explicit)
-    return _find_up(start_dirs, EVIDENCE_FILENAME)
-
-
-def load_evidence_ledger(path):
-    """Parse the ledger. Missing file = empty ledger (valid only under an
-    explicit --evidence). Malformed JSON = ValueError (exit 2 upstream) —
-    same discipline as the baseline: never guess at a corrupt ledger."""
-    path = Path(path)
-    if not path.is_file():
-        return {"events": [], "streaks": {}}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as e:
-        raise ValueError(f"cannot read evidence ledger {path}: {e}")
-    if not isinstance(data, dict):
-        raise ValueError(f"evidence ledger {path}: top level must be an object")
-    data.setdefault("events", [])
-    data.setdefault("streaks", {})
-    if not isinstance(data["events"], list) or not isinstance(data["streaks"], dict):
-        raise ValueError(f"evidence ledger {path}: 'events' must be a list, 'streaks' an object")
-    return data
-
-
-def _event_identity(ev):
-    """Dedup key: identical re-observation of known evidence appends nothing;
-    new evidence (fingerprints), a changed confidence, or a different reason
-    is a new event. Timestamps never enter identity."""
-    return (ev.get("event"), ev.get("key"), ev.get("invariant"),
-            ev.get("confidence"), ev.get("reason"),
-            tuple(sorted(ev.get("fingerprints") or [])))
-
-
-def record_evidence(ledger, per_file, violations_by_spec, code_state=None):
-    """Apply one check run to the ledger (ADR 0009). Returns events appended.
-
-    - demotion-candidate: FAIL on a ★★ or ★ spec/invariant. Baselined
-      violations emit nothing (the baseline entry IS the human adjudication);
-      '—' fails emit nothing (no confidence claim to demote).
-    - promotion-candidate: pass streak reaches config.promotion_streak
-      (default 5) per (key, invariant) — fail resets, error/skip neither
-      counts nor resets (proves nothing) — or a deeper-tier pass: a ★/—
-      invariant passing a mechanical (bounded) check. ★★ never promotes.
-    - Contract/pattern results are schema-only, not evidence: excluded.
-    - code_state (ticket 018): appended events carry the git commit + dirty
-      flag of the checked tree, like `at` — dedup identity UNCHANGED (a
-      re-observation at a new commit of unchanged evidence appends nothing;
-      staleness is judged by consumers, not re-recorded).
-    """
-    from datetime import datetime, timezone
-
-    streak_target = ledger.get("config", {}).get(
-        "promotion_streak", PROMOTION_STREAK_DEFAULT)
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    existing = {_event_identity(e) for e in ledger["events"]
-                if isinstance(e, dict)}
-    appended = []
-
-    def _append(ev):
-        if _event_identity(ev) not in existing:
-            existing.add(_event_identity(ev))
-            ev["at"] = now
-            if code_state is not None:
-                ev["code_state"] = code_state
-            ledger["events"].append(ev)
-            appended.append(ev)
-
-    for spec_path, kind, results in per_file:
-        if kind not in ("behavior", "constraint", "dependency"):
-            continue
-        doc_violations = violations_by_spec.get(str(spec_path), {})
-        for r in results:
-            spec_id = r.get("spec_id", "unknown")
-            invariant = r.get("invariant")
-            key = f"{kind}:{spec_id}"
-            skey = f"{key}#{invariant}"
-            conf = r.get("confidence", "—")
-            status = r["status"]
-
-            if status == "fail":
-                ledger["streaks"].pop(skey, None)
-                v = doc_violations.get(invariant, {})
-                if v.get("baselined"):
-                    continue
-                if conf not in ("★★", "★"):
-                    continue
-                _append({
-                    "event": "demotion-candidate",
-                    "key": key,
-                    "invariant": invariant,
-                    "confidence": conf,
-                    "assurance": r.get("assurance"),
-                    "fingerprints": v.get("fingerprints", []),
-                    "from_pattern": r.get("from_pattern"),
-                    "from_force": r.get("from_force"),
-                    "message": r.get("message"),
-                })
-            elif status == "pass":
-                if conf == "★★":
-                    continue  # top tier — nothing to promote toward
-                # Deeper-tier pass: heuristic-confidence invariant survived a
-                # mechanical check — immediate promotion candidate.
-                if r.get("assurance") == "bounded":
-                    _append({
-                        "event": "promotion-candidate",
-                        "key": key,
-                        "invariant": invariant,
-                        "confidence": conf,
-                        "reason": "deeper-check-pass (bounded/mechanical)",
-                        "fingerprints": [],
-                    })
-                streak = ledger["streaks"].get(skey, 0) + 1
-                ledger["streaks"][skey] = streak
-                if streak == streak_target:
-                    _append({
-                        "event": "promotion-candidate",
-                        "key": key,
-                        "invariant": invariant,
-                        "confidence": conf,
-                        "reason": f"pass-streak-{streak_target}",
-                        "fingerprints": [],
-                    })
-            # skipped/pending/error: neither counts nor resets — proves nothing.
-    return appended
-
-
-def write_evidence_ledger(path, ledger):
-    """Persist the ledger. A write failure after checks ran must not change
-    the run's verdict: warn on stderr, exit code untouched."""
-    try:
-        Path(path).write_text(
-            json.dumps(ledger, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8")
-        return True
-    except OSError as e:
-        print(f"WARNING: evidence ledger not written ({e}) — events from this "
-              f"run are lost", file=sys.stderr)
-        return False
+# Evidence ledger (ADR 0009) — canonical source: check/ledger.py
+from check.ledger import (
+    EVIDENCE_FILENAME, PROMOTION_STREAK_DEFAULT,
+    find_evidence_ledger, load_evidence_ledger,
+    _event_identity, record_evidence, write_evidence_ledger,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -351,62 +130,6 @@ def _spec_affected(spec_path, changed):
             if c == tp or tp in c.parents:
                 return True
     return False
-
-
-def _code_state(root):
-    """Git identity of the checked tree (ticket 018, EDA signoff precedent):
-    {'commit': <hash>, 'dirty': <bool>} — evidence recorded at a commit can be
-    told apart from evidence about some other code state. A dirty tree means
-    the commit does NOT fully identify the checked code; consumers treat such
-    evidence as unverifiable for signoff-grade claims.
-
-    Git absent / not a repo = {'commit': None, 'dirty': None, 'reason': ...} —
-    a coverage statement on the field, never a crash (unlike --changed-only,
-    nothing here REQUIRES git; identity is best-effort)."""
-    import shutil
-    if shutil.which("git") is None:
-        return {"commit": None, "dirty": None, "reason": "git not on PATH"}
-    r = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"],
-                       capture_output=True, text=True)
-    if r.returncode != 0:
-        return {"commit": None, "dirty": None,
-                "reason": "not a git repository (or no commits yet)"}
-    s = subprocess.run(["git", "-C", str(root), "status", "--porcelain"],
-                       capture_output=True, text=True)
-    return {"commit": r.stdout.strip(),
-            "dirty": bool(s.stdout.strip()) if s.returncode == 0 else None}
-
-
-def extract_frontmatter(path):
-    """Extract YAML frontmatter from a markdown file.
-
-    Fence-aware (ticket 039): fences are LINES matching ^---$, never the
-    substring — a block scalar legitimately containing `---` (e.g. a grep
-    for fence lines) must not truncate the frontmatter. Block-scalar content
-    is indented, so it can never match a fence-line pattern.
-    """
-    content = path.read_text(encoding="utf-8")
-    m = re.match(r"---[ \t]*\r?\n", content)
-    if not m:
-        return None
-    body = content[m.end():]
-    m2 = re.search(r"^---[ \t]*$", body, re.MULTILINE)
-    if not m2:
-        return None
-    return yaml.safe_load(body[: m2.start()])
-
-
-def load_spec(path):
-    """Load a spec file, return (data, kind)."""
-    path = Path(path)
-    if path.suffix in (".yaml", ".yml"):
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        return data, data.get("kind")
-    elif path.suffix == ".md":
-        data = extract_frontmatter(path)
-        if data:
-            return data, data.get("kind")
-    return None, None
 
 
 def _find_alloy_jar():
@@ -577,22 +300,6 @@ def _alloy_field_name(name):
     """Mirror archwright-compile-alloy's _to_field: slug → camelCase assert name."""
     parts = name.replace("-", "_").split("_")
     return parts[0] + "".join(p.capitalize() for p in parts[1:])
-
-
-def _project_root_for(spec_path):
-    """Determine the project root for a spec: ARCHWRIGHT_PROJECT_ROOT env
-    (set by --target) wins, else walk up from the spec dir looking for a
-    project marker."""
-    env_root = os.environ.get("ARCHWRIGHT_PROJECT_ROOT")
-    if env_root:
-        return Path(env_root)
-    spec_dir = Path(spec_path).resolve().parent
-    project_root = spec_dir
-    for _ in range(5):
-        if (project_root / "design").exists() or (project_root / "project.godot").exists():
-            break
-        project_root = project_root.parent
-    return project_root
 
 
 def check_contract(data, spec_path):
@@ -1211,33 +918,6 @@ def _first_pattern(check):
     """Extract from_pattern context if available."""
     return check.get("from_pattern", None)
 
-
-_SEVERITY = {"★★": "error", "★": "warning", "—": "info"}
-
-
-def _extract_section(md_path, header):
-    """Extract the body of a '## <header>' section from a markdown spec."""
-    try:
-        text = Path(md_path).read_text(encoding="utf-8")
-    except OSError:
-        return None
-    m = re.search(rf"^##\s+{re.escape(header)}\s*\n(.*?)(?=^##\s|\Z)", text, re.M | re.S)
-    return m.group(1).strip() if m else None
-
-
-def _expected_for(r, data, spec_path):
-    """The 'expected' side of a contrast pair: the rule as the design states it."""
-    if Path(spec_path).suffix == ".md":
-        rule = _extract_section(spec_path, "Rule")
-        if rule:
-            return rule
-    # Behavior specs: the violated invariant's own description + predicate
-    for inv in data.get("invariants", []):
-        if inv.get("id") == r.get("invariant"):
-            desc = inv.get("description", "")
-            pred = inv.get("predicate", "")
-            return f"{desc} ({pred})" if desc else pred
-    return data.get("user_story") or data.get("id", "")
 
 
 def enrich_results(results, data, spec_path):
