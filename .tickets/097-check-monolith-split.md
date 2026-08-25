@@ -1,7 +1,7 @@
 ---
 id: "097"
 title: "Split archwright-check.py into modules under tools/check/"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 ---
@@ -127,13 +127,13 @@ closures are the complexity, not the module boundary.
 ## Acceptance criteria
 
 - [x] `tools/check/` package exists with at least 5 extracted modules (4 done, need 1 more minimum)
-- [ ] `archwright-check.py` reduced by ≥60% LOC (from 2,643 → ≤1,057)
+- [x] `archwright-check.py` reduced by ≥60% LOC (from 2,643 → ≤1,057)
 - [x] `mise run test` green: 165 passed, 0 failed, 0 skipped
 - [x] No flag or exit-code behavior changed
 - [x] `archwright_common.py` unchanged
-- [ ] No circular imports verified
-- [ ] Dependency layering holds
-- [ ] Scope check passes
+- [x] No circular imports verified
+- [x] Dependency layering holds
+- [x] Scope check passes
 
 ## Validation criteria
 
@@ -143,3 +143,7 @@ closures are the complexity, not the module boundary.
 - `python3 tools/archwright-check.py --probe examples/planned/design/specs/purchase-session.yaml` → same
 - `wc -l tools/archwright-check.py` ≤ 1,057
 - `python3 -c "import sys; sys.path.insert(0,'tools'); from check import common, baseline, ledger, conformance, alloy, trace, coverage; print('OK')"` → OK
+
+## Resolution (2026-08-25)
+
+All 7 modules extracted in risk order (common→baseline→ledger→coverage→conformance→alloy→trace). check.py is now a 682-LOC thin CLI dispatcher. Circular dependency broken by conformance.py (alloy imports conformance; dispatch imports both — no reverse dep). Suite green at every step.
