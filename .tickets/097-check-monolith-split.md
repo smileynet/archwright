@@ -14,96 +14,131 @@ priority: high
 ≥10 distinct jobs. Wide blast radius per change; the suite catches regressions
 but the monolith taxes evolution and onboarding.
 
-## Code Analysis (2026-08-23)
+## Analysis (2026-08-24)
 
-Function-level analysis reveals 5 natural extraction boundaries with low
-cross-module coupling:
+Dependency graph analysis revealed:
+- **One circular dependency**: alloy ↔ backends (`check_contract` calls
+  `check_conformance`; `check_file` calls `check_behavior`/`check_contract`)
+- **No mutable module-level state** — all immutable constants, no globals
+- **10 module-level constants** used across boundaries (SCRIPT_DIR,
+  FINGERPRINT_ALGO, _SEVERITY, etc.)
+- **5 shared utility functions** used by 3+ areas (load_spec,
+  _project_root_for, extract_frontmatter, _code_state, _expected_for)
+- **Single library import of check.py**: the ticket-096 Alloy verdict fixture
+  uses `importlib.util.spec_from_file_location` to access
+  `parse_alloy_verdicts` — must remain accessible or test updated
 
-| Module | Functions | LOC | External deps |
-|--------|-----------|-----|---------------|
-| **trace.py** | `Untranslatable`, `_unquote`, `translate_predicate`, `_find_op`, `_split_op`, `build_trace_document`, `check_trace` | ~549 | `_fingerprint_base`, ledger functions, `_code_state` |
-| **backends.py** | `_find_bash`, `_include_match`, `_python_grep`, `_check_grep`, `_check_script`, `_check_semgrep` | ~441 | `_fingerprint_base`, project_root |
-| **coverage.py** | `trace_coverage_report`, `coverage_report` | ~217 | `load_spec`, `extract_frontmatter` |
-| **alloy.py** | `_find_alloy_jar`, `check_behavior`, `parse_alloy_verdicts`, `_alloy_field_name`, `probe_behavior`, `_check_structural_invariants` | ~316 | `_fingerprint_base`, YAML schema |
-| **ledger.py** | `_fingerprint_base`, `_split_evidence`, `_find_up`, `find_baseline`, `load_baseline`, `find_evidence_ledger`, `load_evidence_ledger`, `_event_identity`, `record_evidence`, `write_evidence_ledger` | ~238 | none (leaf module) |
+**Circular dependency solution**: Extract `check_conformance` + its private
+helpers (grep/script/semgrep checkers) into `conformance.py`. Both `alloy.py`
+(for contract specs' check sections) and the dispatch layer import from it.
+Neither imports the other.
 
-**Total extractable: ~1,761 LOC (67% of file)**
+## Module architecture
 
-Remaining in check.py (~882 LOC): `_git_changed_files`, `_spec_affected`,
-`_code_state`, `extract_frontmatter`, `load_spec`, `check_conformance`,
-`_first_pattern`, `_extract_section`, `_expected_for`, `enrich_results`,
-`format_result`, `check_file`, `build_document`, `_CheckParser`,
-`_build_check_parser`, `main`.
-
-## Proposed execution order (risk-ordered: lowest risk first)
-
-### Phase 1: Leaf modules (zero reverse deps)
-
-1. **`tools/check/ledger.py`** — fingerprints + evidence + baseline.
-   Zero callers outside check.py. Pure data manipulation. Safest first extraction.
-
-2. **`tools/check/coverage.py`** — both coverage report modes.
-   Self-contained dispatch targets (called from main, return exit codes).
-   Only need `load_spec` and `extract_frontmatter` imported back from check.py.
-
-### Phase 2: Backend extraction (moderate coupling)
-
-3. **`tools/check/backends.py`** — grep/script/semgrep checkers.
-   Called by `check_conformance` (which stays in check.py). Need
-   `_fingerprint_base` from ledger.py. Clean interface: each takes a check
-   block + returns results.
-
-### Phase 3: Complex modules (higher coupling)
-
-4. **`tools/check/alloy.py`** — behavior checking + probe + contract alloy.
-   Needs `_fingerprint_base`, `_find_alloy_jar`, alloy-runtime.json. The probe
-   function is called from main as an early-return mode.
-
-5. **`tools/check/trace.py`** — trace replay.
-   Most complex extraction: `translate_predicate` is 116 LOC with the
-   `Untranslatable` class; `check_trace` is 305 LOC that uses evidence/ledger
-   functions. Highest risk but highest LOC payoff.
-
-### Stop conditions
-
-- If suite breaks during a phase and the fix isn't obvious within 10 min → revert that phase, document why, deliver partial
-- If a circular import emerges → resolve by moving the shared function to a `tools/check/common.py` (not `archwright_common.py` which stays untouched)
-
-## What to build
-
-Create `tools/check/` as a Python package. Each module gets the functions
-listed above, with imports adjusted. `archwright-check.py` becomes the CLI
-entry point importing from the package.
-
-**Import strategy:** `tools/check/` is NOT on `sys.path` by default (scripts
-in `tools/` add their own directory). The CLI entry point will do:
-```python
-from check.ledger import find_baseline, load_baseline, ...
-from check.backends import _check_grep, _check_script, _check_semgrep
-from check.alloy import check_behavior, probe_behavior, parse_alloy_verdicts
-from check.trace import check_trace, translate_predicate
-from check.coverage import trace_coverage_report, coverage_report
+```
+tools/
+├── archwright-check.py          # CLI entry point (~500 LOC): parser, main(),
+│                                # build_document, git scoping, dispatch
+├── archwright_common.py         # UNCHANGED (state_events)
+└── check/
+    ├── __init__.py              # Package marker (thin — no re-exports needed)
+    ├── common.py                # Shared constants + utilities (~200 LOC):
+    │                            # SCRIPT_DIR, FINGERPRINT_ALGO, _SEVERITY,
+    │                            # _EVIDENCE_CAP, load_spec, extract_frontmatter,
+    │                            # _project_root_for, _code_state, _expected_for,
+    │                            # _extract_section, _find_up
+    ├── baseline.py              # Baseline load/discovery (~90 LOC):
+    │                            # _fingerprint_base, _split_evidence,
+    │                            # find_baseline, load_baseline, BASELINE_FILENAME
+    ├── ledger.py                # Evidence ledger (~170 LOC):
+    │                            # find_evidence_ledger, load_evidence_ledger,
+    │                            # record_evidence, write_evidence_ledger
+    ├── conformance.py           # Check backends — THE CYCLE BREAKER (~450 LOC):
+    │                            # _find_bash, _include_match, _python_grep,
+    │                            # _check_grep, _check_script, _check_semgrep,
+    │                            # check_conformance, _SKIP_DIRS, _LINE_COMMENT
+    ├── alloy.py                 # Alloy behavior + contract checking (~320 LOC):
+    │                            # _find_alloy_jar, check_behavior,
+    │                            # parse_alloy_verdicts, _alloy_field_name,
+    │                            # _check_structural_invariants, check_contract,
+    │                            # probe_behavior
+    ├── trace.py                 # Trace replay (~550 LOC):
+    │                            # Untranslatable, _unquote, _find_op, _split_op,
+    │                            # translate_predicate, build_trace_document,
+    │                            # check_trace
+    └── coverage.py              # Coverage reporting (~220 LOC):
+                                 # trace_coverage_report, coverage_report
 ```
 
-This works because `tools/` is on the path (the script's own directory) and
-`tools/check/` is a package within it.
+**Dependency layering (each module imports only from layers above):**
+```
+stdlib + yaml + archwright_common
+         ↓
+    check/common.py
+         ↓
+    check/baseline.py
+         ↓
+    check/ledger.py       check/coverage.py
+         ↓
+    check/conformance.py
+         ↓
+    check/alloy.py
+         ↓
+    check/trace.py
+         ↓
+    archwright-check.py (CLI entry)
+```
+
+No circular imports possible — strict downward-only layering.
+
+## Execution plan (git-bisect-friendly: one module per commit, suite green each step)
+
+| Step | Extract | LOC out | Risk | Stop condition |
+|------|---------|---------|------|----------------|
+| 1 | `check/common.py` | ~200 | Low | Constants + pure utilities, no callers change |
+| 2 | `check/baseline.py` | ~90 | Low | Leaf module, only common.py dep |
+| 3 | `check/ledger.py` | ~170 | Low | One-way dep on common + baseline |
+| 4 | `check/coverage.py` | ~220 | Low | Self-contained dispatch targets |
+| 5 | `check/conformance.py` | ~450 | Med | Cycle-breaker — alloy.py will import this |
+| 6 | `check/alloy.py` | ~320 | Med | Imports conformance; probe is early-return |
+| 7 | `check/trace.py` | ~550 | Med | Largest chunk; needs ledger + common |
+
+**Total extraction: ~2,000 LOC → check.py drops to ~640 LOC (76% reduction)**
+
+Each step: move functions → add tombstone re-exports (temporarily) → update
+internal imports → run suite → green → commit → remove tombstone in next step.
+
+## Import strategy
+
+- `tools/` is on `sys.path` (script's own directory) — `import check.common`
+  works naturally from `archwright-check.py`
+- The ticket-096 fixture test uses `importlib.util.spec_from_file_location` to
+  load the file — `parse_alloy_verdicts` must either (a) stay importable from
+  the original file via re-export, or (b) test updated to import from
+  `check.alloy`. Option (a) is the move+reexport pattern; option (b) is
+  cleaner long-term. **Do (a) first for safety, remove in a follow-up.**
+- `archwright_common.py` unchanged — `check/trace.py` adds `sys.path` to find
+  it, same as the CLI entry does today
 
 ## Acceptance criteria
 
-- [ ] `tools/check/` package exists with at least 3 extracted modules
-- [ ] `archwright-check.py` reduced by ≥40% LOC (from 2,643 → ≤1,586)
+- [ ] `tools/check/` package exists with at least 5 extracted modules
+- [ ] `archwright-check.py` reduced by ≥60% LOC (from 2,643 → ≤1,057)
 - [ ] `mise run test` green: 165 passed, 0 failed, 0 skipped
 - [ ] No flag or exit-code behavior changed (all fixture invocations identical)
 - [ ] `archwright_common.py` unchanged
-- [ ] No circular imports (each module imports only from check.* or stdlib)
+- [ ] No circular imports (verified: `python3 -c "from check import common, baseline, ledger, conformance, alloy, trace, coverage"` from tools/ dir)
+- [ ] Dependency layering holds (each module only imports from layers above it)
 - [ ] Scope check: changes limited to `tools/archwright-check.py`, `tools/check/`,
-      this ticket, and AGENTS.md if ownership table needs updating
+      `tools/run-fixture-tests.sh` (if test import path changes), this ticket,
+      and AGENTS.md if needed
 
 ## Validation criteria
 
-- `mise run test` → 165/0/0
-- `python3 tools/archwright-check.py --help` → same output as before
-- `python3 tools/archwright-check.py --static examples/planned/design/specs` → same output
-- `python3 tools/archwright-check.py --probe examples/planned/design/specs/purchase-session.yaml` → same output
-- `wc -l tools/archwright-check.py` ≤ 1,586
-- `python3 -c "from check import ledger, backends, alloy, trace, coverage"` succeeds (from tools/ dir)
+- `mise run test` → 165/0/0 after EVERY extraction step
+- `python3 tools/archwright-check.py --help` → same output
+- `python3 tools/archwright-check.py --static examples/planned/design/specs` → same
+- `python3 tools/archwright-check.py --probe examples/planned/design/specs/purchase-session.yaml` → same
+- `wc -l tools/archwright-check.py` ≤ 1,057
+- `python3 -c "import sys; sys.path.insert(0,'tools'); from check import common, baseline, ledger, conformance, alloy, trace, coverage; print('OK')"` → OK
+- No `from archwright` or `from tools` in any `check/*.py` (only relative `from check.X` or stdlib)
