@@ -43,7 +43,8 @@ AI-assisted design system that resolves human design intent (expressed as a forc
 │   ├── archwright-forces-gen.py   # Force inventory YAML → design/forces/*.md (mechanical projection)
 │   ├── archwright-import-woz.py   # woz-session/v1 JSON → discovery artifact (mechanical conversion; interpretation = archwright-woz-import skill)
 │   ├── archwright_common.py       # Shared spec-parsing helpers (state_events) — imported by check + compile-alloy; not a CLI
-│   ├── archwright-check.py        # Check dispatcher: constraint/dependency (grep/semgrep/script), behavior (Alloy), --trace, --static; baseline suppression + ratchet (CK-07/08); evidence ledger (ADR 0009); --trace-coverage, --coverage
+│   ├── archwright-check.py        # Check dispatcher (CLI entry point, 682 LOC): argparse, main(), build_document, git scoping, dispatch. Imports domain logic from check/ package.
+│   ├── check/                     # Check internals package (ticket 097): common.py, baseline.py, ledger.py, conformance.py, alloy.py, trace.py, coverage.py
 │   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
 │   ├── archwright-compile-contract-alloy.py # Contract spec structural_invariants → Alloy 6 model (static, no transitions)
 │   ├── archwright-check-compile.mjs # Intent patterns → check blocks
