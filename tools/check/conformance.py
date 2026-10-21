@@ -72,6 +72,36 @@ def _find_bash():
     return None
 
 
+_PYTHON3_SHIM = None
+
+
+def _python3_shim_prefix():
+    """Bash prelude ensuring `python3` in a spec command resolves to a working Python.
+
+    On Windows, mise-managed Python ships only `python.exe` and the bare `python3`
+    name resolves to the MS Store stub (exits non-zero). A spec command's fresh
+    `bash -c` subprocess does NOT inherit the `python3()` function the fixture
+    runner defines in its own shell, so any `command: python3 -c "..."` fails with
+    exit 2 (ticket 058). Mirror the fixture runner: if `python3` doesn't actually
+    run but `python` does, define a `python3()` shell function that delegates to
+    `python` and prepend it to the command. Returns '' when native `python3` works
+    (Linux/macOS), so those platforms are untouched. Detected once, cached."""
+    global _PYTHON3_SHIM
+    if _PYTHON3_SHIM is not None:
+        return _PYTHON3_SHIM
+    prefix = ""
+    try:
+        if subprocess.run(["python3", "-c", "pass"],
+                          capture_output=True).returncode != 0 and \
+           subprocess.run(["python", "-c", "pass"],
+                          capture_output=True).returncode == 0:
+            prefix = 'python3() { python "$@"; }; '
+    except Exception:
+        prefix = ""
+    _PYTHON3_SHIM = prefix
+    return prefix
+
+
 _SKIP_DIRS = {".git", "Library", "Temp", "obj", "Build", ".vs", ".idea", "PackageCache", "node_modules"}
 
 # Line-comment tokens per extension — a constraint keyword appearing only in a
@@ -199,7 +229,7 @@ def _check_grep(check, spec_id, confidence, project_root):
         try:
             if bash:
                 result = subprocess.run(
-                    [bash, "-c", command], capture_output=True, text=True,
+                    [bash, "-c", _python3_shim_prefix() + command], capture_output=True, text=True,
                     cwd=str(project_root)
                 )
             else:
@@ -311,7 +341,7 @@ def _check_script(check, spec_id, confidence, project_root):
         bash = _find_bash()
         if bash:
             result = subprocess.run(
-                [bash, "-c", command], capture_output=True, text=True,
+                [bash, "-c", _python3_shim_prefix() + command], capture_output=True, text=True,
                 cwd=str(project_root)
             )
         else:
