@@ -1,7 +1,7 @@
 ---
 id: "058"
 title: "check command subprocess: python3 resolves to MS Store stub on Windows"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 ---
