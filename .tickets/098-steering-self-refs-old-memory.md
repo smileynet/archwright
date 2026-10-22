@@ -1,7 +1,7 @@
 ---
 id: "098"
 title: "Review migration finding: shipped steering self-references the old .memory/ layout"
-status: open
+status: done
 blocked_by: []
 validation_criteria:
   - "Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence"
@@ -32,6 +32,15 @@ Source: grey-matter adopt-project, 2026-10-22.
 
 ## Acceptance criteria
 
-- [ ] Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence
-- [ ] Steering self-references resolve to the relocated paths, or the decision to keep them is recorded
-- [ ] Target-project `.memory/` mentions untouched unless 099 decides otherwise
+- [x] Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence
+- [x] Steering self-references resolve to the relocated paths, or the decision to keep them is recorded
+- [x] Target-project `.memory/` mentions untouched unless 099 decides otherwise
+
+## Resolution (2026-10-22)
+
+done: steering self-references repointed to docs/agents/{audit,research,reflections}/ and docs/adr/ (770bd22)
+
+### Verification
+1. ✓ Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence — "Reproduced: grep -rn '\.memory' steering showed :33 (.memory/audit/pipeline-dryrun.md + .memory/adr/0007), :92 (.memory/research-*.md), :183 (.memory/reflections/global.md); all targets exist at docs/agents/audit/, docs/agents/research/, docs/agents/reflections/global.md, docs/adr/0007 -> confirmed"
+2. ✓ Steering self-references resolve to the relocated paths, or the decision to keep them is recorded — "Repointed in 770bd22: :33 -> docs/agents/audit/pipeline-dryrun.md + docs/adr/0007-hitl-only-gates.md, :92 -> docs/agents/research/*.md, :185 -> docs/agents/reflections/global.md; validate --links PASS"
+3. ✓ Target-project `.memory/` mentions untouched unless 099 decides otherwise — "Target-project mentions (:58,:184) changed only per 099's decision (read-new-then-legacy, write docs/agents/archwright/); no other .memory edits"
