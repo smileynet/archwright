@@ -74,11 +74,13 @@ Product-level sources (read FIRST — these establish the generative desires):
 Then read architectural sources:
 - `design/patterns/` — existing formalized patterns
 - `design/specs/` — existing checkable specs
-- `.memory/grills/` — design decisions made in grill sessions
-- `.memory/adr/` — binding architectural decisions
-- `.memory/specs/` — internal spec system (requirements, subspecs)
+- `docs/agents/grill/` (legacy `.memory/grills/`) — design decisions made in grill sessions
+- `docs/adr/` (legacy `.memory/adr/`) — binding architectural decisions
+- `docs/agents/specs/` (legacy `.memory/specs/`) — internal spec system (requirements, subspecs)
 - `AGENTS.md` — project conventions and structure
-- `.memory/CONTEXT.md` — domain glossary
+- `GLOSSARY.md` (legacy `.memory/CONTEXT.md`) — domain glossary
+
+Check the grey-matter path first; fall back to the legacy path when it is absent (read both if both exist).
 
 Do NOT read implementation code at this stage. Forces live in decisions, not in functions.
 
@@ -131,7 +133,7 @@ For each capability/domain area in the project, assess:
 
 ### 3. Produce the intake outline
 
-Write to `.memory/archwright-survey.md`:
+Write to `docs/agents/archwright/archwright-survey.md` (`.memory/archwright-survey.md` instead only if the target still tracks a `.memory/` dir — target layout rule, `steering/archwright-conventions.md`):
 
 ```markdown
 # Archwright Survey: <project-name>

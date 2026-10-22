@@ -30,7 +30,7 @@ The archwright pipeline (`survey → forces → tensions → resolve → formali
 5. A skill's "Does NOT" section is a hard boundary, not a suggestion.
 6. "Proceed" after orientation authorizes the NEXT phase (or the span the agent proposed and the human accepted) — never "run everything silently to completion" without a digest gate at the end.
 
-**Why:** Human checkpoints are for decisions, not ceremony. Mechanical phases are protected by validation gates + the end-of-span digest (batched review), while decision points, ★★ events, and fog still hard-block. Evidence: `.memory/audit/pipeline-dryrun.md` findings 2 and 4; full rationale in `.memory/adr/0007-hitl-only-gates.md`.
+**Why:** Human checkpoints are for decisions, not ceremony. Mechanical phases are protected by validation gates + the end-of-span digest (batched review), while decision points, ★★ events, and fog still hard-block. Evidence: `docs/agents/audit/pipeline-dryrun.md` findings 2 and 4; full rationale in `docs/adr/0007-hitl-only-gates.md`.
 
 ## Autonomy Within Phases and Spans
 
@@ -55,7 +55,9 @@ target-project/
     specs/             # Behavior/contract: YAML. Constraint/dependency: Markdown+frontmatter.
 ```
 
-These directories are the archwright output. The `.memory/` directory in the target project contains the project's own internal knowledge (grills, ADRs, specs-as-requirements) — archwright reads from `.memory/` and writes to `design/`.
+These directories are the archwright output. The target's own knowledge (grills, ADRs, specs-as-requirements) is pipeline input. **Target layout rule** (ticket 099):
+- **Read** grey-matter paths first, then the legacy crew-research path: glossary `GLOSSARY.md` (legacy `.memory/CONTEXT.md`), ADRs `docs/adr/` (`.memory/adr/`), specs `docs/agents/specs/` (`.memory/specs/`), grills `docs/agents/grill/` (`.memory/grills/`), agent notes `docs/agents/` (`.memory/`).
+- **Write** working files (`archwright-survey.md`, `archwright-forces-<area>.yaml`, `archwright-tensions-<area>.yaml`, `reflections/`) to `docs/agents/archwright/`. Use `.memory/` instead only if the target still has a tracked `.memory/` dir (`git ls-files .memory | head -1` non-empty). Below, `<work>` names whichever applies.
 
 ## Run Scoping and Artifact Placement
 
@@ -89,7 +91,7 @@ Six rules:
 
 1. **Gaps are pending-with-reason, never silent.** The gap artifact names the missing adapter (stack, kind, what it unblocks) — a `pending` registry row, a `target_status: pending` on a spec, or a SKIP-with-reason in check output. Checks that can't run because an adapter is missing SKIP with the declared reason; they never fail and never silently pass.
 2. **Two-tier governance.** New INSTANCES of existing kinds (a new stack adapter, a new domain overlay, a new predicate) flow through this protocol. New KINDS, new axes, or format/schema changes bypass it and require an ADR + HITL.
-3. **Research before generating.** 2+ independent sources or a spike before writing the new instance. Dispatch parallel research subagents covering prior art, best practices, and related ecosystems (operator-set shape, tickets 049/050) — findings that shaped the instance get a durable synthesis (`.memory/research-*.md` or the ADR); raw subagent reports stay ephemeral. Spike output IS the conformance scenario.
+3. **Research before generating.** 2+ independent sources or a spike before writing the new instance. Dispatch parallel research subagents covering prior art, best practices, and related ecosystems (operator-set shape, tickets 049/050) — findings that shaped the instance get a durable synthesis (`docs/agents/research/*.md` or the ADR); raw subagent reports stay ephemeral. Spike output IS the conformance scenario.
 4. **Conformance at birth.** Every new instance ships with a golden corpus (scenario source + expected output) wired into `tools/run-fixture-tests.sh`. No corpus → the instance stays `pending`. **The corpus MUST include at least one violating scenario that produces FAIL** — a checker proven only on passing cases may be vacuous (the Alloy compiler generated transition-less models for months; every check passed until a deliberately-violating spec exposed it, 2026-07-17).
 5. **Tiered status by guarantee**, reusing the confidence vocabulary: `pending` (registered, unproven) → ★ (conformance corpus passes) → ★★ (corpus in the fixture suite + measured cost recorded). Status is COMPUTED by the suite, not hand-declared. Demotion is stepwise (★★→★→pending, never cliff-edge) and `since:` history is retained in the registry row.
 6. **Activation-gated enforcement + rule-of-two.** An adapter's checks run only where its stack/domain is detected (survey records detection; downstream phases consult it). Build no axis scaffolding (schemas, harnesses, plugin machinery) until ≥2 concrete entries need it.
@@ -180,8 +182,8 @@ Unknown syntax → Untranslatable (SKIP-with-reason in trace mode, per ticket 01
 When a spec derivation failure reveals a reusable lesson:
 
 1. Write a reflection using `tools/templates/reflection.md`
-2. **Global** (methodology-level, all projects): add to `.memory/reflections/global.md` in the archwright repo
-3. **Project** (target-project-specific): add to `.memory/reflections/` in the target project
+2. **Global** (methodology-level, all projects): add to `docs/agents/reflections/global.md` in the archwright repo
+3. **Project** (target-project-specific): add to `<work>/reflections/` in the target project (`docs/agents/archwright/reflections/`; legacy `.memory/reflections/`)
 4. `archwright-derive` Step 1b reads both sets before generating specs
 
 ## Report Reference Commits

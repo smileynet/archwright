@@ -118,7 +118,7 @@ We built [feature X]
 - L1-L3 product forces can drive pattern formalization directly
 - L4-L5 product forces MUST be presented to the user for validation before they enter the tension map
 - Tag every inferred force explicitly: "⚠️ Inferred — needs validation"
-- **Auto-promotion (L4 → L3):** If an inferred force (L4) is corroborated by 2+ internal project sources (e.g., decisions.md + CONTEXT.md, or ADR + mechanics doc), auto-promote to L3 and skip individual HITL confirmation. Present promotions as a summary: "N forces auto-promoted L4→L3 based on internal corroboration." Only genuinely speculative forces (L5 — no internal corroboration) require individual confirmation.
+- **Auto-promotion (L4 → L3):** If an inferred force (L4) is corroborated by 2+ internal project sources (e.g., decisions.md + GLOSSARY.md, or ADR + mechanics doc), auto-promote to L3 and skip individual HITL confirmation. Present promotions as a summary: "N forces auto-promoted L4→L3 based on internal corroboration." Only genuinely speculative forces (L5 — no internal corroboration) require individual confirmation.
 
 ### 7. Validate inferred forces with user (HITL gate)
 
@@ -158,14 +158,14 @@ After validation, merge the full inventory:
 
 Two artifacts:
 
-**(a) Working inventory** (`.memory/archwright-forces-<area>.yaml`) — the full extraction with provenance quotes, used by the tensions phase:
+**(a) Working inventory** (`docs/agents/archwright/archwright-forces-<area>.yaml`; `.memory/` instead only if the target still tracks a `.memory/` dir — target layout rule, `steering/archwright-conventions.md`) — the full extraction with provenance quotes, used by the tensions phase:
 
 ```yaml
 area: <area-name>
 sources_read:
   - path: "README.md"
     type: product
-  - path: ".memory/grills/play-data-schema/Q01-spec-authority.md"
+  - path: "docs/agents/grill/play-data-schema/Q01-spec-authority.md"
     type: grill
 
 product_forces:

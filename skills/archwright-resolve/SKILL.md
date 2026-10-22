@@ -117,7 +117,7 @@ Deferred tensions still proceed to formalization (the constraint is load-bearing
 Once decided:
 - If the resolution should be a pattern → dispatch `archwright-formalize`
 - If specs should be derived → dispatch `archwright-derive`
-- If the resolution is small/local → record inline (ADR or grill decision, update CONTEXT.md)
+- If the resolution is small/local → record inline (ADR or grill decision, update GLOSSARY.md, legacy `.memory/CONTEXT.md`)
 
 ## Growth Rules
 

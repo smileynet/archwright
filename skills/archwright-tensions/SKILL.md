@@ -63,7 +63,7 @@ For resolved tensions, determine:
 
 ### 6. Output tension map
 
-Write to `.memory/archwright-tensions-<area>.yaml` (working scaffolding, same convention as the forces inventory — durable resolutions later become patterns in `design/patterns/`):
+Write to `docs/agents/archwright/archwright-tensions-<area>.yaml` (`.memory/` instead only if the target still tracks a `.memory/` dir; working scaffolding, same convention as the forces inventory — durable resolutions later become patterns in `design/patterns/`):
 
 ```yaml
 area: <area-name>

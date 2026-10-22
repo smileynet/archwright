@@ -115,7 +115,7 @@ _Avoid_: hard EDA-style invalidation (any change voids all evidence — kills pa
 
 **Force file**:
 The durable per-force artifact (`design/forces/<id>.md`, kind: force) — the root of provenance. `serves:` and `from_force:` resolve against these once at least one exists.
-_Avoid_: calling the working YAML inventory (`.memory/archwright-forces-*.yaml`) "the forces" — that's extraction scaffolding.
+_Avoid_: calling the working YAML inventory (`docs/agents/archwright/archwright-forces-*.yaml`, legacy `.memory/`) "the forces" — that's extraction scaffolding.
 
 **HITL-blocking gate**:
 A pipeline gate that always stops for the human: resolve, L4/L5 desire validation, ★★ events that survive the research gate (ADR 0010 — noise/known dispositions are proposed/logged instead; hard floor always blocks), fog, end-of-span digest. All other gates are **flow-through** (ADR 0007).
