@@ -62,6 +62,6 @@ archwright-side birth run.
 - `mise run validate:tickets` (f69f23d, pre-existing) verified green: exit 0, 27 unchecked-AC warnings — kept advisory (decay cleanup stays out of scope).
 - Zero migration confirmed: `tkt validate` status=pass over all existing tickets; `tkt ready` frontier matches manual scan.
 - PLAN.md seam note recorded (frontmatter = machine layer tkt computes from; sync-plan may watch the seam); stale NEXT UP refreshed.
-- `.memory/lessons/concurrent-sessions.md` allocation guard routed to tkt.
+- `docs/agents/lessons/concurrent-sessions.md` allocation guard routed to tkt.
 - R11/R12 workaround audit (directive rider): R11 still live — 039 open, both check.py:384 and validate.py:63 still substring-split on `---`. R12 item 1 marked OBSOLETE (040 shipped exclude); items 2–3 stand.
 - This ticket was itself worked end-to-end via tkt (new → claim → close) — the birth run doubles as acceptance evidence.

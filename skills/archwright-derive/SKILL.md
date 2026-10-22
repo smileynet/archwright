@@ -33,7 +33,7 @@ Produce checkable specs from a formalized pattern. Each spec is a downstream pro
 
 Before generating anything, read BOTH sets (Reflections Protocol, `steering/archwright-conventions.md`):
 
-- **Global** (methodology-level, all projects): `.memory/reflections/global.md` in the archwright repo
+- **Global** (methodology-level, all projects): `docs/agents/reflections/global.md` in the archwright repo
 - **Project** (target-specific): `.memory/reflections/` in the target project, if present
 
 Apply active workarounds to the specs you write; skip entries marked OBSOLETE (e.g. R11's `-\{3\}` fence-escaping became obsolete when ticket 039 landed fence-aware extraction). A missing reflections file is normal — skip silently, never an error.

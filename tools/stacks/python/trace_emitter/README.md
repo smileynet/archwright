@@ -76,5 +76,5 @@ the TypeScript adapter (`../typescript/trace_emitter/`).
 - **Snapshot at record time, never at dump time** — storing live dict
   references and serializing at teardown records the final state in every
   entry (the stdlib-documented `mock.call_args` mutable-argument pitfall).
-- Full findings: archwright `.memory/research-py-trace-emitter.md` (prior art,
+- Full findings: archwright `docs/agents/research/py-trace-emitter.md` (prior art,
   best practices, related runtime-verification ecosystems).

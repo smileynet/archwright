@@ -9,7 +9,7 @@ blocked_by: []
 
 ## Context
 
-ADR 0009 (`.memory/adr/0009-confidence-evidence-lifecycle.md`) ratified split
+ADR 0009 (`docs/adr/0009-confidence-evidence-lifecycle.md`) ratified split
 storage by author: machine evidence events go to a tool-owned ledger
 (`design/.archwright-evidence.json`); human ratifications go to the artifact's
 `confidence` field + Evidence line. The design was accepted 2026-07-17 with

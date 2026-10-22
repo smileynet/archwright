@@ -58,7 +58,7 @@ machine + invariants into the target language's PBT framework.
       → YES. Command factory pattern maps cleanly. Good async support.
 - [x] What's the right interface between PBT harness and the system under test?
       → DECIDED (grill 2026-08-01): Hybrid (Option D). User provides step(event, context),
-        PBT drives, trace emitter observes state. See .memory/grill/pbt-contract-alloy-architecture.md
+        PBT drives, trace emitter observes state. See docs/agents/grill/pbt-contract-alloy-architecture.md
 - [x] Should the generated harness be a one-shot file or a live `--pbt` mode?
       → DECIDED (grill 2026-08-01): Inline default + --emit for files (Option C).
         Fast feedback is primary; --emit produces CI artifact.

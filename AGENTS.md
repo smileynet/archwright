@@ -2,103 +2,17 @@
 
 AI-assisted design system that resolves human design intent (expressed as a force-resolution language) into verified architecture, with traceable bidirectional flow.
 
-## Project Layout
+## Where things are
 
-```
-.
-├── README.md                      # Project overview & doc index
-├── docs/
-│   ├── lineage.md                 # Origin: Alexander, what we keep vs. what software dropped
-│   ├── findings.md                # Load-bearing theoretical insights (stable core)
-│   ├── glossary.md                # All concepts and terminology
-│   ├── pattern-schema.md          # Proposed machine-readable schema for patterns
-│   ├── worked-examples.md         # Alexander patterns mapped to games/apps
-│   ├── prior-art.md              # 5 traditions with full references
-│   └── open-questions.md          # Prioritized research backlog
-├── skills/                        # Skill source-of-truth (deployed via tools/deploy-skills.sh)
-│   ├── archwright-survey/         # Entry point: map project design state
-│   ├── archwright-forces/         # Extract desires + constraints from sources
-│   ├── archwright-tensions/       # Cluster forces into named tensions
-│   ├── archwright-resolve/        # Resolve tensions (HITL: human decides)
-│   ├── archwright-formalize/      # Write patterns from resolved tensions
-│   ├── archwright-model/          # Identify domains as actors, map state machines
-│   ├── archwright-contract/       # Derive typed data contracts from domain model
-│   ├── archwright-derive/         # Generate specs from domain models
-│   ├── archwright-check/          # Verify specs against implementation
-│   ├── archwright-review/         # Review code for design alignment
-│   ├── archwright-audit/          # Audit docs for truth (surface contradictions)
-│   ├── archwright-passup/         # Lift check violations to owning level, route per confidence
-│   ├── archwright-diagram/        # Render models/patterns as Mermaid diagrams
-│   ├── archwright-discover-ui/    # Discovery track: UI sessions — design system + wireframes + ledger (ADR 0011)
-│   └── archwright-woz-import/     # Discovery track: wizard_of_oz session import — tool conversion + interpretation (ticket 025)
-├── steering/                      # Steering source-of-truth (deployed via tools/deploy-skills.sh)
-│   ├── archwright-conventions.md  # Pipeline phase discipline, quality gates
-│   └── subagent-reliability.md    # Failure handling for parallel dispatch
-├── figures/                       # SVG diagrams
-│   ├── compilation.svg            # Fig 1: vertical compile from forces to architecture
-│   ├── invariant_boundary.svg     # Fig 2: invariant-as-no-go-region + pass-up hop
-│   └── pass_up_tower.svg          # Fig 3: pass-up as level-terminating climb
-├── tools/                         # Mechanical operations
-│   ├── archwright-validate.py     # Schema + link validation for patterns/specs
-│   ├── archwright-forces-gen.py   # Force inventory YAML → design/forces/*.md (mechanical projection)
-│   ├── archwright-import-woz.py   # woz-session/v1 JSON → discovery artifact (mechanical conversion; interpretation = archwright-woz-import skill)
-│   ├── archwright_common.py       # Shared spec-parsing helpers (state_events) — imported by check + compile-alloy; not a CLI
-│   ├── archwright-check.py        # Check dispatcher (CLI entry point, 682 LOC): argparse, main(), build_document, git scoping, dispatch. Imports domain logic from check/ package.
-│   ├── check/                     # Check internals package (ticket 097): common.py, baseline.py, ledger.py, conformance.py, alloy.py, trace.py, coverage.py
-│   ├── archwright-compile-alloy.py# Behavior spec → Alloy 6 model
-│   ├── archwright-compile-contract-alloy.py # Contract spec structural_invariants → Alloy 6 model (static, no transitions)
-│   ├── archwright-check-compile.mjs # Intent patterns → check blocks
-│   ├── report/                    # Report generator (ticket 041): generate.py (CLI), derive.py (model_view/asks blocks), vocab.py + vocabulary.yaml (token table), render_html/md.py, templates/ (report.html surface, elk-diagram.js interactive renderer, disclosure.html fold partial, page.js reducer — also trace-validated under node). Reads ONLY the CK-03 doc + design/ YAML (dependency:report-reads-canonical-only). Output: design/report/ in the target project (gitignored)
-│   ├── run-fixture-tests.sh       # Full check suite over tests/fixtures/ + examples/ corpora (count: Commands test row)
-│   ├── deploy-skills.sh           # Sync skills + steering + domain overlays + glossary to the target tool's discovery dirs (--tool kiro|claude|codex|agy, --project <path>)
-│   ├── pattern-schema.yaml        # JSON Schema for pattern validation
-│   ├── spec-schema.yaml           # JSON Schema for spec validation
-│   ├── contract-schema.yaml       # JSON Schema for contract specs (from_model, events)
-│   ├── check-output-schema.yaml   # CK-03 output contract (check/validate --json shape: skips[] coverage reasons, aw/v1 fingerprints, baselined flag)
-│   ├── trace-schema.ts            # Trace types (input: bare array of {event, state, clock}; result: invariants_skipped/guards_skipped per ticket 015)
-│   ├── templates/                 # Document templates
-│   │   ├── pattern.md             # New pattern template
-│   │   ├── force.md               # Per-force file template (design/forces/)
-│   │   ├── spec-behavior.yaml    # Behavior spec template
-│   │   ├── spec-contract.yaml    # Contract spec template
-│   │   ├── spec-constraint.md    # Constraint spec template
-│   │   ├── spec-dependency.md    # Dependency spec template
-│   │   ├── discovery-ledger.md   # Decision-ledger section contract (seam format, ADR 0011)
-│   │   ├── wireframe.md          # Per-screen discovery artifact template
-│   │   ├── reflection.md         # Derivation failure lesson template (archwright-derive Step 1b)
-│   │   └── design-system.md      # Layered design-system artifact template (grill Q3)
-│   └── domains/                   # Domain overlays: scales + predicates + discovery frameworks per domain
-│       ├── detect.yaml            # Manifest → domain rules (survey applies; override wins)
-│       ├── game/                  # Game scales + 13 predicates + research sources + discovery.yaml
-│       ├── web/                   # Web scales + predicates
-│       └── general/               # Fallback scales + cross-cutting predicates
-├── tools/stacks/                  # Stack adapters: per-language/engine mechanical components (ADR 0008)
-│   ├── REGISTRY.yaml              # Adapter kinds × status (pending/★/★★, computed) + since: history
-│   ├── gdscript/                  # All pending (T7 converted)
-│   ├── python/                    # trace_emitter ★★ (conformance in suite; field target discord-poc); pbt_harness ★★ (conformance in suite; ticket 091); ast_grammar/check_patterns pending
-│   └── typescript/                # trace_emitter ★★ (conformance in suite + field-proven on TileRush); ast_grammar/check_patterns pending
-├── examples/                      # Lifecycle examples: ONE toy product (Snackbox) at three states (ticket 028)
-│   ├── README.md                  # Walkthrough incl. state-0 greenfield entry path
-│   ├── planned/                   # Full design/, no code — checks pending, behavior proven pre-code
-│   ├── partial/                   # design/ + first code — deliberate FAILs + baselined debt (living fixture)
-│   └── complete/                  # Quiescence — all pass, evidence ledger accumulating (suite runs it from a tmp copy)
-├── .memory/
-│   ├── CONTEXT.md                 # Project glossary (quick-reference terms)
-│   ├── PLAN.md                    # Authoritative work status — read its STATUS header; do not duplicate plan state here or elsewhere
-│   ├── specs/                     # Specs for plan deliverables (incl. Phase 5)
-│   ├── audit/                     # Audit reports (tools, skills, claims)
-│   ├── grill/                     # Grill session decision records (INDEX.md + Q-files per topic)
-│   ├── DEPRECATED.md              # Removal queue — superseded files + remove-when conditions (reviewed by repo-maintenance audit)
-│   ├── lessons/                   # One durable lesson per file + README index/session log
-│   ├── research-*.md              # Research plans & syntheses
-│   └── adr/                       # Architecture decision records
-├── audit-plan.md                  # Audit plan — CLOSED 2026-07-18 (all 7 DoD verified; see §Plan Close-Out)
-├── mise.toml                      # Managed toolchain + env + tasks (see Dependency Rehydration)
-├── .tickets/                      # Frontier tickets (shared frontmatter contract, tkt-managed — see §Tickets)
-├── .scratch/                      # Ephemeral working notes (gitignored)
-├── .references/                   # Reference repos (gitignored)
-└── AGENTS.md                      # This file
-```
+- `skills/archwright-*/`, `steering/`: **shipped** skills and steering (product, not this repo's agent layer). Deployed by `tools/deploy-skills.sh`; the kiro-global copies are symlinks into this repo, so edits go live everywhere at once. One-liners: each SKILL.md `description`; index: §What Archwright Is.
+- `tools/`: mechanical servants. Map: `tools/README.md`; usage contract: §Commands. Also `tools/check/` (check internals package, ticket 097: common, baseline, ledger, conformance, alloy, trace, coverage, imported by the `archwright-check.py` dispatcher) and `tools/report/` (report generator, ticket 041: `generate.py` CLI, `derive.py`, `vocab.py` + `vocabulary.yaml`, `render_html/md.py`, `templates/`; reads ONLY the CK-03 doc + `design/` YAML per `dependency:report-reads-canonical-only`; writes `design/report/` in the target project, gitignored here). Templates, domain overlays, stack adapters: `tools/{templates,domains,stacks}/` (adapter status: `tools/stacks/REGISTRY.yaml`, computed by the suite).
+- `docs/`: user-facing theory docs (index: `README.md` § docs table) and `docs/glossary.md`, the **shipped** methodology glossary (deployed into `archwright-survey/references/`). `figures/`: SVGs (see `figures/README.md`).
+- `GLOSSARY.md`: this repo's agent vocabulary. `docs/adr/`: decision records.
+- `docs/agents/`: agent-facing reference — `PLAN.md` (authoritative work status; read its STATUS header, don't duplicate plan state elsewhere), `specs/` (requirements specs for plan deliverables), `grill/` (grill decision records: INDEX.md + Q-files), `audit/`, `lessons/` (one lesson per file + README index), `research/`, `reflections/global.md`, `spikes/`, `reviews/`, `self-run/`, `DEPRECATED.md` (removal queue reviewed by the repo-maintenance audit), `research/adoption-2026-10-22/` (adoption evidence).
+- `design/`: archwright run on itself. `examples/{planned,partial,complete}/`: one toy product (Snackbox) at three lifecycle states (see `examples/README.md`). `tests/fixtures/`: suite corpora.
+- `audit-plan.md`: audit plan, CLOSED 2026-07-18 (all 7 DoD verified; see §Plan Close-Out).
+- `.kiro/skills/repo-maintenance/`: project-local skill for the suite and deploy scripts (never deployed globally).
+- `.tickets/`: tkt board. `mise.toml`: toolchain + env + tasks. `.references/`: gitignored (see its README). `.scratch/`: ephemeral.
 
 ## What Archwright Is
 
@@ -155,7 +69,7 @@ Research + design-theory project transitioning to implementation. Primary output
 
 ## Commands
 
-Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydration). Tasks: `validate`, `validate-links`, `validate:tickets`, `check-static`, `test`, `ship` (`mise run ship -- "msg"` — commits STAGED files only + pushes, blocking on upstream divergence; prefer it over hand-rolled add/fetch/commit/push), `deploy-skills`, `setup`, `rehydrate-alloy`. Without mise, tools are not on PATH — invoke via interpreter (verified 2026-07-16, `.memory/audit/tools.md`):
+Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydration). Tasks: `validate`, `validate-links`, `validate:tickets`, `check-static`, `test`, `ship` (`mise run ship -- "msg"` — commits STAGED files only + pushes, blocking on upstream divergence; prefer it over hand-rolled add/fetch/commit/push), `deploy-skills`, `setup`, `rehydrate-alloy`. Without mise, tools are not on PATH — invoke via interpreter (verified 2026-07-16, `docs/agents/audit/tools.md`):
 
 | Task | Command |
 |------|---------|
@@ -175,13 +89,13 @@ Preferred: `mise run <task>` (managed toolchain + env — see Dependency Rehydra
 | Run Alloy model | `java -Djava.awt.headless=true -jar .references/alloy6.jar exec <model.als>` (jar not in repo — `.references/` is gitignored; behavior checks SKIP without it) |
 | Deploy skills | `mise run deploy-skills` or `bash tools/deploy-skills.sh [--project <path>]` |
 | Publish report | `mise run report-publish -- --project <path> [--name <display>]` — generates report bundle (html+md+json) via check --all + generate.py, commits + pushes `design/report/` in the target project. HTML diagram: ELK Direct SVG (interactive, ~1.4MB inlined); markdown diagram: Mermaid stateDiagram-v2. Windows: git commit step may fail with temp-file errors — commit manually in the target project after generation succeeds |
-| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 165 checks incl. Alloy behavior + guard-compilation + forces-gen/probe conformance + stack-adapter conformance (ts + python trace emitters) + check-tool feature tests + pending-coverage (CK-06) + baseline fingerprints/suppression/ratchet (CK-07/08) + evidence ledger (ADR 0009 / ticket 017) + commit-binding code_state (018) + changed-only scoping (CK-19) + trace strict-mode (ticket 015) + trace CK-03 document (016) + vacuous-absent guard (012) + from_model boundary-producer/fold resolution (013) + pattern-status gated (011) + discovery schema/conservation (026) + woz-import conformance (025, incl. embedded-SUPERSEDES idempotence) + lifecycle examples (028: per-state expected results over `examples/`) + deploy steering ownership guard (037: foreign-skip, manifest refresh) + invariant-description WARN (038) + report generator conformance (041: bundle generation, asks derivation, hard floor, vocabulary completeness, bundle constraints both-directions, reducer trace round-trip) + exclude filtering (040) + fence-aware frontmatter extraction (039: block-scalar `---` parses, violating variant FAILs) + coverage modes (043: bare-array/enveloped trace association, gap = exit 1 non-vacuous, spec-ahead reporting) + model-YAML parse-error gate (guidance sync) + diagram transitions (046: behavior-spec statechart joins as semantic edges, vocab arrow labels, states-only fallback non-vacuous) + model YAML schema (048: shape-detected kind model, 11 error classes non-vacuous, corpus models pass unmodified) + python trace emitter (049: emit, pass-validate, violate-FAIL) + candidate event collisions (050: cross-model lint, shared opt-out, schema-level shared type) + PBT harness (091: correct-step pass, violating-step FAIL with shrunk counterexample) + contract Alloy structural verification (092: passing UNSAT, counterexample SAT→FAIL, schema validation) + Alloy verdict format-break detection (096: parse_alloy_verdicts isolation, malformed→empty dict) (SKIPs with reason if alloy6.jar, java, node, or git absent; green = 0 failed, 0 skipped — **the count at the head of this row is the single source; elsewhere say "suite green"**) |
+| Run fixture tests | `mise run test` (or `tools/run-fixture-tests.sh`) — 165 checks (per-feature sections: the `=== … (ticket N) ===` headers in `tools/run-fixture-tests.sh`) (SKIPs with reason if alloy6.jar, java, node, or git absent; green = 0 failed, 0 skipped — **the count at the head of this row is the single source; elsewhere say "suite green"**) |
 
-Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json`, `--baseline`, `--update-baseline`, `--evidence`, `--changed-only`, `--base`, `--trace-coverage`, `--coverage`, `--pbt` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `.memory/audit/tools.md`; baseline flags added CK-07/08, `--evidence` ticket 017, `--changed-only`/`--base` CK-19, `--trace-coverage`/`--coverage` 2026-07-19, `--pbt` 2026-08-01).
+Note: `archwright-check.py` flags are `--static`, `--trace`, `--probe`, `--all`, `--target`, `--json`, `--baseline`, `--update-baseline`, `--evidence`, `--changed-only`, `--base`, `--trace-coverage`, `--coverage`, `--pbt` only — there is no `--structural`, `--deep`, `--project`, or `--model` flag (verified 2026-07-16, `docs/agents/audit/tools.md`; baseline flags added CK-07/08, `--evidence` ticket 017, `--changed-only`/`--base` CK-19, `--trace-coverage`/`--coverage` 2026-07-19, `--pbt` 2026-08-01).
 
 ## Dependency Rehydration
 
-`.references/` is gitignored — external binaries must be re-fetched on a fresh clone or new machine.
+`.references/` is gitignored (index: `.references/README.md`) — external binaries must be re-fetched on a fresh clone or new machine.
 
 **Primary path — mise** (`mise.toml` at repo root manages tools, env, and tasks):
 
@@ -212,41 +126,30 @@ Notes:
 - Missing diagram renderers never block a phase — skills fall back to presenting unrendered Mermaid/smcat source.
 - Windows: bare `python3` resolves to a broken MS Store stub, and mise's python ships only `python.exe` — use `mise exec -- python` or `mise run` tasks (`run-fixture-tests.sh` has its own python3→python guard). Without mise, real Python is at `%LOCALAPPDATA%\Programs\Python\Python312\python.exe` and `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1` must be set manually (★/— glyphs vs cp1252 console; `PYTHONIOENCODING` alone only fixes stdout, `PYTHONUTF8` fixes `open()` default encoding too).
 - Windows: Smart App Control (SAC) blocks mise.exe (unsigned, no ISG reputation). Disable via Settings → Windows Security → App & browser control → Smart App Control → Off. Since April 2026 (KB5083769) this is **reversible** — no longer a permanent decision. Known Windows-specific suite gaps: tickets 058–060.
-- After ANY merge from upstream — and BEFORE any push that touches `tools/` — `mise run test` (suite green at the final tree; commit messages are not evidence — see `.memory/lessons/port-diffs-not-files.md`)), plus `mise run sanitize-check` (merges reintroduce real names — 2 hits on 2026-07-19; SKIPs without the machine-local denylist). Kiro-global skills are symlinked into this repo (since 5d450bf) and track edits automatically — re-run `mise run deploy-skills` only for newly added skills or when deploying to other tools (claude/codex/agy), whose copies go stale silently.
+- After ANY merge from upstream — and BEFORE any push that touches `tools/` — `mise run test` (suite green at the final tree; commit messages are not evidence — see `docs/agents/lessons/port-diffs-not-files.md`), plus `mise run sanitize-check` (merges reintroduce real names — 2 hits on 2026-07-19; SKIPs without the machine-local denylist). Kiro-global skills are symlinked into this repo (since 5d450bf) and track edits automatically — re-run `mise run deploy-skills` only for newly added skills or when deploying to other tools (claude/codex/agy), whose copies go stale silently.
 - After rehydrating the jar, run `mise run test` — the behavior + guard-conformance skips become active checks (green = 0 failed, 0 skipped; count in Commands table).
 
 ## Workflows
 
-1. **Extend the design language** — add findings to docs/, terms to `.memory/CONTEXT.md`
-2. **Explore an open question** — pick from docs/open-questions.md, research, produce ADR
-3. **Build tooling** — scripts in `tools/` for validation, compilation, checking
-4. **Tracer bullet** — encode fieldball-coach decisions as patterns + specs, verify
-5. **Pipeline on new project** — run full pipeline (survey→check) on a target project, producing patterns + models + specs in `design/`
+| Situation | Use |
+|---|---|
+| Extend the design language | add findings to `docs/`, terms to `GLOSSARY.md` (`domain-modeling`) |
+| Explore an open question | pick from `docs/open-questions.md`, `research`, then an ADR in `docs/adr/` (`domain-modeling` ADR section) |
+| Build tooling | scripts in `tools/` for validation, compilation, checking; run the suite (`repo-maintenance`) |
+| Tracer bullet | encode fieldball-coach decisions as patterns + specs, verify |
+| Pipeline on a new project | run the full pipeline (survey→check) on a target project, producing patterns + models + specs in its `design/` (rules: `steering/archwright-conventions.md`) |
+| Planning a larger piece of work | `wayfinder`, then `to-spec` / `to-tickets` |
+| Starting / ending a session | `orient` / `handoff` (wrap-up: `wrap-session`) |
 
 ## Tickets
 
-`.tickets/` follows the shared frontmatter contract — authority: crew-research `.memory/specs/ticket-cli-spec.md` (status vocabulary is frozen contract; additions need a spec change there, never convention drift). This is the repo convention regardless of tooling:
+`.tickets/` is tkt-managed (commands: the tkt block below; `tkt --help`). Repo rules tkt doesn't encode:
 
-- Text ids matching the `NNN-slug.md` filename prefix (3-digit here); quoted or unquoted
-- `status: open | in_progress | done` — `in_progress` = claimed WIP (excluded from frontier, visible on the board)
-- `blocked_by: [ids]` — all done ⇒ frontier-eligible; `priority: high` jumps lowest-number-first
-- Unknown fields (`created`, `closed`, `lane`, …) preserved verbatim; existing tickets valid unchanged (zero migration)
-- Claim-before-allocate: fetch → true-max scan (local + origin) → create → commit → push (a pushed ticket is a claim)
-
-**Prefer `tkt` when on PATH** (git-native ticket CLI, source: crew-research `tools/tkt`; install: `uv tool install ~/code/crew-research/tools/tkt`; interim without install: `PYTHONPATH=~/code/crew-research/tools/tkt python3 -m tkt.cli`):
-
-| Task | Command |
-|------|---------|
-| Frontier | `tkt ready` |
-| Allocate + claim new (collision-safe) | `tkt new <slug> --title "..." [--blocked-by IDS] [--priority high]` |
-| Claim WIP | `tkt claim <id>` |
-| Close (Resolution stub, warns unchecked ACs) | `tkt close <id>` |
-| Field edits | `tkt edit <id>` |
-| Contract + decay check | `tkt validate` — or `mise run validate:tickets` (warnings, e.g. unchecked ACs on done tickets, are advisory here) |
-
-**Manual fallback (tkt absent):** same shapes by hand — rescan before allocating, set `status: in_progress` on claim and push, dated Resolution on close, merge into the lower/pushed ticket on collision. Motivating incidents: 005 double-implementation, 009/010 id race (`.memory/lessons/concurrent-sessions.md`).
-
-PLAN.md stays the authoritative status narrative; ticket frontmatter is the machine-readable layer tkt computes from. Never use `tk` (unrelated third-party tool: reads `deps` not `blocked_by`, silently omits unparseable tickets).
+- Shared frontmatter contract (historical authority: crew-research `.memory/specs/ticket-cli-spec.md`); status vocabulary is frozen contract. Unknown fields (`created`, `closed`, `lane`, …) are preserved verbatim; ids are 3-digit `NNN-slug.md`.
+- Claim before allocating (a pushed ticket is a claim). Motivating incidents: 005 double-implementation, 009/010 id race (`docs/agents/lessons/concurrent-sessions.md`).
+- Manual fallback (tkt absent): same shapes by hand — rescan before allocating, set `status: in_progress` on claim and push, dated Resolution on close, merge into the lower/pushed ticket on collision.
+- `docs/agents/PLAN.md` stays the authoritative status narrative; ticket frontmatter is the machine-readable layer. `mise run validate:tickets` checks the corpus (warnings advisory).
+- Never use `tk` (unrelated third-party tool: reads `deps` not `blocked_by`, silently omits unparseable tickets).
 
 ## Key Constraints
 
@@ -259,32 +162,15 @@ PLAN.md stays the authoritative status narrative; ticket frontmatter is the mach
 - Contract phase solely owns contract specs (C7, ratified 2026-07-16) — model emits contract *candidates* (identity/direction, no payloads); one spec per event type, with a one-protocol/one-authority-actor cluster exception; `from_model:` provenance required
 - Design artifacts are live documents in the target project — committed to the current branch (no special design branches); large projects/monorepos get per-area pipeline runs + an all-up reconciliation pass (grill Q06)
 - Coverage gaps follow the Extension Protocol (ADR 0008): pending-with-reason, new instances flow through, new kinds need ADR + HITL; adapter status in `tools/stacks/REGISTRY.yaml` is computed by the fixture suite, never hand-declared
-- Discovery track (ADR 0011, `.memory/adr/0011-discovery-track.md`) — HITL-dense discovery work feeds the mechanical pipeline at the `resolve` seam via decision ledgers; see the ADR for the seam contract and grill verdicts
+- Discovery track (ADR 0011, `docs/adr/0011-discovery-track.md`) — HITL-dense discovery work feeds the mechanical pipeline at the `resolve` seam via decision ledgers; see the ADR for the seam contract and grill verdicts
 - The agent IS the system; tools are mechanical servants
-- Sanitized field references — committed content never names real target projects; field runs, fixtures, and lesson notes use the established invented aliases (fieldball-coach/FBC, TileRush, tilerush-demo, DemoAR, DemoVR — sanitized repo-wide 2026-07-19). The real↔alias mapping lives outside the repo (recall). New field work aliases at the source, not in a cleanup pass
+- Sanitized field references — committed content never names real target projects; field runs, fixtures, and lesson notes use the established invented aliases (fieldball-coach/FBC, fieldball-practice, TileRush, tilerush-demo, DemoAR, DemoVR — sanitized repo-wide 2026-07-19 and 2026-10-22). The real↔alias mapping lives outside the repo (formerly recall, now retired; machine-local `.sanitization-denylist` drives `mise run sanitize-check`; its home is under review, see `migration-finding` tickets). New field work aliases at the source, not in a cleanup pass
 - Field-evidence convention — field runs deposit a sanitized digest into this repo (`field-evidence/<alias>-<date>.yaml`); "field-proven" claims require inspectable committed artifacts with expiry (see `steering/archwright-conventions.md` § Field-Evidence Convention). No retroactive fabrication
 - Subagents extract (read files → structured output); main agent synthesizes (dedup, cluster, merge)
 
-## Pipeline Phase Discipline
+## Pipeline rules
 
-The archwright pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`) is a sequence of discrete phases. **Gates block only where human input is needed** (ADR 0007, `.memory/adr/0007-hitl-only-gates.md`):
-
-- **HITL-blocking (always stop):** resolve (decisions; pre-resolved = one batched confirmation), L4/L5 desire validation in forces, ★★ events surviving the ADR-0010 research gate (genuine new decisions arrive w/ research + recommendation; noise/known are proposed/logged; unratified assignment & demotion always block), fog (unknown forces mid-span), end-of-span digest acceptance.
-- **Flow-through (auto-advance):** all other phase transitions — only within a human-pre-authorized span, only when the phase's artifacts pass `archwright-validate.py`, and only with a digest entry written. No span authorized → stop after each phase.
-
-Constants: survey never writes patterns/specs or resolves tensions; a skill's "Does NOT" section is a hard boundary; "proceed" authorizes the next phase or an explicitly accepted span — never a silent run to completion.
-
-## Target Project Artifacts
-
-When archwright operates on a project, it produces:
-```
-target-project/
-  design/
-    forces/            # Markdown+frontmatter, one file per force (kind: force) — root of provenance
-    patterns/          # Markdown+frontmatter (tensions, resolutions; serves: links to forces)
-    models/            # YAML (machine-readable) + MD (human-readable with Mermaid diagrams)
-    specs/             # Behavior/contract: YAML. Constraint/dependency: Markdown+frontmatter.
-```
+The pipeline (`survey → forces → tensions → resolve → formalize → model → contract → derive → check`), its HITL-blocking vs flow-through gates (ADR 0007, `docs/adr/0007-hitl-only-gates.md`; ADR 0010 research gate), and the `design/{forces,patterns,models,specs}/` artifacts it writes into a target project are defined in `steering/archwright-conventions.md` (§Pipeline Phase Discipline, §Target Project Artifacts). That file is the single home; don't restate it here.
 
 ## References
 
@@ -297,8 +183,49 @@ target-project/
 - Lean 4 / CSLib / Veil — future unbounded verification backend
 - Kleppmann (2025) — AI + formal verification mainstream prediction
 
+## Gotchas
+
+- **Tickets tagged `migration-finding`** are unconfirmed outside-audit findings from the
+  grey-matter adoption (2026-10-22). Review first: reproduce each point, then confirm, reject, or
+  re-scope it before changing anything.
+- **`.memory/` in shipped skills and steering means the *target project's* `.memory/`**, not this repo's (this repo's moved to `GLOSSARY.md`, `docs/adr/`, `docs/agents/` on 2026-10-22). Don't bulk-rewrite those mentions.
+- **Fresh venv:** `mise run test` needs `mise run setup` first (pyyaml + hypothesis); without it nearly every check fails on `ModuleNotFoundError: yaml`.
+
 ## Customization
 
 - Project-specific steering: add to the tool's project rules dir in this repo (kiro: `.kiro/steering/`, claude: `.claude/rules/`)
-- Domain terms: keep `.memory/CONTEXT.md` current
-- Decisions: record in `.memory/adr/` using ADR format
+- Domain terms: keep `GLOSSARY.md` current
+- Decisions: record in `docs/adr/` using ADR format
+
+<!-- tkt:begin -->
+## Tickets
+
+This project uses [tkt](https://github.com/smileynet/tkt) for work tracking. Tickets live in `.tickets/`.
+
+```
+tkt ready                                         # what to work on next
+tkt claim <id>                                    # mark as in_progress (shared repos)
+tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done (--evidence: 1 per validation criterion, repeatable)
+tkt new <slug> --title "..." [--tags stream]      # create work (defaults to open, on the frontier)
+tkt edit <id> --status backlog                    # park a ticket off the frontier (deferred work)
+tkt validate --brief                              # check for issues
+```
+
+### Status lifecycle
+
+`open` (frontier-eligible, the default) → `in_progress` → `done`; `backlog` = parked, invisible to `ready`.
+
+New work defaults to `open`. Use `--status backlog` only for work deliberately deferred out of this cycle — not for discovered work that's actually actionable.
+
+Reach `done` only via `tkt close` — never edit a ticket's status to `done` by hand (it skips the close gates).
+
+### Workflow
+
+Single-agent: `tkt ready` → `tkt close <id> --check-all --resolution "..."`
+Shared-repo: `tkt ready` → `tkt claim <id>` → work → `tkt close <id> --check-all --resolution "..."`
+Discovered work: `tkt new <slug> --title "..."` (open — a separate, actionable ticket; add `--blocked-by` if it depends on current work)
+Migrated work: `tkt close <id> --force --resolution "Migrated to <project> #<id>"` (don't check ACs)
+
+Tag new tickets with their work stream (`--tags <stream>`) in multi-stream projects — one tag is the norm.
+If a claim push is rejected, someone else got there first — pick the next frontier ticket.
+<!-- tkt:end -->

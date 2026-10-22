@@ -16,7 +16,7 @@ Tickets 052-055 each validated against their wireframes during implementation:
 - 054: response bar matches wf-overview bottom bar (accumulation + export)
 - 055: behavior-detail drill-down matches wf-behavior-detail (description, rules, protects, provenance fold)
 
-fieldball-practice design/ used as the standing validation target throughout.
+Fieldball-practice design/ used as the standing validation target throughout.
 Suite validates report structure (transitions, arrows, bundle constraints, reducer trace).
 Remaining: 056 (stability section) is low-priority; final visual-conformance pass deferred until it ships.
 
@@ -36,7 +36,7 @@ This happened because the ACs on 041 tested the **pipeline plumbing** (generate 
 
 1. **Add a visual-conformance gate to report tickets.** Each report ticket (052-056) must include an AC: "generated report for fieldball-practice matches the corresponding wireframe to structural accuracy" — open the HTML, compare to the ASCII wireframe, flag deviations.
 
-2. **fieldball-practice as the standing validation target.** It has a complete design/ directory (forces, model, specs) with a mix of passing and pending specs — realistic input for every report posture.
+2. **Fieldball-practice as the standing validation target.** It has a complete design/ directory (forces, model, specs) with a mix of passing and pending specs — realistic input for every report posture.
 
 3. **Report fixture in archwright test suite.** Add fieldball-practice (or a synthetic equivalent) as a fixture that `run-fixture-tests.sh` generates a report from and validates structural expectations (sections present, diagram has edges, asks block non-empty when violations exist).
 
@@ -45,6 +45,6 @@ This happened because the ACs on 041 tested the **pipeline plumbing** (generate 
 ## Acceptance criteria
 
 - [x] Tickets 052-056 each have a visual-conformance AC citing the specific wireframe
-- [x] fieldball-practice design/ directory used as the test target for report generation
+- [x] Fieldball-practice design/ directory used as the test target for report generation
 - [x] A fixture test validates report structure (not just generation success)
 - [x] After 052-056 complete: fieldball-practice report visually matches wf-overview / wf-all-clear / wf-behavior-detail patterns

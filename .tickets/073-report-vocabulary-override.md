@@ -18,12 +18,12 @@ Domain-specific events (like fieldball-practice's `play_changed`, `ready_pressed
 2. Override merges with (not replaces) the base vocabulary
 3. Generate a "missing vocabulary" report: events that fell back to humanization
 4. `mise run report` in the target project auto-discovers `design/vocabulary.yaml`
-5. fieldball-practice: create a vocabulary override with plain-language event labels
+5. Fieldball-practice: create a vocabulary override with plain-language event labels
 
 ## Acceptance criteria
 
 - [x] Target project can provide `design/vocabulary.yaml` with event overrides
 - [x] Overrides merge with base vocabulary (base terms preserved)
 - [x] Missing events reported at generation time (warning, not error)
-- [x] fieldball-practice vocabulary file maps key events to plain language
+- [x] Fieldball-practice vocabulary file maps key events to plain language
 - [x] Report with override shows custom labels instead of humanized fallbacks

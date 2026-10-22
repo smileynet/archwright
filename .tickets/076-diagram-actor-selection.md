@@ -21,5 +21,5 @@ Selection heuristic: max(transitions count) → ties broken by max(states count)
 ## Acceptance criteria
 
 - [x] Diagram shows the actor with the most transitions
-- [x] fieldball-practice shows practice-hud (active → step_transitioning → play_complete → returning_to_clipboard)
+- [x] Fieldball-practice shows practice-hud (active → step_transitioning → play_complete → returning_to_clipboard)
 - [x] Verified via Playwright: diagram SVG contains the expected state names

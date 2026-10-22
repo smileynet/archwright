@@ -38,7 +38,7 @@ Built `tools/stacks/python/trace_emitter/` (trace_recorder.py, 83 lines, stdlib
 only) from the TypeScript adapter's pattern, per the Extension Protocol:
 
 - **Research (rule 3):** 3 subagent reports (prior art, best practices, related
-  RV ecosystems) — synthesis promoted to `.memory/research-py-trace-emitter.md`.
+  RV ecosystems) — synthesis promoted to `docs/agents/research/py-trace-emitter.md`.
   Verdict: no prior art emits the `{event, state, clock}` shape (Hypothesis =
   code repr, pytest plugins = test lifecycle, PyModel = Python source); thin
   convention helper confirmed. Adopted from findings: snapshot-at-record-time

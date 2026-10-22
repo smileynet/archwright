@@ -54,6 +54,6 @@ Mirror the Alloy-side taint discipline (ticket 008) at the trace layer:
 
 ## Context
 
-- `.memory/lessons/trace-predicate-vacuity.md` — the incident record
+- `docs/agents/lessons/trace-predicate-vacuity.md` — the incident record
 - Ticket 008 — the Alloy-side precedent (taint-based SKIP)
 - Second vacuous-checker catch by a rule-4 corpus (first: transition-less Alloy models, 2026-07-17)

@@ -47,4 +47,4 @@ Run archwright-check against fieldball-practice with a deliberately-violating fi
 - [x] Cards have disclosure fold for history/rationale ("why this rule exists")
 - [x] Clicking a card's action accumulates a response in the page reducer
 - [x] Empty sections are hidden (not shown with "0 items")
-- [x] fieldball-practice report with a planted violation shows a working approval card
+- [x] Fieldball-practice report with a planted violation shows a working approval card

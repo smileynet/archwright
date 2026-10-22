@@ -37,4 +37,4 @@ Fieldball Practice `design/models/gameplay-ui-actors.yaml` — 7 actors, multipl
 - [x] Verification badges (✓/✗/○/…) appear per state
 - [x] Diagram renders inline in the self-contained HTML (no external dependencies)
 - [x] Click a state → shows its rules and what it protects (behavior-detail pattern)
-- [x] fieldball-practice report shows the step-transition lifecycle as a readable diagram
+- [x] Fieldball-practice report shows the step-transition lifecycle as a readable diagram

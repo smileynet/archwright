@@ -16,4 +16,4 @@ Must carry the Q4 guard calibration: strict 3+-consecutive-suggested tripwire fo
 - [x] Guard calibration table (session type → mechanism) present
 - [x] No game-specific content (that's the overlay's job, ticket 021)
 
-Context: ADR 0011; spec `.memory/specs/discovery-track.md` (T1); grill Q1/Q4.
+Context: ADR 0011; spec `docs/agents/specs/discovery-track.md` (T1); grill Q1/Q4.

@@ -29,7 +29,7 @@ Currently: no drill-down exists. The report is flat — one level only.
 
 ## Validation target
 
-fieldball-practice `step-transition` actor has 4 states (completing, repositioning, new_step_ready, active) with 2 invariants. Clicking "completing" should show: "Green flash on completed objective, progress bar pulse" + the 2 rules + "The player's joysticks stay responsive" experience.
+Fieldball-practice `step-transition` actor has 4 states (completing, repositioning, new_step_ready, active) with 2 invariants. Clicking "completing" should show: "Green flash on completed objective, progress bar pulse" + the 2 rules + "The player's joysticks stay responsive" experience.
 
 ## Acceptance criteria
 

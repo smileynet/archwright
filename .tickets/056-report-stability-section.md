@@ -31,4 +31,4 @@ This provides temporal context — not just "is it passing now?" but "has it bee
 - [x] Last failure date shown (or "never failed" for new rules)
 - [x] Promotion candidates highlighted with suggestion text
 - [x] Section absent when no evidence ledger exists (graceful degradation)
-- [x] fieldball-practice report shows stability data after 2+ check runs
+- [x] Fieldball-practice report shows stability data after 2+ check runs

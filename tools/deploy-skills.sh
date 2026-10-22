@@ -9,7 +9,7 @@
 #   deploy-skills --tool agy --project .     # agy, project (./.agents/skills/)
 #
 # Per-tool conventions (verified against official docs 2026-07-17, see
-# .memory/audit/deploy-targets.md):
+# docs/agents/audit/deploy-targets.md):
 #
 #   tool    skills (global)     skills (project)      steering
 #   ------  ------------------  --------------------  --------------------------------

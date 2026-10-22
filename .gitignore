@@ -1,8 +1,9 @@
 # Ephemeral working notes
 .scratch/
 
-# Reference repos (large, not project source)
-.references/
+# Reference repos (large, not project source); only the rehydration index is committed
+.references/*
+!.references/README.md
 __pycache__/
 
 # Python venv (auto-created by mise via _.python.venv)
@@ -22,3 +23,4 @@ design/report/
 # node (visual-conformance harness, ticket 044) — playwright is optional
 node_modules/
 package-lock.json
+.sanitization-aliases

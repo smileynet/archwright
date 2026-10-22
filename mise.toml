@@ -16,7 +16,7 @@ node = "22"
 # Auto-create and activate a project venv — uv pip installs land here.
 # Bypasses pip's require-virtualenv config entirely (uv ignores pip config).
 _.python.venv = { path = ".venv", create = true }
-# ★/— glyphs break on cp1252 consoles without this (.memory/lessons/utf8-encoding-explicit.md)
+# ★/— glyphs break on cp1252 consoles without this (docs/agents/lessons/utf8-encoding-explicit.md)
 PYTHONIOENCODING = "utf-8"
 # Python UTF-8 mode (PEP 686): open() defaults to UTF-8 instead of the system
 # locale (cp1252 on Windows). Without this, inline python3 -c "json.load(open(...))"

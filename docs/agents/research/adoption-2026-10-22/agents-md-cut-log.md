@@ -1,0 +1,9 @@
+# AGENTS.md cut log (adoption 2026-10-22)
+
+- "## Project Layout" tree: skills subtree → each skills/*/SKILL.md description + the Skills list kept in §What Archwright Is; steering subtree → §What Archwright Is Steering list; figures entries → figures/README.md; docs/*.md entries → README.md docs table (+ `ls docs/`); tools/*.py|sh|yaml|ts entries → tools/README.md map; tools/templates/* list → `ls tools/templates/` + §Tool→skill ownership rows; tools/domains + tools/stacks status → tools/README.md + tools/stacks/REGISTRY.yaml (status computed by the suite); examples subtree → examples/README.md; .memory/* entries → relocated paths in §Where things are; check/ and report/ details kept in §Where things are; mise.toml/.tickets/.scratch/.references/AGENTS.md lines kept in §Where things are.
+- Commands "Run fixture tests" feature enumeration (046/048/049/... list) → the `=== … (ticket N) ===` section headers in tools/run-fixture-tests.sh; count and green-definition kept.
+- "## Workflows" numbered list → kept as the §Workflows table (same five items, relocated paths).
+- "## Tickets" status/blocked_by/priority bullets and the tkt command table → tkt block (tkt init --write) + `tkt --help`; "Prefer tkt when on PATH ... install: uv tool install ~/code/crew-research/tools/tkt; interim PYTHONPATH=..." → tkt is on PATH (cargo build); crew-research fallback remains in mise.toml `validate:tickets` (under review as a migration finding).
+- "## Pipeline Phase Discipline" (HITL-blocking/flow-through bullets, Constants line) → steering/archwright-conventions.md §Pipeline Phase Discipline rules 1-6 and §Autonomy.
+- "## Target Project Artifacts" tree → steering/archwright-conventions.md §Target Project Artifacts (identical tree).
+- "Customization: keep .memory/CONTEXT.md current / record in .memory/adr/" → reworded to GLOSSARY.md / docs/adr/ (relocation).

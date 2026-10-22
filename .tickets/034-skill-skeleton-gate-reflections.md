@@ -29,7 +29,7 @@ Place this BEFORE the "Does NOT" section in the upstream file.
 Add Step 1b between Step 1 and Step 2. Before generating specs, check for
 lessons from prior derivation failures:
 
-- Global reflections (`.memory/reflections/` in archwright repo)
+- Global reflections (`docs/agents/reflections/` in archwright repo)
 - Project reflections (`.memory/reflections/` in target project)
 - Boundary rule: methodology-level → global; project-specific → project
 
