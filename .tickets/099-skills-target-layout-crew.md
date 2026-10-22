@@ -1,7 +1,7 @@
 ---
 id: "099"
 title: "Review migration finding: shipped skills assume the crew-research target-project layout"
-status: backlog
+status: open
 blocked_by: []
 validation_criteria:
   - "Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence"
