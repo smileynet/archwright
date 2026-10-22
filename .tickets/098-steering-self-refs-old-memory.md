@@ -1,7 +1,7 @@
 ---
 id: "098"
 title: "Review migration finding: shipped steering self-references the old .memory/ layout"
-status: backlog
+status: open
 blocked_by: []
 validation_criteria:
   - "Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence"
