@@ -38,6 +38,17 @@ Source: grey-matter adopt-project, 2026-10-22.
 
 ## Acceptance criteria
 
-- [ ] Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence
+- [x] Reviewed before any change: each finding reproduced against the current repo and marked confirmed / rejected / re-scoped, with evidence
 - [ ] Home for the alias map decided and the AGENTS.md/mise.toml wording updated
-- [ ] sanitize-check hits aliased or explicitly accepted
+- [x] sanitize-check hits aliased or explicitly accepted
+
+## History purge (2026-10-23)
+
+- Finding confirmed: `sanitize-check` failed at baseline as described; both real target-project
+  names are now aliased in the current tree (sanitize-check passes).
+- Owner decided to purge history: file contents, commit messages, and one fixture path rewritten
+  and force-pushed; a fresh mirror clone of the remote shows 0 denylist hits.
+
+Still open: confirm the alias-map home (machine-local `.sanitization-aliases` beside
+`.sanitization-denylist`) and update the AGENTS.md Key Constraints line and `mise.toml:170`, which
+still say "recall". Close once that wording lands.
